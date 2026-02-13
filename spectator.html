@@ -519,9 +519,9 @@
 
             const statsContainer = document.getElementById(`${teamId}Stats`);
             document.getElementById(`${teamId}StatsTitle`).textContent =
-                `${team.name} - ${currentQuarter === 'total' ? 'Game Total' : 'Quarter ' + currentQuarter}`;
+                `${team.name} - Game Total`;
 
-            // Build player stats table
+            // Build player stats table - ALWAYS show game totals
             let playersHTML = '';
 
             team.players.forEach(player => {
@@ -535,24 +535,15 @@
                         fouls: 0
                     };
 
-                    if (currentQuarter === 'total') {
-                        Object.values(player.quarterStats).forEach(qStats => {
-                            stats.points += qStats.points || 0;
-                            stats.rebounds += qStats.rebounds || 0;
-                            stats.assists += qStats.assists || 0;
-                            stats.steals += qStats.steals || 0;
-                            stats.blocks += qStats.blocks || 0;
-                            stats.fouls += qStats.fouls || 0;
-                        });
-                    } else {
-                        const qStats = player.quarterStats[currentQuarter] || {};
-                        stats.points = qStats.points || 0;
-                        stats.rebounds = qStats.rebounds || 0;
-                        stats.assists = qStats.assists || 0;
-                        stats.steals = qStats.steals || 0;
-                        stats.blocks = qStats.blocks || 0;
-                        stats.fouls = qStats.fouls || 0;
-                    }
+                    // Always calculate totals across all quarters
+                    Object.values(player.quarterStats).forEach(qStats => {
+                        stats.points += qStats.points || 0;
+                        stats.rebounds += qStats.rebounds || 0;
+                        stats.assists += qStats.assists || 0;
+                        stats.steals += qStats.steals || 0;
+                        stats.blocks += qStats.blocks || 0;
+                        stats.fouls += qStats.fouls || 0;
+                    });
 
                     // Only show players with stats
                     if (stats.points > 0 || stats.rebounds > 0 || stats.assists > 0 ||
