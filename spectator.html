@@ -163,10 +163,45 @@
         }
 
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            gap: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
             margin-top: 15px;
+        }
+
+        .player-stat-row {
+            background: #374151;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .player-stat-name {
+            font-size: 1em;
+            font-weight: 600;
+            color: white;
+            min-width: 150px;
+        }
+
+        .player-stat-values {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .player-stat-item {
+            font-size: 0.85em;
+            color: #cbd5e0;
+            white-space: nowrap;
+        }
+
+        .player-stat-item strong {
+            color: #48bb78;
+            font-size: 1.1em;
         }
 
         .stat-item {
@@ -297,8 +332,23 @@
                 grid-template-columns: 1fr;
             }
 
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .player-stat-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .player-stat-name {
+                min-width: auto;
+            }
+
+            .player-stat-values {
+                justify-content: flex-start;
+                width: 100%;
+            }
+
+            .player-stat-item {
+                font-size: 0.8em;
             }
         }
     </style>
@@ -471,64 +521,64 @@
             document.getElementById(`${teamId}StatsTitle`).textContent =
                 `${team.name} - ${currentQuarter === 'total' ? 'Game Total' : 'Quarter ' + currentQuarter}`;
 
-            const totals = {
-                points: 0,
-                rebounds: 0,
-                assists: 0,
-                steals: 0,
-                blocks: 0,
-                fouls: 0
-            };
+            // Build player stats table
+            let playersHTML = '';
 
             team.players.forEach(player => {
                 if (player.quarterStats) {
+                    let stats = {
+                        points: 0,
+                        rebounds: 0,
+                        assists: 0,
+                        steals: 0,
+                        blocks: 0,
+                        fouls: 0
+                    };
+
                     if (currentQuarter === 'total') {
                         Object.values(player.quarterStats).forEach(qStats => {
-                            totals.points += qStats.points || 0;
-                            totals.rebounds += qStats.rebounds || 0;
-                            totals.assists += qStats.assists || 0;
-                            totals.steals += qStats.steals || 0;
-                            totals.blocks += qStats.blocks || 0;
-                            totals.fouls += qStats.fouls || 0;
+                            stats.points += qStats.points || 0;
+                            stats.rebounds += qStats.rebounds || 0;
+                            stats.assists += qStats.assists || 0;
+                            stats.steals += qStats.steals || 0;
+                            stats.blocks += qStats.blocks || 0;
+                            stats.fouls += qStats.fouls || 0;
                         });
                     } else {
                         const qStats = player.quarterStats[currentQuarter] || {};
-                        totals.points += qStats.points || 0;
-                        totals.rebounds += qStats.rebounds || 0;
-                        totals.assists += qStats.assists || 0;
-                        totals.steals += qStats.steals || 0;
-                        totals.blocks += qStats.blocks || 0;
-                        totals.fouls += qStats.fouls || 0;
+                        stats.points = qStats.points || 0;
+                        stats.rebounds = qStats.rebounds || 0;
+                        stats.assists = qStats.assists || 0;
+                        stats.steals = qStats.steals || 0;
+                        stats.blocks = qStats.blocks || 0;
+                        stats.fouls = qStats.fouls || 0;
+                    }
+
+                    // Only show players with stats
+                    if (stats.points > 0 || stats.rebounds > 0 || stats.assists > 0 ||
+                        stats.steals > 0 || stats.blocks > 0 || stats.fouls > 0) {
+                        playersHTML += `
+                            <div class="player-stat-row">
+                                <div class="player-stat-name">${player.name}</div>
+                                <div class="player-stat-values">
+                                    <span class="player-stat-item"><strong>${stats.points}</strong> PTS</span>
+                                    <span class="player-stat-item"><strong>${stats.rebounds}</strong> REB</span>
+                                    <span class="player-stat-item"><strong>${stats.assists}</strong> AST</span>
+                                    <span class="player-stat-item"><strong>${stats.steals}</strong> STL</span>
+                                    <span class="player-stat-item"><strong>${stats.blocks}</strong> BLK</span>
+                                    <span class="player-stat-item"><strong>${stats.fouls}</strong> F</span>
+                                </div>
+                            </div>
+                        `;
                     }
                 }
             });
 
-            statsContainer.innerHTML = `
-                <div class="stat-item">
-                    <div class="stat-label">Points</div>
-                    <div class="stat-value">${totals.points}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Rebounds</div>
-                    <div class="stat-value">${totals.rebounds}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Assists</div>
-                    <div class="stat-value">${totals.assists}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Steals</div>
-                    <div class="stat-value">${totals.steals}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Blocks</div>
-                    <div class="stat-value">${totals.blocks}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Fouls</div>
-                    <div class="stat-value">${totals.fouls}</div>
-                </div>
-            `;
+            if (playersHTML === '') {
+                playersHTML = '<div style="text-align: center; color: #a0aec0; padding: 20px;">No stats yet</div>';
+            }
+
+            statsContainer.innerHTML = playersHTML;
         }
 
         function showMVP(mvp, gameData) {
