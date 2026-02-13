@@ -106,7 +106,7 @@ Enables real-time spectator viewing:
 
 4. **Share Spectator URL**
    ```
-   https://YOUR-USERNAME.github.io/basketball-tracker/spectator.html
+   https://cestorquia24.github.io/Bella-Vista-Live-Basketball-Game-Tracker/spectator.html
    ```
 
 ## 📱 Using on Mobile Devices
