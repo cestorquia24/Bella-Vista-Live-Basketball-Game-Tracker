@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<!-- saved from url=(0187)https://dede3phc22dgx.cloudfront.net/creao2/b38c3718-d077-4a39-bf6c-46459ba7316f/78c1f3b0-40b1-7060-a869-e7ddc038af9a/2bb9a590-6fe6-4c77-9077-d9571d84ca95/basketball-tracker-template.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Violet vs. Yellow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            min-height: 100vh;
+            margin: 0;
+            background: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            padding: 20px 30px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-size: 1em;
+        }
+
+        .live-scoreboard {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            padding: 30px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-shrink: 0;
+            border-bottom: 4px solid #667eea;
+            position: relative;
+        }
+
+        .score-team {
+            flex: 1;
+            text-align: center;
+        }
+
+        .score-team-name {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score-value {
+            font-size: 5em;
+            font-weight: 900;
+            color: #48bb78;
+            line-height: 1;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .score-vs {
+            font-size: 2.5em;
+            color: #cbd5e0;
+            font-weight: 700;
+            padding: 0 30px;
+        }
+
+        .scoreboard-controls {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .cast-btn, .undo-btn-top {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cast-btn:hover, .undo-btn-top:hover:not(:disabled) {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .undo-btn-top:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .quarter-info {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .quarter-selector {
+            background: #f7fafc;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .quarter-btn {
+            padding: 12px 30px;
+            border: 2px solid #cbd5e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .quarter-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quarter-btn:hover:not(.active) {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .totals-section {
+            background: #f7fafc;
+            padding: 15px 20px;
+            border-bottom: 2px solid #e2e8f0;
+            flex-shrink: 0;
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .team-totals {
+            background: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .team-totals h3 {
+            margin-bottom: 8px;
+            color: #2d3748;
+            font-size: 1em;
+            font-weight: 700;
+        }
+
+        .totals-stats {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+
+        .total-stat {
+            text-align: center;
+            padding: 8px;
+            background: #f7fafc;
+            border-radius: 6px;
+        }
+
+        .total-stat-label {
+            font-size: 0.75em;
+            color: #718096;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .total-stat-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .teams-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px;
+            background: #e2e8f0;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .team-section {
+            background: white;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100%;
+        }
+
+        .team-section h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #667eea;
+            font-size: 1.5em;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .team-section.team2 h2 {
+            border-bottom-color: #f56565;
+        }
+
+        .lineup-section {
+            margin-bottom: 15px;
+        }
+
+        .players-list {
+            min-height: 60px;
+            border-radius: 6px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .players-list.drag-over {
+            background: #edf2f7;
+            border: 2px dashed #667eea;
+        }
+
+        .lineup-title {
+            font-size: 1em;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            background: #edf2f7;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: sticky;
+            top: 60px;
+            z-index: 9;
+        }
+
+        .lineup-title.starting {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .lineup-title.bench {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .player-row {
+            display: grid;
+            grid-template-columns: 2fr 0.6fr 1.5fr repeat(6, 1fr);
+            gap: 8px;
+            padding: 10px;
+            border-bottom: 1px solid #e2e8f0;
+            align-items: center;
+            cursor: move;
+            transition: all 0.2s;
+            min-width: 820px;
+        }
+
+        .swap-btn {
+            padding: 6px 10px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .swap-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+        }
+
+        .swap-btn:active {
+            transform: translateY(0);
+        }
+
+        .player-row > div {
+            min-width: 0;
+        }
+
+        .quick-score-btns {
+            display: flex;
+            gap: 2px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .quick-score-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 36px;
+            height: 32px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quick-score-btn.pt1 {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .quick-score-btn.pt2 {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .quick-score-btn.pt3 {
+            background: #fbd38d;
+            color: #7c2d12;
+        }
+
+        .quick-score-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .team-fouls-section {
+            background: #fff5f5;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 2px solid #feb2b2;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .team-fouls-label {
+            font-weight: 700;
+            color: #c53030;
+            font-size: 1em;
+        }
+
+        .team-fouls-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .team-fouls-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #c53030;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .player-row:hover {
+            background: #f7fafc;
+        }
+
+        .player-row.dragging {
+            opacity: 0.5;
+            background: #e2e8f0;
+        }
+
+        .player-row.drag-over {
+            border-top: 3px solid #667eea;
+        }
+
+        .players-list {
+            min-height: 60px;
+            border-radius: 6px;
+        }
+
+        .players-list.drag-over {
+            background: #edf2f7;
+            border: 2px dashed #667eea;
+        }
+
+        .player-header {
+            font-weight: 700;
+            color: #2d3748;
+            background: #edf2f7;
+            border-bottom: 2px solid #cbd5e0;
+            cursor: default;
+        }
+
+        .player-header > div {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #2d3748;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .stat-control {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .stat-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .stat-btn.minus {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .stat-btn.minus:hover {
+            background: #fc8181;
+        }
+
+        .stat-btn.plus {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .stat-btn.plus:hover {
+            background: #68d391;
+        }
+
+        .stat-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #718096;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .mvp-section {
+            background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
+            padding: 20px;
+            border-bottom: 2px solid #f39c12;
+            flex-shrink: 0;
+        }
+
+        .mvp-container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .mvp-label {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #d68910;
+        }
+
+        .mvp-selector {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: 2px solid #f39c12;
+            border-radius: 8px;
+            background: white;
+            color: #2d3748;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 250px;
+            transition: all 0.3s;
+        }
+
+        .mvp-selector:hover {
+            border-color: #d68910;
+            box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+        }
+
+        .mvp-selector:focus {
+            outline: none;
+            border-color: #d68910;
+            box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.2);
+        }
+
+        .mvp-display {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #d68910;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #f39c12;
+        }
+
+        .export-section {
+            padding: 15px 20px;
+            text-align: center;
+            background: white;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .auto-save-indicator {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            color: #48bb78;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+
+        .export-btn {
+            padding: 15px 40px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 1024px) {
+            .player-row {
+                grid-template-columns: 1.8fr 0.6fr repeat(7, 1fr);
+                gap: 6px;
+                font-size: 0.9em;
+                padding: 8px;
+                min-width: 820px;
+            }
+
+            .swap-btn {
+                font-size: 0.75em;
+                padding: 5px 8px;
+            }
+
+            .stat-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 1.1em;
+            }
+
+            .score-team-name {
+                font-size: 1.4em;
+            }
+
+            .score-value {
+                font-size: 3.5em;
+            }
+
+            .score-vs {
+                font-size: 2em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.2em;
+            }
+
+            .game-info {
+                font-size: 0.8em;
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .teams-container {
+                grid-template-columns: 1fr;
+            }
+
+            .score-team-name {
+                font-size: 1em;
+            }
+
+            .score-value {
+                font-size: 2em;
+            }
+
+            .score-vs {
+                font-size: 1.2em;
+                padding: 0 10px;
+            }
+
+            .scoreboard-controls {
+                position: static;
+                justify-content: center;
+                margin-top: 15px;
+                flex-wrap: wrap;
+            }
+
+            .cast-btn, .undo-btn-top {
+                padding: 8px 15px;
+                font-size: 0.8em;
+            }
+
+            .quarter-info {
+                position: static;
+                text-align: center;
+                margin-bottom: 10px;
+                font-size: 0.9em;
+            }
+
+            .quarter-btn {
+                padding: 8px 12px;
+                font-size: 0.85em;
+            }
+
+            .totals-section {
+                padding: 10px 15px;
+            }
+
+            .totals-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .team-totals {
+                padding: 10px 12px;
+            }
+
+            .team-totals h3 {
+                font-size: 0.85em;
+            }
+
+            .totals-stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+
+            .total-stat {
+                padding: 6px 4px;
+            }
+
+            .total-stat-label {
+                font-size: 0.65em;
+            }
+
+            .total-stat-value {
+                font-size: 1em;
+            }
+
+            .player-row {
+                grid-template-columns: 1.5fr 0.5fr 1.3fr repeat(6, 0.7fr);
+                gap: 4px;
+                font-size: 0.75em;
+                padding: 8px 5px;
+                min-width: 780px;
+            }
+
+            .swap-btn {
+                font-size: 0.65em;
+                padding: 4px 6px;
+            }
+
+            .quick-score-btn {
+                padding: 3px 5px;
+                font-size: 0.7em;
+                min-width: 32px;
+                height: 26px;
+            }
+
+            .stat-btn {
+                width: 26px;
+                height: 26px;
+                font-size: 0.9em;
+            }
+
+            .stat-value {
+                min-width: 28px;
+                font-size: 0.9em;
+            }
+
+            .export-btn {
+                padding: 10px 20px;
+                font-size: 0.9em;
+                margin: 5px !important;
+            }
+
+            .lineup-title {
+                font-size: 0.85em;
+                padding: 6px 8px;
+            }
+
+            .team-section h2 {
+                font-size: 1.1em;
+            }
+
+            .team-section {
+                padding: 15px 10px;
+            }
+
+            .team-fouls-section {
+                padding: 10px 12px;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .team-fouls-label {
+                font-size: 0.9em;
+            }
+
+            .team-fouls-value {
+                font-size: 1.2em;
+            }
+
+            .mvp-section {
+                padding: 12px 15px;
+            }
+
+            .mvp-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .mvp-label {
+                font-size: 1em;
+            }
+
+            .mvp-selector {
+                min-width: 200px;
+                font-size: 0.9em;
+                padding: 8px 12px;
+            }
+
+            .mvp-display {
+                font-size: 0.9em;
+                padding: 8px 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 0.95em;
+            }
+
+            .score-team-name {
+                font-size: 0.85em;
+            }
+
+            .score-value {
+                font-size: 1.5em;
+            }
+
+            .player-row {
+                grid-template-columns: 1.2fr 0.4fr 1.1fr repeat(6, 0.6fr);
+                gap: 3px;
+                font-size: 0.7em;
+                padding: 6px 3px;
+                min-width: 680px;
+            }
+
+            .swap-btn {
+                font-size: 0.6em;
+                padding: 3px 5px;
+            }
+
+            .quick-score-btn {
+                padding: 2px 4px;
+                font-size: 0.65em;
+                min-width: 28px;
+                height: 24px;
+            }
+
+            .stat-btn {
+                width: 24px;
+                height: 24px;
+                font-size: 0.85em;
+            }
+
+            .stat-value {
+                min-width: 24px;
+                font-size: 0.85em;
+            }
+
+            .totals-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 1920px) {
+            .player-row {
+                padding: 12px;
+                gap: 12px;
+            }
+
+            .stat-btn {
+                width: 36px;
+                height: 36px;
+            }
+
+            .team-section h2 {
+                font-size: 1.8em;
+            }
+
+            .lineup-title {
+                font-size: 1.1em;
+            }
+        }
+
+        /* Setup Screen Styles */
+        .setup-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .setup-screen.hidden {
+            display: none;
+        }
+
+        .setup-form {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .setup-form h2 {
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-group small {
+            display: block;
+            color: #718096;
+            margin-top: 4px;
+            font-size: 0.9em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .start-game-btn {
+            width: 100%;
+            padding: 16px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .start-game-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .setup-form {
+                padding: 20px;
+            }
+
+            .setup-form h2 {
+                font-size: 1.5em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Setup Screen -->
+    <div class="setup-screen" id="setupScreen">
+        <div class="setup-form">
+            <h2>🏀 Setup Basketball Game</h2>
+            <form id="gameSetupForm" onsubmit="startGameFromForm(event); return false;">
+                <div class="form-group">
+                    <label for="gameNameInput">Game Name</label>
+                    <input type="text" id="gameNameInput" value="Violet vs. Yellow" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="team1NameInput">Team 1 Name</label>
+                        <input type="text" id="team1NameInput" value="Team Violet" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="team2NameInput">Team 2 Name</label>
+                        <input type="text" id="team2NameInput" value="Team Yellow" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="team1PlayersInput">Team 1 Players</label>
+                        <textarea id="team1PlayersInput" required>Estorquia # 18
+S. Suyo # 24
+Perez #8
+Puno #30
+Concepcion #13
+Amaro #14
+Borja #7
+Ramos #25
+Campos #28
+Prado #12
+Mariano #29</textarea>
+                        <small>One player per line. First 5 will be starters.</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="team2PlayersInput">Team 2 Players</label>
+                        <textarea id="team2PlayersInput" required>Randolf Bacal
+Marlon Germedia
+Josh Mendoza
+Felix Lorenzo
+James Salonga
+Mark Joseph Bayeta
+Ronald Sspanol
+Basty Valenzuela
+RM Guilalas
+Lance Concepcion
+Nurjan Macaaya
+Bryan Madriaga</textarea>
+                        <small>One player per line. First 5 will be starters.</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="quartersInput">Number of Quarters</label>
+                    <input type="number" id="quartersInput" value="4" min="1" max="8" required>
+                </div>
+
+                <button type="submit" class="start-game-btn">Start Game</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🏀 Bella Vista Hoopers Games Season 1 <span style="font-size: 0.5em; color: #48bb78;">(v2.4)</span></h1>
+            <div class="game-info">
+                <div><strong>Game:</strong> <span id="gameName">Violet vs. Yellow</span></div>
+                <div><strong>Date:</strong> <span id="gameDate">2026-02-13</span></div>
+            </div>
+        </div>
+
+        <div class="live-scoreboard">
+            <div class="quarter-info" id="currentQuarterDisplay">Quarter 1</div>
+            <div class="score-team">
+                <div class="score-team-name" id="scoreTeam1Name">Team Violet</div>
+                <div class="score-value" id="scoreTeam1Value">0</div>
+            </div>
+            <div class="score-vs">VS</div>
+            <div class="score-team">
+                <div class="score-team-name" id="scoreTeam2Name">Team Yellow</div>
+                <div class="score-value" id="scoreTeam2Value">0</div>
+            </div>
+            <div class="scoreboard-controls">
+                <button class="undo-btn-top" id="undoBtn" onclick="undoLastAction()" disabled>↶ Undo</button>
+                <button class="cast-btn" onclick="openCastMode()">📺 Cast to Display</button>
+            </div>
+        </div>
+
+        <div class="quarter-selector" id="quarterSelector"><button class="quarter-btn active">Quarter 1</button><button class="quarter-btn">Quarter 2</button><button class="quarter-btn">Quarter 3</button><button class="quarter-btn">Quarter 4</button><button class="quarter-btn">Total</button></div>
+
+        <div class="totals-section">
+            <div class="totals-grid">
+                <div class="team-totals">
+                    <h3 id="team1TotalName">Team Violet - Quarter 1</h3>
+                    <div class="totals-stats" id="team1Totals">
+                <div class="total-stat">
+                    <div class="total-stat-label">Points</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Rebounds</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Assists</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Steals</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Blocks</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+            </div>
+                </div>
+                <div class="team-totals">
+                    <h3 id="team2TotalName">Team Yellow - Quarter 1</h3>
+                    <div class="totals-stats" id="team2Totals">
+                <div class="total-stat">
+                    <div class="total-stat-label">Points</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Rebounds</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Assists</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Steals</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Blocks</div>
+                    <div class="total-stat-value">0</div>
+                </div>
+            </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mvp-section">
+            <div class="mvp-container">
+                <div class="mvp-label">🏆 Best Player of the Game</div>
+                <select id="mvpSelector" class="mvp-selector" onchange="setMVP()">
+                    <option value="">-- Select Best Player --</option>
+                </select>
+                <div class="mvp-display" id="mvpDisplay">No player selected</div>
+            </div>
+        </div>
+
+        <div class="teams-container">
+            <div class="team-section team1">
+                <h2 id="team1Name">Team Violet</h2>
+
+                <div class="team-fouls-section">
+                    <div class="team-fouls-label">Team Fouls (Quarter <span id="team1FoulsQuarter">1</span>)</div>
+                    <div class="team-fouls-controls">
+                        <button class="stat-btn minus" onclick="updateTeamFouls('team1', -1)">-</button>
+                        <div class="team-fouls-value" id="team1FoulsValue">0</div>
+                        <button class="stat-btn plus" onclick="updateTeamFouls('team1', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="lineup-section">
+                    <div class="lineup-title starting">🏀 On Court LineUp (5 Players)</div>
+                    <div id="team1Starting" class="players-list">
+                    </div>
+                </div>
+
+                <div class="lineup-section">
+                    <div class="lineup-title bench">🪑 Bench Players</div>
+                    <div id="team1Bench" class="players-list">
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-section team2">
+                <h2 id="team2Name">Team Yellow</h2>
+
+                <div class="team-fouls-section">
+                    <div class="team-fouls-label">Team Fouls (Quarter <span id="team2FoulsQuarter">1</span>)</div>
+                    <div class="team-fouls-controls">
+                        <button class="stat-btn minus" onclick="updateTeamFouls('team2', -1)">-</button>
+                        <div class="team-fouls-value" id="team2FoulsValue">0</div>
+                        <button class="stat-btn plus" onclick="updateTeamFouls('team2', 1)">+</button>
+                    </div>
+                </div>
+
+                <div class="lineup-section">
+                    <div class="lineup-title starting">🏀 On Court LineUp (5 Players)</div>
+                    <div id="team2Starting" class="players-list">
+                    </div>
+                </div>
+
+                <div class="lineup-section">
+                    <div class="lineup-title bench">🪑 Bench Players</div>
+                    <div id="team2Bench" class="players-list">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="export-section">
+            <div class="auto-save-indicator">✓ Auto-saving</div>
+            <button class="export-btn" onclick="exportCSV()" style="background: #48bb78;">📄 Export Game Summary</button>
+            <button class="export-btn" onclick="clearGameData()" style="margin-left: 10px; background: #f56565;">🗑️ Clear & Start New Game</button>
+        </div>
+    </div>
+
+    <script>
+        console.log('Basketball Tracker v2.4 - Quick Swap Substitutions');
+
+        // Game data structure
+        const gameData = {
+            gameName: '',
+            gameDate: new Date().toISOString().split('T')[0],
+            team1: { name: '', players: [], teamFouls: {} },
+            team2: { name: '', players: [], teamFouls: {} },
+            quarters: 4,
+            mvp: null
+        };
+
+        // Make gameData globally accessible for cast mode
+        window.gameData = gameData;
+
+        let currentQuarter = 1;
+        let actionHistory = [];
+        const MAX_HISTORY = 50;
+
+        // Make currentQuarter accessible globally for cast mode
+        window.currentQuarter = currentQuarter;
+
+        // Auto-save functionality
+        function saveGameData() {
+            try {
+                localStorage.setItem('basketballGameData', JSON.stringify(gameData));
+                localStorage.setItem('basketballCurrentQuarter', currentQuarter.toString());
+                localStorage.setItem('basketballActionHistory', JSON.stringify(actionHistory));
+            } catch (e) {
+                console.error('Failed to save game data:', e);
+            }
+        }
+
+        function loadGameData() {
+            try {
+                const saved = localStorage.getItem('basketballGameData');
+                const savedQuarter = localStorage.getItem('basketballCurrentQuarter');
+                const savedHistory = localStorage.getItem('basketballActionHistory');
+
+                if (saved) {
+                    Object.assign(gameData, JSON.parse(saved));
+                    if (savedQuarter) currentQuarter = parseInt(savedQuarter) || 1;
+                    if (savedHistory) actionHistory = JSON.parse(savedHistory);
+                    return true;
+                }
+            } catch (e) {
+                console.error('Failed to load game data:', e);
+            }
+            return false;
+        }
+
+        function clearGameData() {
+            if (confirm('Clear all game data and start a new game?')) {
+                localStorage.removeItem('basketballGameData');
+                localStorage.removeItem('basketballCurrentQuarter');
+                localStorage.removeItem('basketballActionHistory');
+                showSetupScreen();
+            }
+        }
+
+        // Undo functionality
+        function recordAction(action) {
+            actionHistory.push(action);
+            if (actionHistory.length > MAX_HISTORY) {
+                actionHistory.shift();
+            }
+            document.getElementById('undoBtn').disabled = false;
+            saveGameData();
+        }
+
+        function undoLastAction() {
+            if (actionHistory.length === 0) return;
+
+            const action = actionHistory.pop();
+
+            switch (action.type) {
+                case 'stat':
+                    const player = gameData[action.team].players.find(p => p.id === action.playerId);
+                    if (player) {
+                        player.quarterStats[action.quarter][action.statName] = action.oldValue;
+                    }
+                    break;
+                case 'teamFouls':
+                    gameData[action.team].teamFouls[action.quarter] = action.oldValue;
+                    break;
+                case 'starter':
+                    const p = gameData[action.team].players.find(p => p.id === action.playerId);
+                    if (p) p.isStarter = action.oldValue;
+                    break;
+            }
+
+            renderPlayers('team1', gameData.team1.players);
+            renderPlayers('team2', gameData.team2.players);
+            updateTotals();
+            updateLiveScoreboard();
+
+            if (actionHistory.length === 0) {
+                document.getElementById('undoBtn').disabled = true;
+            }
+
+            saveGameData();
+        }
+
+        // Initialize game from form data (this would come from the agentapp form)
+        function initializeGame(formData) {
+            // ALWAYS start fresh - don't load old data
+            console.log('Initializing fresh game...');
+
+            gameData.gameName = formData.gameName || 'Basketball Game';
+            gameData.team1.name = formData.team1Name || 'Team 1';
+            gameData.team2.name = formData.team2Name || 'Team 2';
+            gameData.quarters = parseInt(formData.quarters) || 4;
+
+            // Initialize team fouls
+            for (let q = 1; q <= gameData.quarters; q++) {
+                gameData.team1.teamFouls[q] = 0;
+                gameData.team2.teamFouls[q] = 0;
+            }
+
+            // Parse players - first 5 are starters
+            const team1PlayersList = formData.team1Players.split('\n').filter(p => p.trim());
+            const team2PlayersList = formData.team2Players.split('\n').filter(p => p.trim());
+
+            gameData.team1.players = team1PlayersList.map((name, idx) =>
+                createPlayer(name.trim(), idx + 1, gameData.quarters, idx < 5)
+            );
+            gameData.team2.players = team2PlayersList.map((name, idx) =>
+                createPlayer(name.trim(), idx + 1, gameData.quarters, idx < 5)
+            );
+
+            saveGameData();
+            renderGame();
+        }
+
+        function createPlayer(name, id, quarters, isStarter = false) {
+            const stats = {};
+            for (let q = 1; q <= quarters; q++) {
+                stats[q] = {
+                    points: 0,
+                    rebounds: 0,
+                    assists: 0,
+                    steals: 0,
+                    blocks: 0,
+                    fouls: 0
+                };
+            }
+            return { id, name, quarterStats: stats, isStarter };
+        }
+
+        function renderGame() {
+            window.currentQuarter = currentQuarter; // Make sure it's accessible globally
+            document.getElementById('gameName').textContent = gameData.gameName;
+            document.getElementById('gameDate').textContent = gameData.gameDate;
+            document.getElementById('team1Name').textContent = gameData.team1.name;
+            document.getElementById('team2Name').textContent = gameData.team2.name;
+
+            renderQuarterSelector();
+            renderPlayers('team1', gameData.team1.players);
+            renderPlayers('team2', gameData.team2.players);
+            updateTotals();
+            updateLiveScoreboard();
+            updateTeamFoulsDisplay();
+            populateMVPSelector();
+            updateMVPDisplay();
+        }
+
+        function populateMVPSelector() {
+            const selector = document.getElementById('mvpSelector');
+            selector.innerHTML = '<option value="">-- Select Best Player --</option>';
+
+            // Add Team 1 players
+            const team1Group = document.createElement('optgroup');
+            team1Group.label = gameData.team1.name;
+            gameData.team1.players.forEach(player => {
+                const option = document.createElement('option');
+                option.value = `team1-${player.id}`;
+                option.textContent = player.name;
+                team1Group.appendChild(option);
+            });
+            selector.appendChild(team1Group);
+
+            // Add Team 2 players
+            const team2Group = document.createElement('optgroup');
+            team2Group.label = gameData.team2.name;
+            gameData.team2.players.forEach(player => {
+                const option = document.createElement('option');
+                option.value = `team2-${player.id}`;
+                option.textContent = player.name;
+                team2Group.appendChild(option);
+            });
+            selector.appendChild(team2Group);
+
+            // Set selected value if MVP is already chosen
+            if (gameData.mvp && gameData.mvp.teamKey && gameData.mvp.playerId) {
+                selector.value = `${gameData.mvp.teamKey}-${gameData.mvp.playerId}`;
+            }
+        }
+
+        function setMVP() {
+            const selector = document.getElementById('mvpSelector');
+            const value = selector.value;
+
+            if (!value) {
+                gameData.mvp = null;
+                updateMVPDisplay();
+                saveGameData();
+                return;
+            }
+
+            const [team, playerId] = value.split('-');
+            const player = gameData[team].players.find(p => p.id === parseInt(playerId));
+
+            if (player) {
+                gameData.mvp = {
+                    teamKey: team, // Store the team key (team1 or team2)
+                    playerId: player.id,
+                    name: player.name,
+                    team: gameData[team].name
+                };
+                updateMVPDisplay();
+                saveGameData();
+            }
+        }
+
+        function updateMVPDisplay() {
+            const display = document.getElementById('mvpDisplay');
+            if (gameData.mvp && gameData.mvp.name) {
+                display.textContent = `${gameData.mvp.name} (${gameData.mvp.team})`;
+            } else {
+                display.textContent = 'No player selected';
+            }
+        }
+
+        function updateLiveScoreboard() {
+            const team1Total = calculateTeamTotalPoints('team1');
+            const team2Total = calculateTeamTotalPoints('team2');
+
+            document.getElementById('scoreTeam1Name').textContent = gameData.team1.name;
+            document.getElementById('scoreTeam2Name').textContent = gameData.team2.name;
+            document.getElementById('scoreTeam1Value').textContent = team1Total;
+            document.getElementById('scoreTeam2Value').textContent = team2Total;
+
+            const quarterText = currentQuarter === 'total' ? 'Final' : `Q${currentQuarter}`;
+            document.getElementById('currentQuarterDisplay').textContent = quarterText;
+        }
+
+        function calculateTeamTotalPoints(team) {
+            let total = 0;
+            gameData[team].players.forEach(player => {
+                Object.values(player.quarterStats).forEach(qStats => {
+                    total += qStats.points;
+                });
+            });
+            return total;
+        }
+
+        // Make this function globally accessible for cast mode
+        window.calculateTeamTotalPoints = calculateTeamTotalPoints;
+
+        function updateTeamFoulsDisplay() {
+            const q = currentQuarter === 'total' ? 1 : currentQuarter;
+            document.getElementById('team1FoulsQuarter').textContent = q;
+            document.getElementById('team2FoulsQuarter').textContent = q;
+            document.getElementById('team1FoulsValue').textContent = gameData.team1.teamFouls[q] || 0;
+            document.getElementById('team2FoulsValue').textContent = gameData.team2.teamFouls[q] || 0;
+        }
+
+        function updateTeamFouls(team, change) {
+            const q = currentQuarter === 'total' ? 1 : currentQuarter;
+            const oldValue = gameData[team].teamFouls[q] || 0;
+            const newValue = Math.max(0, oldValue + change);
+
+            recordAction({
+                type: 'teamFouls',
+                team: team,
+                quarter: q,
+                oldValue: oldValue
+            });
+
+            gameData[team].teamFouls[q] = newValue;
+            updateTeamFoulsDisplay();
+            saveGameData();
+        }
+
+        function renderQuarterSelector() {
+            const selector = document.getElementById('quarterSelector');
+            selector.innerHTML = '';
+
+            for (let q = 1; q <= gameData.quarters; q++) {
+                const btn = document.createElement('button');
+                btn.className = 'quarter-btn' + (q === currentQuarter ? ' active' : '');
+                btn.textContent = `Quarter ${q}`;
+                btn.onclick = () => switchQuarter(q);
+                selector.appendChild(btn);
+            }
+
+            const totalBtn = document.createElement('button');
+            totalBtn.className = 'quarter-btn';
+            totalBtn.textContent = 'Total';
+            totalBtn.onclick = () => switchQuarter('total');
+            selector.appendChild(totalBtn);
+        }
+
+        function switchQuarter(quarter) {
+            currentQuarter = quarter;
+            window.currentQuarter = quarter; // Update global for cast mode
+            renderQuarterSelector();
+            renderPlayers('team1', gameData.team1.players);
+            renderPlayers('team2', gameData.team2.players);
+            updateTotals();
+            updateLiveScoreboard();
+            updateTeamFoulsDisplay();
+            saveGameData();
+        }
+
+        function createHeaderRow() {
+            const header = document.createElement('div');
+            header.className = 'player-row player-header';
+            header.innerHTML = `
+                <div>Player</div>
+                <div></div>
+                <div class="stat-label">Quick Score</div>
+                <div class="stat-label">PTS</div>
+                <div class="stat-label">REB</div>
+                <div class="stat-label">AST</div>
+                <div class="stat-label">STL</div>
+                <div class="stat-label">BLK</div>
+                <div class="stat-label">Fouls</div>
+            `;
+            return header;
+        }
+
+        function renderPlayers(team, players) {
+            const startingContainer = document.getElementById(`${team}Starting`);
+            const benchContainer = document.getElementById(`${team}Bench`);
+            startingContainer.innerHTML = '';
+            benchContainer.innerHTML = '';
+
+            const starters = players.filter(p => p.isStarter);
+            const bench = players.filter(p => !p.isStarter);
+
+            // Add header to starting lineup
+            startingContainer.appendChild(createHeaderRow());
+
+            // Render starting lineup
+            starters.forEach(player => {
+                const row = createPlayerRow(player, team);
+                startingContainer.appendChild(row);
+            });
+
+            // Add header to bench
+            benchContainer.appendChild(createHeaderRow());
+
+            // Render bench players
+            bench.forEach(player => {
+                const row = createPlayerRow(player, team);
+                benchContainer.appendChild(row);
+            });
+
+            // Setup drag and drop
+            setupDragAndDrop(team);
+        }
+
+        function createPlayerRow(player, team) {
+            const row = document.createElement('div');
+            row.className = 'player-row';
+            row.draggable = true;
+            row.dataset.playerId = player.id;
+            row.dataset.team = team;
+
+            const stats = currentQuarter === 'total'
+                ? calculateTotalStats(player)
+                : player.quarterStats[currentQuarter];
+
+            const swapButtonText = player.isStarter ? '↓ Bench' : '↑ Start';
+
+            row.innerHTML = `
+                <div class="player-name">${player.name}</div>
+                <button class="swap-btn" onclick="quickSwap('${team}', ${player.id})">${swapButtonText}</button>
+                ${renderQuickScoreButtons(player.id, team)}
+                ${renderStatControl('points', stats.points, player.id, team)}
+                ${renderStatControl('rebounds', stats.rebounds, player.id, team)}
+                ${renderStatControl('assists', stats.assists, player.id, team)}
+                ${renderStatControl('steals', stats.steals, player.id, team)}
+                ${renderStatControl('blocks', stats.blocks, player.id, team)}
+                ${renderStatControl('fouls', stats.fouls, player.id, team)}
+            `;
+
+            return row;
+        }
+
+        function renderQuickScoreButtons(playerId, team) {
+            if (currentQuarter === 'total') {
+                return '<div></div>';
+            }
+
+            return `
+                <div class="quick-score-btns">
+                    <button class="quick-score-btn pt1" onclick="quickScore('${team}', ${playerId}, 1)">+1</button>
+                    <button class="quick-score-btn pt2" onclick="quickScore('${team}', ${playerId}, 2)">+2</button>
+                    <button class="quick-score-btn pt3" onclick="quickScore('${team}', ${playerId}, 3)">+3</button>
+                </div>
+            `;
+        }
+
+        function quickScore(team, playerId, points) {
+            updateStat(team, playerId, 'points', points);
+        }
+
+        function quickSwap(team, playerId) {
+            const player = gameData[team].players.find(p => p.id === playerId);
+
+            if (player) {
+                // Record action for undo
+                recordAction({
+                    type: 'starter',
+                    team: team,
+                    playerId: playerId,
+                    oldValue: player.isStarter
+                });
+
+                // Toggle starter status
+                player.isStarter = !player.isStarter;
+
+                // Re-render players for this team
+                renderPlayers(team, gameData[team].players);
+                updateTotals();
+                saveGameData();
+            }
+        }
+
+        function setupDragAndDrop(team) {
+            const startingContainer = document.getElementById(`${team}Starting`);
+            const benchContainer = document.getElementById(`${team}Bench`);
+
+            [startingContainer, benchContainer].forEach(container => {
+                container.addEventListener('dragover', handleDragOver);
+                container.addEventListener('drop', handleDrop);
+                container.addEventListener('dragleave', handleDragLeave);
+
+                const playerRows = container.querySelectorAll('.player-row');
+                playerRows.forEach(row => {
+                    row.addEventListener('dragstart', handleDragStart);
+                    row.addEventListener('dragend', handleDragEnd);
+                });
+            });
+        }
+
+        let draggedElement = null;
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            this.classList.add('drag-over');
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            e.preventDefault();
+
+            this.classList.remove('drag-over');
+
+            if (draggedElement && draggedElement !== this) {
+                const playerId = parseInt(draggedElement.dataset.playerId);
+                const team = draggedElement.dataset.team;
+                const player = gameData[team].players.find(p => p.id === playerId);
+
+                if (player) {
+                    // Record action for undo
+                    recordAction({
+                        type: 'starter',
+                        team: team,
+                        playerId: playerId,
+                        oldValue: player.isStarter
+                    });
+
+                    // Toggle starter status based on drop target
+                    const isDroppedOnStarting = this.id.includes('Starting');
+                    player.isStarter = isDroppedOnStarting;
+
+                    // Re-render players for this team
+                    renderPlayers(team, gameData[team].players);
+                    updateTotals();
+                }
+            }
+
+            return false;
+        }
+
+        function renderStatControl(statName, value, playerId, team) {
+            if (currentQuarter === 'total') {
+                return `<div class="stat-value">${value}</div>`;
+            }
+
+            return `
+                <div class="stat-control">
+                    <button class="stat-btn minus" onclick="updateStat('${team}', ${playerId}, '${statName}', -1)">-</button>
+                    <div class="stat-value">${value}</div>
+                    <button class="stat-btn plus" onclick="updateStat('${team}', ${playerId}, '${statName}', 1)">+</button>
+                </div>
+            `;
+        }
+
+        function updateStat(team, playerId, statName, change) {
+            const player = gameData[team].players.find(p => p.id === playerId);
+            if (player) {
+                const currentValue = player.quarterStats[currentQuarter][statName];
+                const newValue = Math.max(0, currentValue + change);
+
+                // Record action for undo
+                recordAction({
+                    type: 'stat',
+                    team: team,
+                    playerId: playerId,
+                    statName: statName,
+                    quarter: currentQuarter,
+                    oldValue: currentValue
+                });
+
+                player.quarterStats[currentQuarter][statName] = newValue;
+                renderPlayers(team, gameData[team].players);
+                updateTotals();
+                updateLiveScoreboard();
+            }
+        }
+
+        function calculateTotalStats(player) {
+            const total = {
+                points: 0,
+                rebounds: 0,
+                assists: 0,
+                steals: 0,
+                blocks: 0,
+                fouls: 0
+            };
+            Object.values(player.quarterStats).forEach(qStats => {
+                total.points += qStats.points;
+                total.rebounds += qStats.rebounds;
+                total.assists += qStats.assists;
+                total.steals += qStats.steals;
+                total.blocks += qStats.blocks;
+                total.fouls += qStats.fouls;
+            });
+            return total;
+        }
+
+        // Make this function globally accessible for cast mode
+        window.calculateTotalStats = calculateTotalStats;
+
+        function updateTotals() {
+            const quarterLabel = currentQuarter === 'total' ? 'Game Total' : `Quarter ${currentQuarter}`;
+            document.getElementById('team1TotalName').textContent = `${gameData.team1.name} - ${quarterLabel}`;
+            document.getElementById('team2TotalName').textContent = `${gameData.team2.name} - ${quarterLabel}`;
+
+            renderTeamTotals('team1');
+            renderTeamTotals('team2');
+        }
+
+        function renderTeamTotals(team) {
+            const container = document.getElementById(`${team}Totals`);
+            const players = gameData[team].players;
+
+            const totals = {
+                points: 0,
+                rebounds: 0,
+                assists: 0,
+                steals: 0,
+                blocks: 0,
+                fouls: 0
+            };
+
+            players.forEach(player => {
+                const stats = currentQuarter === 'total'
+                    ? calculateTotalStats(player)
+                    : player.quarterStats[currentQuarter];
+
+                totals.points += stats.points;
+                totals.rebounds += stats.rebounds;
+                totals.assists += stats.assists;
+                totals.steals += stats.steals;
+                totals.blocks += stats.blocks;
+                totals.fouls += stats.fouls;
+            });
+
+            container.innerHTML = `
+                <div class="total-stat">
+                    <div class="total-stat-label">Points</div>
+                    <div class="total-stat-value">${totals.points}</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Rebounds</div>
+                    <div class="total-stat-value">${totals.rebounds}</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Assists</div>
+                    <div class="total-stat-value">${totals.assists}</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Steals</div>
+                    <div class="total-stat-value">${totals.steals}</div>
+                </div>
+                <div class="total-stat">
+                    <div class="total-stat-label">Blocks</div>
+                    <div class="total-stat-value">${totals.blocks}</div>
+                </div>
+            `;
+        }
+
+        function exportCSV() {
+            const team1Score = calculateTeamTotalPoints('team1');
+            const team2Score = calculateTeamTotalPoints('team2');
+
+            // Determine winner
+            let winner = '';
+            if (team1Score > team2Score) {
+                winner = gameData.team1.name;
+            } else if (team2Score > team1Score) {
+                winner = gameData.team2.name;
+            } else {
+                winner = 'TIE';
+            }
+
+            // Start with game summary
+            let csv = `GAME SUMMARY\n`;
+            csv += `Game,${gameData.gameName}\n`;
+            csv += `Date,${gameData.gameDate}\n`;
+            csv += `\n`;
+            csv += `FINAL SCORE\n`;
+            csv += `${gameData.team1.name},${team1Score}\n`;
+            csv += `${gameData.team2.name},${team2Score}\n`;
+            csv += `\n`;
+            csv += `WINNER,${winner}\n`;
+
+            // Add MVP if selected
+            if (gameData.mvp && gameData.mvp.name) {
+                csv += `BEST PLAYER,${gameData.mvp.name} (${gameData.mvp.team})\n`;
+            }
+            csv += `\n`;
+
+            // Team 1 Statistics
+            csv += `${gameData.team1.name.toUpperCase()} - PLAYER STATISTICS\n`;
+            csv += `Player,Points,Rebounds,Assists,Steals,Blocks,Fouls\n`;
+            gameData.team1.players.forEach(player => {
+                const total = calculateTotalStats(player);
+                csv += `"${player.name}",${total.points},${total.rebounds},${total.assists},${total.steals},${total.blocks},${total.fouls}\n`;
+            });
+
+            csv += `\n`;
+
+            // Team 2 Statistics
+            csv += `${gameData.team2.name.toUpperCase()} - PLAYER STATISTICS\n`;
+            csv += `Player,Points,Rebounds,Assists,Steals,Blocks,Fouls\n`;
+            gameData.team2.players.forEach(player => {
+                const total = calculateTotalStats(player);
+                csv += `"${player.name}",${total.points},${total.rebounds},${total.assists},${total.steals},${total.blocks},${total.fouls}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${gameData.gameName.replace(/\s/g, '_')}_Summary_${gameData.gameDate}.csv`;
+            link.click();
+        }
+
+        // Cast Mode - Open scoreboard in new window
+        function openCastMode() {
+            const team1Score = calculateTeamTotalPoints('team1');
+            const team2Score = calculateTeamTotalPoints('team2');
+            const quarterText = currentQuarter === 'total' ? 'FINAL' : 'QUARTER ' + currentQuarter;
+            const q = currentQuarter === 'total' ? 1 : currentQuarter;
+            const team1Fouls = gameData.team1.teamFouls[q] || 0;
+            const team2Fouls = gameData.team2.teamFouls[q] || 0;
+
+            // Get MVP info if available
+            const showMVP = currentQuarter === 'total' && gameData.mvp && gameData.mvp.name;
+            const mvpDisplay = showMVP ? 'inline-block' : 'none';
+            const mvpName = showMVP ? `${gameData.mvp.name} (${gameData.mvp.team})` : '';
+
+            // Get MVP stats - search through both teams
+            let mvpStats = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0 };
+            if (showMVP && gameData.mvp.teamKey) {
+                // Directly access the player from the correct team
+                const mvpPlayer = gameData[gameData.mvp.teamKey].players.find(p => p.id === gameData.mvp.playerId);
+
+                if (mvpPlayer) {
+                    // Calculate stats directly from quarterStats
+                    Object.values(mvpPlayer.quarterStats).forEach(qStats => {
+                        mvpStats.points += qStats.points || 0;
+                        mvpStats.rebounds += qStats.rebounds || 0;
+                        mvpStats.assists += qStats.assists || 0;
+                        mvpStats.steals += qStats.steals || 0;
+                        mvpStats.blocks += qStats.blocks || 0;
+                    });
+                }
+            }
+
+            const castWindow = window.open('', 'Cast Mode', 'width=1920,height=1080');
+
+            castWindow.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Scoreboard - ` + gameData.gameName + `</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .scoreboard {
+            text-align: center;
+            padding: 60px;
+            width: 100%;
+        }
+        .game-title {
+            font-size: 3em;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: #cbd5e0;
+        }
+        .quarter-display {
+            font-size: 2.5em;
+            font-weight: 600;
+            margin-bottom: 50px;
+            color: #a0aec0;
+        }
+        .score-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 100px;
+        }
+        .team-box {
+            text-align: center;
+        }
+        .team-name {
+            font-size: 4em;
+            font-weight: 700;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        .team-score {
+            font-size: 12em;
+            font-weight: 900;
+            color: #48bb78;
+            text-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+        .team-fouls {
+            font-size: 1.8em;
+            font-weight: 600;
+            margin-top: 20px;
+            color: #fc8181;
+        }
+        .vs-text {
+            font-size: 4em;
+            font-weight: 700;
+            color: #718096;
+        }
+        .mvp-banner {
+            margin-top: 60px;
+            padding: 25px 40px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            border-radius: 15px;
+            display: inline-block;
+            box-shadow: 0 8px 20px rgba(243, 156, 18, 0.4);
+        }
+        .mvp-label {
+            font-size: 1.8em;
+            font-weight: 600;
+            color: #fef5e7;
+            margin-bottom: 10px;
+        }
+        .mvp-name {
+            font-size: 3em;
+            font-weight: 900;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+        .mvp-stats {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .mvp-stat-item {
+            text-align: center;
+        }
+        .mvp-stat-label {
+            font-size: 1em;
+            color: #fef5e7;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .mvp-stat-value {
+            font-size: 2.5em;
+            color: white;
+            font-weight: 900;
+        }
+        .refresh-note {
+            position: absolute;
+            bottom: 30px;
+            font-size: 1.5em;
+            color: #718096;
+        }
+    <\/style>
+    <script>
+        setInterval(() => {
+            if (window.opener && !window.opener.closed) {
+                try {
+                    const openerGameData = window.opener.gameData;
+                    const openerCurrentQuarter = window.opener.currentQuarter;
+
+                    if (openerGameData && window.opener.calculateTeamTotalPoints) {
+                        const team1Score = window.opener.calculateTeamTotalPoints('team1');
+                        const team2Score = window.opener.calculateTeamTotalPoints('team2');
+
+                        document.getElementById('team1Score').textContent = team1Score;
+                        document.getElementById('team2Score').textContent = team2Score;
+
+                        const quarterText = openerCurrentQuarter === 'total' ? 'FINAL' : 'QUARTER ' + openerCurrentQuarter;
+                        document.getElementById('quarterDisplay').textContent = quarterText;
+
+                        const q = openerCurrentQuarter === 'total' ? 1 : openerCurrentQuarter;
+                        const team1Fouls = openerGameData.team1.teamFouls[q] || 0;
+                        const team2Fouls = openerGameData.team2.teamFouls[q] || 0;
+                        document.getElementById('team1Fouls').textContent = 'Team Fouls: ' + team1Fouls;
+                        document.getElementById('team2Fouls').textContent = 'Team Fouls: ' + team2Fouls;
+
+                        // Update MVP display
+                        const mvpBanner = document.getElementById('mvpBanner');
+                        if (openerCurrentQuarter === 'total' && openerGameData.mvp && openerGameData.mvp.name) {
+                            mvpBanner.style.display = 'inline-block';
+                            document.getElementById('mvpName').textContent = openerGameData.mvp.name + ' (' + openerGameData.mvp.team + ')';
+
+                            // Update MVP stats - use teamKey to get the correct player
+                            if (openerGameData.mvp.teamKey) {
+                                const mvpPlayer = openerGameData[openerGameData.mvp.teamKey].players.find(p => p.id === openerGameData.mvp.playerId);
+
+                                if (mvpPlayer) {
+                                    // Calculate total stats directly from the player data
+                                    let totalStats = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0 };
+                                    Object.values(mvpPlayer.quarterStats).forEach(qStats => {
+                                        totalStats.points += qStats.points || 0;
+                                        totalStats.rebounds += qStats.rebounds || 0;
+                                        totalStats.assists += qStats.assists || 0;
+                                        totalStats.steals += qStats.steals || 0;
+                                        totalStats.blocks += qStats.blocks || 0;
+                                    });
+
+                                    document.getElementById('mvpPoints').textContent = totalStats.points;
+                                    document.getElementById('mvpRebounds').textContent = totalStats.rebounds;
+                                    document.getElementById('mvpAssists').textContent = totalStats.assists;
+                                    document.getElementById('mvpSteals').textContent = totalStats.steals;
+                                    document.getElementById('mvpBlocks').textContent = totalStats.blocks;
+                                }
+                            }
+                        } else {
+                            mvpBanner.style.display = 'none';
+                        }
+                    }
+                } catch(e) {
+                    console.error('Error updating scoreboard:', e);
+                }
+            }
+        }, 2000);
+    <\/script>
+<\/head>
+<body>
+    <div class="scoreboard">
+        <div class="game-title">` + gameData.gameName + `</div>
+        <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
+        <div class="score-container">
+            <div class="team-box">
+                <div class="team-name">` + gameData.team1.name + `</div>
+                <div class="team-score" id="team1Score">` + team1Score + `</div>
+                <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
+            </div>
+            <div class="vs-text">VS</div>
+            <div class="team-box">
+                <div class="team-name">` + gameData.team2.name + `</div>
+                <div class="team-score" id="team2Score">` + team2Score + `</div>
+                <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
+            </div>
+        </div>
+        <div class="mvp-banner" id="mvpBanner" style="display: ` + mvpDisplay + `;">
+            <div class="mvp-label">🏆 Best Player of the Game</div>
+            <div class="mvp-name" id="mvpName">` + mvpName + `</div>
+            <div class="mvp-stats">
+                <div class="mvp-stat-item">
+                    <div class="mvp-stat-label">PTS</div>
+                    <div class="mvp-stat-value" id="mvpPoints">` + mvpStats.points + `</div>
+                </div>
+                <div class="mvp-stat-item">
+                    <div class="mvp-stat-label">REB</div>
+                    <div class="mvp-stat-value" id="mvpRebounds">` + mvpStats.rebounds + `</div>
+                </div>
+                <div class="mvp-stat-item">
+                    <div class="mvp-stat-label">AST</div>
+                    <div class="mvp-stat-value" id="mvpAssists">` + mvpStats.assists + `</div>
+                </div>
+                <div class="mvp-stat-item">
+                    <div class="mvp-stat-label">STL</div>
+                    <div class="mvp-stat-value" id="mvpSteals">` + mvpStats.steals + `</div>
+                </div>
+                <div class="mvp-stat-item">
+                    <div class="mvp-stat-label">BLK</div>
+                    <div class="mvp-stat-value" id="mvpBlocks">` + mvpStats.blocks + `</div>
+                </div>
+            </div>
+        </div>
+        <div class="refresh-note">🔄 Auto-updating every 2 seconds</div>
+    </div>
+<\/body>
+<\/html>
+            `);
+
+            castWindow.document.close();
+        }
+
+        // Setup screen functions
+        function showSetupScreen() {
+            document.getElementById('setupScreen').classList.remove('hidden');
+        }
+
+        function hideSetupScreen() {
+            document.getElementById('setupScreen').classList.add('hidden');
+        }
+
+        function startGameFromForm(event) {
+            event.preventDefault();
+
+            const formData = {
+                gameName: document.getElementById('gameNameInput').value,
+                team1Name: document.getElementById('team1NameInput').value,
+                team2Name: document.getElementById('team2NameInput').value,
+                team1Players: document.getElementById('team1PlayersInput').value,
+                team2Players: document.getElementById('team2PlayersInput').value,
+                quarters: parseInt(document.getElementById('quartersInput').value)
+            };
+
+            hideSetupScreen();
+            initializeGame(formData);
+            return false;
+        }
+
+        // Check if we have saved data on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('basketballGameData');
+            if (saved) {
+                // Load existing game
+                hideSetupScreen();
+                loadGameData();
+                renderGame();
+            } else {
+                // Show setup screen for new game
+                showSetupScreen();
+            }
+        });
+    </script>
+
+
+</body></html>
