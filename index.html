@@ -1101,6 +1101,14 @@
             overflow-y: auto;
         }
 
+        .setup-logo {
+            width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto 20px auto;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+        }
+
         .setup-form h2 {
             color: #2d3748;
             margin-bottom: 30px;
@@ -1180,6 +1188,10 @@
                 padding: 20px;
             }
 
+            .setup-logo {
+                width: 150px;
+            }
+
             .setup-form h2 {
                 font-size: 1.5em;
             }
@@ -1194,6 +1206,7 @@
     <!-- Setup Screen -->
     <div class="setup-screen" id="setupScreen">
         <div class="setup-form">
+            <img src="belaLogo1.jpg" alt="Bella Vista Basketball League" class="setup-logo">
             <h2>🏀 Setup Basketball Game</h2>
             <form id="gameSetupForm" onsubmit="startGameFromForm(event); return false;">
                 <div class="form-group">
