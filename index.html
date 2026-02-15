@@ -1750,56 +1750,77 @@ Bryan Madriaga</textarea>
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
             if (type === 'shotClock') {
-                // Shot clock buzzer - long loud horn (1.5 seconds)
+                // Shot clock buzzer - long harsh buzzer (3 seconds)
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
 
-                oscillator.type = 'sawtooth'; // Horn-like sound
-                oscillator.frequency.value = 550; // Buzzer horn frequency
+                oscillator.type = 'square'; // Harsh buzzer sound
+                oscillator.frequency.value = 400; // Buzzer frequency
                 oscillator.connect(gainNode);
                 gainNode.connect(audioContext.destination);
 
-                gainNode.gain.setValueAtTime(0.7, audioContext.currentTime); // Very loud
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+                gainNode.gain.setValueAtTime(0.8, audioContext.currentTime); // Very loud
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
 
                 oscillator.start();
-                setTimeout(() => oscillator.stop(), 1500); // 1.5 second horn
+                setTimeout(() => oscillator.stop(), 3000); // 3 second buzzer
             } else if (type === 'gameEnd') {
-                // Game timer end - long, loud horn (2 seconds)
-                const oscillator = audioContext.createOscillator();
+                // Game timer end - truck horn (2 seconds, dual tone)
+                // Create two oscillators for richer horn sound
+                const oscillator1 = audioContext.createOscillator();
+                const oscillator2 = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
 
-                oscillator.type = 'sawtooth'; // Horn-like sound
-                oscillator.frequency.value = 400; // Deep horn
-                oscillator.connect(gainNode);
+                oscillator1.type = 'sawtooth';
+                oscillator2.type = 'sawtooth';
+                oscillator1.frequency.value = 185; // Low truck horn note
+                oscillator2.frequency.value = 220; // High truck horn note
+
+                oscillator1.connect(gainNode);
+                oscillator2.connect(gainNode);
                 gainNode.connect(audioContext.destination);
 
                 gainNode.gain.setValueAtTime(0.7, audioContext.currentTime); // Very loud
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
 
-                oscillator.start();
-                setTimeout(() => oscillator.stop(), 2000); // 2 second horn
+                oscillator1.start();
+                oscillator2.start();
+                setTimeout(() => {
+                    oscillator1.stop();
+                    oscillator2.stop();
+                }, 2000); // 2 second horn
             }
         }
 
-        // Start continuous timeout buzzer (hold button)
+        // Start continuous timeout buzzer (hold button) - Truck horn sound
         function startTimeoutBuzzer() {
             if (timeoutBuzzerOscillator) return; // Already playing
 
             if (!window.AudioContext && !window.webkitAudioContext) return;
 
             timeoutBuzzerContext = new (window.AudioContext || window.webkitAudioContext)();
-            timeoutBuzzerOscillator = timeoutBuzzerContext.createOscillator();
+
+            // Create dual-tone truck horn
+            const oscillator1 = timeoutBuzzerContext.createOscillator();
+            const oscillator2 = timeoutBuzzerContext.createOscillator();
             timeoutBuzzerGain = timeoutBuzzerContext.createGain();
 
-            timeoutBuzzerOscillator.type = 'sawtooth'; // Horn sound
-            timeoutBuzzerOscillator.frequency.value = 500; // Buzzer horn frequency
-            timeoutBuzzerOscillator.connect(timeoutBuzzerGain);
+            oscillator1.type = 'sawtooth';
+            oscillator2.type = 'sawtooth';
+            oscillator1.frequency.value = 185; // Low truck horn note
+            oscillator2.frequency.value = 220; // High truck horn note
+
+            oscillator1.connect(timeoutBuzzerGain);
+            oscillator2.connect(timeoutBuzzerGain);
             timeoutBuzzerGain.connect(timeoutBuzzerContext.destination);
 
             timeoutBuzzerGain.gain.setValueAtTime(0.7, timeoutBuzzerContext.currentTime); // Very loud
 
-            timeoutBuzzerOscillator.start();
+            oscillator1.start();
+            oscillator2.start();
+
+            // Store both oscillators
+            timeoutBuzzerOscillator = [oscillator1, oscillator2];
         }
 
         // Stop continuous timeout buzzer (release button)
@@ -1811,7 +1832,8 @@ Bryan Madriaga</textarea>
                 timeoutBuzzerGain.gain.exponentialRampToValueAtTime(0.01, timeoutBuzzerContext.currentTime + 0.1);
                 setTimeout(() => {
                     if (timeoutBuzzerOscillator) {
-                        timeoutBuzzerOscillator.stop();
+                        timeoutBuzzerOscillator[0].stop();
+                        timeoutBuzzerOscillator[1].stop();
                         timeoutBuzzerOscillator = null;
                         timeoutBuzzerGain = null;
                         timeoutBuzzerContext = null;
