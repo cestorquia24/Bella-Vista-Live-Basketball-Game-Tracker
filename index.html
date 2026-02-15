@@ -76,6 +76,21 @@
             padding: 20px 30px;
             text-align: center;
             flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        }
+
+        .header-content {
+            flex: 1;
         }
 
         .header h1 {
@@ -802,6 +817,16 @@
         }
 
         @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                padding: 15px 10px;
+            }
+
+            .header-logo {
+                width: 60px;
+                height: 60px;
+            }
+
             .header h1 {
                 font-size: 1.2em;
             }
@@ -1239,10 +1264,13 @@ Bryan Madriaga</textarea>
 
     <div class="container">
         <div class="header">
-            <h1>🏀 Bella Vista Hoopers Games Season 1 <span style="font-size: 0.5em; color: #48bb78;">(v2.6)</span></h1>
-            <div class="game-info">
-                <div><strong>Game:</strong> <span id="gameName">Violet vs. Yellow</span></div>
-                <div><strong>Date:</strong> <span id="gameDate">2026-02-13</span></div>
+            <img src="bellaLogo.jpg" alt="Bella Vista Basketball League" class="header-logo">
+            <div class="header-content">
+                <h1>🏀 Bella Vista Hoopers Games Season 1 <span style="font-size: 0.5em; color: #48bb78;">(v2.6)</span></h1>
+                <div class="game-info">
+                    <div><strong>Game:</strong> <span id="gameName">Violet vs. Yellow</span></div>
+                    <div><strong>Date:</strong> <span id="gameDate">2026-02-13</span></div>
+                </div>
             </div>
         </div>
 
@@ -2369,6 +2397,13 @@ Bryan Madriaga</textarea>
             align-items: center;
             color: white;
         }
+        .cast-logo {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+        }
         .scoreboard {
             text-align: center;
             padding: 60px;
@@ -2562,6 +2597,7 @@ Bryan Madriaga</textarea>
     <\/script>
 <\/head>
 <body>
+    <img src="bellaLogo.jpg" alt="Bella Vista Basketball League" class="cast-logo">
     <div class="scoreboard">
         <div class="game-title">` + gameData.gameName + `</div>
         <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
