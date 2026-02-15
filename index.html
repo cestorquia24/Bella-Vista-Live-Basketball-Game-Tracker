@@ -233,6 +233,33 @@
             background: #f59e0b;
         }
 
+        .possession-btn {
+            padding: 10px 20px;
+            background: #718096;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .possession-btn:hover {
+            background: #4a5568;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(113, 128, 150, 0.4);
+        }
+
+        .possession-btn.active {
+            background: #f97316;
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+        }
+
+        .possession-btn.active:hover {
+            background: #ea580c;
+        }
+
         .quarter-info {
             position: absolute;
             top: 15px;
@@ -1360,10 +1387,12 @@ Bryan Madriaga</textarea>
                 </div>
             </div>
             <div class="scoreboard-controls">
+                <button class="possession-btn" id="team1PossessionBtn" onclick="setPossession('team1')">🏀 Team 1 Ball</button>
                 <button class="dark-mode-toggle" id="darkModeToggle" onclick="toggleDarkMode()">🌙 Dark Mode</button>
                 <button class="cast-btn" id="liveUpdatesBtn" onclick="toggleLiveUpdates()">📡 Live: OFF</button>
                 <button class="undo-btn-top" id="undoBtn" onclick="undoLastAction()" disabled>↶ Undo</button>
                 <button class="cast-btn" onclick="openCastMode()">📺 Cast to Display</button>
+                <button class="possession-btn" id="team2PossessionBtn" onclick="setPossession('team2')">🏀 Team 2 Ball</button>
             </div>
         </div>
 
@@ -1539,6 +1568,7 @@ Bryan Madriaga</textarea>
             quarters: 4,
             minutesPerQuarter: 10,
             mvp: null,
+            possession: null, // null, 'team1', or 'team2'
             gameTimer: {
                 totalSeconds: 600,
                 currentSeconds: 600,
@@ -1728,6 +1758,32 @@ Bryan Madriaga</textarea>
             btn.textContent = isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode';
         }
 
+        // Possession functionality
+        function setPossession(team) {
+            // Toggle possession: if same team clicked, clear possession
+            if (gameData.possession === team) {
+                gameData.possession = null;
+            } else {
+                gameData.possession = team;
+            }
+
+            updatePossessionButtons();
+            saveGameData();
+        }
+
+        function updatePossessionButtons() {
+            const team1Btn = document.getElementById('team1PossessionBtn');
+            const team2Btn = document.getElementById('team2PossessionBtn');
+
+            // Update button text with team names
+            team1Btn.textContent = `🏀 ${gameData.team1.name || 'Team 1'} Ball`;
+            team2Btn.textContent = `🏀 ${gameData.team2.name || 'Team 2'} Ball`;
+
+            // Update active states
+            team1Btn.classList.toggle('active', gameData.possession === 'team1');
+            team2Btn.classList.toggle('active', gameData.possession === 'team2');
+        }
+
         function loadDarkMode() {
             const isDarkMode = localStorage.getItem('darkMode') === 'true';
             if (isDarkMode) {
@@ -1896,6 +1952,7 @@ Bryan Madriaga</textarea>
             updateTeamFoulsDisplay();
             populateMVPSelector();
             updateMVPDisplay();
+            updatePossessionButtons();
         }
 
         function populateMVPSelector() {
@@ -2547,6 +2604,24 @@ Bryan Madriaga</textarea>
         }
         .team-box {
             text-align: center;
+            position: relative;
+        }
+        .possession-indicator {
+            font-size: 5em;
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce-possession 1.5s ease-in-out infinite;
+            filter: drop-shadow(0 4px 16px rgba(249, 115, 22, 0.8));
+        }
+        @keyframes bounce-possession {
+            0%, 100% {
+                transform: translateX(-50%) translateY(0);
+            }
+            50% {
+                transform: translateX(-50%) translateY(-20px);
+            }
         }
         .team-name {
             font-size: 4em;
@@ -2653,6 +2728,27 @@ Bryan Madriaga</textarea>
                         document.getElementById('team1Fouls').textContent = 'Team Fouls: ' + team1Fouls;
                         document.getElementById('team2Fouls').textContent = 'Team Fouls: ' + team2Fouls;
 
+                        // Update possession indicators
+                        const team1Box = document.querySelector('.score-container .team-box:first-child');
+                        const team2Box = document.querySelector('.score-container .team-box:last-child');
+
+                        // Remove existing possession indicators
+                        const existingIndicators = document.querySelectorAll('.possession-indicator');
+                        existingIndicators.forEach(ind => ind.remove());
+
+                        // Add new possession indicator if applicable
+                        if (openerGameData.possession === 'team1') {
+                            const indicator = document.createElement('div');
+                            indicator.className = 'possession-indicator';
+                            indicator.textContent = '🏀';
+                            team1Box.insertBefore(indicator, team1Box.firstChild);
+                        } else if (openerGameData.possession === 'team2') {
+                            const indicator = document.createElement('div');
+                            indicator.className = 'possession-indicator';
+                            indicator.textContent = '🏀';
+                            team2Box.insertBefore(indicator, team2Box.firstChild);
+                        }
+
                         // Update MVP display
                         const mvpBanner = document.getElementById('mvpBanner');
                         if (openerCurrentQuarter === 'total' && openerGameData.mvp && openerGameData.mvp.name) {
@@ -2709,12 +2805,14 @@ Bryan Madriaga</textarea>
         </div>
         <div class="score-container">
             <div class="team-box">
+                ` + (gameData.possession === 'team1' ? '<div class="possession-indicator">🏀</div>' : '') + `
                 <div class="team-name">` + gameData.team1.name + `</div>
                 <div class="team-score" id="team1Score">` + team1Score + `</div>
                 <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
             </div>
             <div class="vs-text">VS</div>
             <div class="team-box">
+                ` + (gameData.possession === 'team2' ? '<div class="possession-indicator">🏀</div>' : '') + `
                 <div class="team-name">` + gameData.team2.name + `</div>
                 <div class="team-score" id="team2Score">` + team2Score + `</div>
                 <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
