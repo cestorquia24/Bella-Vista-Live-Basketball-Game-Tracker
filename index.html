@@ -2612,6 +2612,11 @@ Bryan Madriaga</textarea>
             animation: bounce-possession 1.5s ease-in-out infinite;
             filter: drop-shadow(0 4px 16px rgba(249, 115, 22, 0.8));
             display: block;
+            min-height: 100px;
+        }
+        .possession-indicator.hidden {
+            opacity: 0;
+            animation: none;
         }
         @keyframes bounce-possession {
             0%, 100% {
@@ -2728,26 +2733,24 @@ Bryan Madriaga</textarea>
                         document.getElementById('team2Fouls').textContent = 'Team Fouls: ' + team2Fouls;
 
                         // Update possession indicators
-                        const team1Box = document.querySelector('.score-container .team-box:first-child');
-                        const team2Box = document.querySelector('.score-container .team-box:last-child');
+                        const team1Indicator = document.querySelector('.score-container .team-box:first-child .possession-indicator');
+                        const team2Indicator = document.querySelector('.score-container .team-box:last-child .possession-indicator');
 
-                        // Remove existing possession indicators
-                        const existingIndicators = document.querySelectorAll('.possession-indicator');
-                        existingIndicators.forEach(ind => ind.remove());
+                        // Toggle hidden class based on possession
+                        if (team1Indicator) {
+                            if (openerGameData.possession === 'team1') {
+                                team1Indicator.classList.remove('hidden');
+                            } else {
+                                team1Indicator.classList.add('hidden');
+                            }
+                        }
 
-                        // Add new possession indicator if applicable (after team name, before score)
-                        if (openerGameData.possession === 'team1') {
-                            const indicator = document.createElement('div');
-                            indicator.className = 'possession-indicator';
-                            indicator.textContent = '🏀';
-                            const teamName = team1Box.querySelector('.team-name');
-                            teamName.parentNode.insertBefore(indicator, teamName.nextSibling);
-                        } else if (openerGameData.possession === 'team2') {
-                            const indicator = document.createElement('div');
-                            indicator.className = 'possession-indicator';
-                            indicator.textContent = '🏀';
-                            const teamName = team2Box.querySelector('.team-name');
-                            teamName.parentNode.insertBefore(indicator, teamName.nextSibling);
+                        if (team2Indicator) {
+                            if (openerGameData.possession === 'team2') {
+                                team2Indicator.classList.remove('hidden');
+                            } else {
+                                team2Indicator.classList.add('hidden');
+                            }
                         }
 
                         // Update MVP display
@@ -2807,14 +2810,14 @@ Bryan Madriaga</textarea>
         <div class="score-container">
             <div class="team-box">
                 <div class="team-name">` + gameData.team1.name + `</div>
-                ` + (gameData.possession === 'team1' ? '<div class="possession-indicator">🏀</div>' : '') + `
+                <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
                 <div class="team-score" id="team1Score">` + team1Score + `</div>
                 <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
             </div>
             <div class="vs-text">VS</div>
             <div class="team-box">
                 <div class="team-name">` + gameData.team2.name + `</div>
-                ` + (gameData.possession === 'team2' ? '<div class="possession-indicator">🏀</div>' : '') + `
+                <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
                 <div class="team-score" id="team2Score">` + team2Score + `</div>
                 <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
             </div>
