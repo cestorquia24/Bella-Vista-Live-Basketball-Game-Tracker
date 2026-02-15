@@ -286,6 +286,25 @@
             background: #f56565;
         }
 
+        .timer-btn.adjust {
+            background: #667eea;
+            color: white;
+            padding: 8px 12px;
+        }
+
+        .timer-btn.adjust:hover {
+            background: #5a67d8;
+        }
+
+        .timer-btn.fiba {
+            background: #9f7aea;
+            color: white;
+        }
+
+        .timer-btn.fiba:hover {
+            background: #805ad5;
+        }
+
         .quarter-selector {
             background: var(--section-bg);
             padding: 15px 20px;
@@ -1255,6 +1274,12 @@ Bryan Madriaga</textarea>
                     <button class="timer-btn pause" id="gameTimerPauseBtn" onclick="pauseGameTimer()" style="display: none;">⏸ Pause</button>
                     <button class="timer-btn reset" onclick="resetGameTimer()">↻ Reset</button>
                 </div>
+                <div class="timer-controls" style="margin-top: 8px;">
+                    <button class="timer-btn adjust" onclick="adjustGameTimer(-60)">-1min</button>
+                    <button class="timer-btn adjust" onclick="adjustGameTimer(-10)">-10s</button>
+                    <button class="timer-btn adjust" onclick="adjustGameTimer(10)">+10s</button>
+                    <button class="timer-btn adjust" onclick="adjustGameTimer(60)">+1min</button>
+                </div>
             </div>
             <div class="timer-box">
                 <div class="timer-label">Shot Clock</div>
@@ -1262,7 +1287,14 @@ Bryan Madriaga</textarea>
                 <div class="timer-controls">
                     <button class="timer-btn start" id="shotClockStartBtn" onclick="startShotClock()">▶ Start</button>
                     <button class="timer-btn pause" id="shotClockPauseBtn" onclick="pauseShotClock()" style="display: none;">⏸ Pause</button>
-                    <button class="timer-btn reset" onclick="resetShotClock()">↻ Reset</button>
+                    <button class="timer-btn reset" onclick="resetShotClock()">↻ 24s</button>
+                    <button class="timer-btn fiba" onclick="resetShotClockFIBA()">🏀 14s</button>
+                </div>
+                <div class="timer-controls" style="margin-top: 8px;">
+                    <button class="timer-btn adjust" onclick="adjustShotClock(-5)">-5s</button>
+                    <button class="timer-btn adjust" onclick="adjustShotClock(-1)">-1s</button>
+                    <button class="timer-btn adjust" onclick="adjustShotClock(1)">+1s</button>
+                    <button class="timer-btn adjust" onclick="adjustShotClock(5)">+5s</button>
                 </div>
             </div>
         </div>
@@ -1546,6 +1578,35 @@ Bryan Madriaga</textarea>
         function resetShotClock() {
             pauseShotClock();
             gameData.shotClock.seconds = 24;
+            updateShotClockDisplay();
+            saveGameData();
+        }
+
+        // Manual timer adjustments
+        function adjustGameTimer(seconds) {
+            const newValue = gameData.gameTimer.currentSeconds + seconds;
+            // Don't go below 0 or above total time
+            if (newValue >= 0 && newValue <= gameData.gameTimer.totalSeconds) {
+                gameData.gameTimer.currentSeconds = newValue;
+                updateGameTimerDisplay();
+                saveGameData();
+            }
+        }
+
+        function adjustShotClock(seconds) {
+            const newValue = gameData.shotClock.seconds + seconds;
+            // Don't go below 0 or above 99 seconds
+            if (newValue >= 0 && newValue <= 99) {
+                gameData.shotClock.seconds = newValue;
+                updateShotClockDisplay();
+                saveGameData();
+            }
+        }
+
+        // FIBA 14-second shot clock (used after offensive rebound)
+        function resetShotClockFIBA() {
+            pauseShotClock();
+            gameData.shotClock.seconds = 14;
             updateShotClockDisplay();
             saveGameData();
         }
