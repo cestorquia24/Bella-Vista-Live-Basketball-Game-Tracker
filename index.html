@@ -2608,25 +2608,23 @@ Bryan Madriaga</textarea>
         }
         .possession-indicator {
             font-size: 5em;
-            position: absolute;
-            top: -80px;
-            left: 50%;
-            transform: translateX(-50%);
+            margin: 20px 0;
             animation: bounce-possession 1.5s ease-in-out infinite;
             filter: drop-shadow(0 4px 16px rgba(249, 115, 22, 0.8));
+            display: block;
         }
         @keyframes bounce-possession {
             0%, 100% {
-                transform: translateX(-50%) translateY(0);
+                transform: translateY(0);
             }
             50% {
-                transform: translateX(-50%) translateY(-20px);
+                transform: translateY(-20px);
             }
         }
         .team-name {
             font-size: 4em;
             font-weight: 700;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 3px;
         }
@@ -2635,6 +2633,7 @@ Bryan Madriaga</textarea>
             font-weight: 900;
             color: #48bb78;
             text-shadow: 0 8px 16px rgba(0,0,0,0.5);
+            margin-top: 10px;
         }
         .team-fouls {
             font-size: 1.8em;
@@ -2736,17 +2735,19 @@ Bryan Madriaga</textarea>
                         const existingIndicators = document.querySelectorAll('.possession-indicator');
                         existingIndicators.forEach(ind => ind.remove());
 
-                        // Add new possession indicator if applicable
+                        // Add new possession indicator if applicable (after team name, before score)
                         if (openerGameData.possession === 'team1') {
                             const indicator = document.createElement('div');
                             indicator.className = 'possession-indicator';
                             indicator.textContent = '🏀';
-                            team1Box.insertBefore(indicator, team1Box.firstChild);
+                            const teamName = team1Box.querySelector('.team-name');
+                            teamName.parentNode.insertBefore(indicator, teamName.nextSibling);
                         } else if (openerGameData.possession === 'team2') {
                             const indicator = document.createElement('div');
                             indicator.className = 'possession-indicator';
                             indicator.textContent = '🏀';
-                            team2Box.insertBefore(indicator, team2Box.firstChild);
+                            const teamName = team2Box.querySelector('.team-name');
+                            teamName.parentNode.insertBefore(indicator, teamName.nextSibling);
                         }
 
                         // Update MVP display
@@ -2805,15 +2806,15 @@ Bryan Madriaga</textarea>
         </div>
         <div class="score-container">
             <div class="team-box">
-                ` + (gameData.possession === 'team1' ? '<div class="possession-indicator">🏀</div>' : '') + `
                 <div class="team-name">` + gameData.team1.name + `</div>
+                ` + (gameData.possession === 'team1' ? '<div class="possession-indicator">🏀</div>' : '') + `
                 <div class="team-score" id="team1Score">` + team1Score + `</div>
                 <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
             </div>
             <div class="vs-text">VS</div>
             <div class="team-box">
-                ` + (gameData.possession === 'team2' ? '<div class="possession-indicator">🏀</div>' : '') + `
                 <div class="team-name">` + gameData.team2.name + `</div>
+                ` + (gameData.possession === 'team2' ? '<div class="possession-indicator">🏀</div>' : '') + `
                 <div class="team-score" id="team2Score">` + team2Score + `</div>
                 <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
             </div>
