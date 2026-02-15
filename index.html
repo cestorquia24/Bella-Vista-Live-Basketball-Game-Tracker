@@ -1430,6 +1430,12 @@ Bryan Madriaga</textarea>
             </div>
         </div>
 
+        <div class="timer-section" style="padding: 15px; border-bottom: 2px solid #667eea;">
+            <button class="timer-btn reset" onclick="playBuzzerSound('timeout')" style="font-size: 1.2em; padding: 15px 40px; background: #e53e3e; width: auto; margin: 0 auto; display: block;">
+                📢 TIMEOUT BUZZER
+            </button>
+        </div>
+
         <div class="quarter-selector" id="quarterSelector"><button class="quarter-btn active">Quarter 1</button><button class="quarter-btn">Quarter 2</button><button class="quarter-btn">Quarter 3</button><button class="quarter-btn">Quarter 4</button><button class="quarter-btn">Total</button></div>
 
         <div class="totals-section">
@@ -1629,15 +1635,8 @@ Bryan Madriaga</textarea>
                     saveGameData();
                 } else {
                     pauseGameTimer();
-                    // Play sound or alert when timer ends
-                    if (window.AudioContext || window.webkitAudioContext) {
-                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        const oscillator = audioContext.createOscillator();
-                        oscillator.frequency.value = 800;
-                        oscillator.connect(audioContext.destination);
-                        oscillator.start();
-                        setTimeout(() => oscillator.stop(), 500);
-                    }
+                    // Play loud horn sound when game timer ends
+                    playBuzzerSound('gameEnd');
                 }
             }, 1000);
         }
@@ -1686,28 +1685,8 @@ Bryan Madriaga</textarea>
                     saveGameData();
                 } else {
                     pauseShotClock();
-                    // Play buzzer sound when shot clock expires (multiple rapid beeps)
-                    if (window.AudioContext || window.webkitAudioContext) {
-                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-                        // Create three rapid beeps for buzzer effect
-                        [0, 150, 300].forEach((delay) => {
-                            setTimeout(() => {
-                                const oscillator = audioContext.createOscillator();
-                                const gainNode = audioContext.createGain();
-
-                                oscillator.frequency.value = 800; // Lower frequency for buzzer sound
-                                oscillator.connect(gainNode);
-                                gainNode.connect(audioContext.destination);
-
-                                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-                                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-
-                                oscillator.start();
-                                setTimeout(() => oscillator.stop(), 100);
-                            }, delay);
-                        });
-                    }
+                    // Play loud buzzer sound when shot clock expires
+                    playBuzzerSound('shotClock');
                 }
             }, 1000);
         }
@@ -1758,6 +1737,68 @@ Bryan Madriaga</textarea>
             saveGameData();
             // Auto-start after reset
             startShotClock();
+        }
+
+        // Buzzer sound system - loud and long sounds for different events
+        function playBuzzerSound(type) {
+            if (!window.AudioContext && !window.webkitAudioContext) return;
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            if (type === 'shotClock') {
+                // Shot clock buzzer - loud, rapid triple beeps
+                [0, 200, 400].forEach((delay) => {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+
+                        oscillator.type = 'square'; // Harsh buzzer tone
+                        oscillator.frequency.value = 600; // Lower buzz frequency
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+
+                        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); // Loud
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+                        oscillator.start();
+                        setTimeout(() => oscillator.stop(), 150);
+                    }, delay);
+                });
+            } else if (type === 'gameEnd') {
+                // Game timer end - long, loud horn
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.type = 'sawtooth'; // Horn-like sound
+                oscillator.frequency.value = 400; // Deep horn
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                gainNode.gain.setValueAtTime(0.6, audioContext.currentTime); // Very loud
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
+
+                oscillator.start();
+                setTimeout(() => oscillator.stop(), 2000); // 2 second horn
+            } else if (type === 'timeout') {
+                // Timeout buzzer - two long beeps
+                [0, 600].forEach((delay) => {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+
+                        oscillator.type = 'square';
+                        oscillator.frequency.value = 500;
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+
+                        gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+
+                        oscillator.start();
+                        setTimeout(() => oscillator.stop(), 400);
+                    }, delay);
+                });
+            }
         }
 
         // Dark Mode functionality
