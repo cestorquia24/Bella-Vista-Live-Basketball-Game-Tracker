@@ -1778,9 +1778,10 @@ Bryan Madriaga</textarea>
                     return osc;
                 });
 
-                // Overall volume envelope
+                // Overall volume envelope - stay loud for full duration
                 gainNode.gain.setValueAtTime(0.9, audioContext.currentTime); // Very loud
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+                gainNode.gain.setValueAtTime(0.9, audioContext.currentTime + 2.95); // Keep loud
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3); // Quick fade at end
 
                 // Start all oscillators
                 oscillators.forEach(osc => osc.start());
@@ -1819,8 +1820,10 @@ Bryan Madriaga</textarea>
                     return osc;
                 });
 
+                // Stay loud for full 3 seconds
                 gainNode.gain.setValueAtTime(0.9, audioContext.currentTime); // Very loud
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
+                gainNode.gain.setValueAtTime(0.9, audioContext.currentTime + 2.95); // Keep loud
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3); // Quick fade at end
 
                 oscillators.forEach(osc => osc.start());
 
