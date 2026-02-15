@@ -196,6 +196,96 @@
             font-weight: 600;
         }
 
+        .timer-section {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-shrink: 0;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .timer-box {
+            text-align: center;
+        }
+
+        .timer-label {
+            font-size: 0.9em;
+            color: #cbd5e0;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .timer-display {
+            font-size: 3.5em;
+            font-weight: 900;
+            color: #48bb78;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .timer-display.warning {
+            color: #f6ad55;
+        }
+
+        .timer-display.danger {
+            color: #fc8181;
+            animation: pulse-timer 1s infinite;
+        }
+
+        @keyframes pulse-timer {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .timer-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timer-btn.start {
+            background: #48bb78;
+            color: white;
+        }
+
+        .timer-btn.start:hover {
+            background: #38a169;
+        }
+
+        .timer-btn.pause {
+            background: #f6ad55;
+            color: white;
+        }
+
+        .timer-btn.pause:hover {
+            background: #ed8936;
+        }
+
+        .timer-btn.reset {
+            background: #fc8181;
+            color: white;
+        }
+
+        .timer-btn.reset:hover {
+            background: #f56565;
+        }
+
         .quarter-selector {
             background: var(--section-bg);
             padding: 15px 20px;
@@ -1117,6 +1207,12 @@ Bryan Madriaga</textarea>
                     <input type="number" id="quartersInput" value="4" min="1" max="8" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="minutesPerQuarterInput">Minutes per Quarter</label>
+                    <input type="number" id="minutesPerQuarterInput" value="10" min="1" max="12" required>
+                    <small>Maximum 12 minutes per quarter</small>
+                </div>
+
                 <button type="submit" class="start-game-btn">Start Game</button>
             </form>
         </div>
@@ -1124,7 +1220,7 @@ Bryan Madriaga</textarea>
 
     <div class="container">
         <div class="header">
-            <h1>🏀 Bella Vista Hoopers Games Season 1 <span style="font-size: 0.5em; color: #48bb78;">(v2.5)</span></h1>
+            <h1>🏀 Bella Vista Hoopers Games Season 1 <span style="font-size: 0.5em; color: #48bb78;">(v2.6)</span></h1>
             <div class="game-info">
                 <div><strong>Game:</strong> <span id="gameName">Violet vs. Yellow</span></div>
                 <div><strong>Date:</strong> <span id="gameDate">2026-02-13</span></div>
@@ -1147,6 +1243,27 @@ Bryan Madriaga</textarea>
                 <button class="cast-btn" id="liveUpdatesBtn" onclick="toggleLiveUpdates()">📡 Live: OFF</button>
                 <button class="undo-btn-top" id="undoBtn" onclick="undoLastAction()" disabled>↶ Undo</button>
                 <button class="cast-btn" onclick="openCastMode()">📺 Cast to Display</button>
+            </div>
+        </div>
+
+        <div class="timer-section">
+            <div class="timer-box">
+                <div class="timer-label">Game Time</div>
+                <div class="timer-display" id="gameTimerDisplay">10:00</div>
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="gameTimerStartBtn" onclick="startGameTimer()">▶ Start</button>
+                    <button class="timer-btn pause" id="gameTimerPauseBtn" onclick="pauseGameTimer()" style="display: none;">⏸ Pause</button>
+                    <button class="timer-btn reset" onclick="resetGameTimer()">↻ Reset</button>
+                </div>
+            </div>
+            <div class="timer-box">
+                <div class="timer-label">Shot Clock</div>
+                <div class="timer-display" id="shotClockDisplay">24</div>
+                <div class="timer-controls">
+                    <button class="timer-btn start" id="shotClockStartBtn" onclick="startShotClock()">▶ Start</button>
+                    <button class="timer-btn pause" id="shotClockPauseBtn" onclick="pauseShotClock()" style="display: none;">⏸ Pause</button>
+                    <button class="timer-btn reset" onclick="resetShotClock()">↻ Reset</button>
+                </div>
             </div>
         </div>
 
@@ -1277,7 +1394,7 @@ Bryan Madriaga</textarea>
     </div>
 
     <script>
-        console.log('Basketball Tracker v2.5 - Dark Mode + Live Spectator View');
+        console.log('Basketball Tracker v2.6 - Game Timer + Shot Clock');
 
         // Game data structure
         const gameData = {
@@ -1286,7 +1403,17 @@ Bryan Madriaga</textarea>
             team1: { name: '', players: [], teamFouls: {} },
             team2: { name: '', players: [], teamFouls: {} },
             quarters: 4,
-            mvp: null
+            minutesPerQuarter: 10,
+            mvp: null,
+            gameTimer: {
+                totalSeconds: 600,
+                currentSeconds: 600,
+                isRunning: false
+            },
+            shotClock: {
+                seconds: 24,
+                isRunning: false
+            }
         };
 
         // Make gameData globally accessible for cast mode
@@ -1298,6 +1425,130 @@ Bryan Madriaga</textarea>
 
         // Make currentQuarter accessible globally for cast mode
         window.currentQuarter = currentQuarter;
+
+        // Timer intervals
+        let gameTimerInterval = null;
+        let shotClockInterval = null;
+
+        // Game Timer Functions
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateGameTimerDisplay() {
+            const display = document.getElementById('gameTimerDisplay');
+            display.textContent = formatTime(gameData.gameTimer.currentSeconds);
+
+            // Color warnings
+            if (gameData.gameTimer.currentSeconds <= 10) {
+                display.className = 'timer-display danger';
+            } else if (gameData.gameTimer.currentSeconds <= 60) {
+                display.className = 'timer-display warning';
+            } else {
+                display.className = 'timer-display';
+            }
+        }
+
+        function startGameTimer() {
+            if (gameData.gameTimer.isRunning) return;
+
+            gameData.gameTimer.isRunning = true;
+            document.getElementById('gameTimerStartBtn').style.display = 'none';
+            document.getElementById('gameTimerPauseBtn').style.display = 'inline-block';
+
+            gameTimerInterval = setInterval(() => {
+                if (gameData.gameTimer.currentSeconds > 0) {
+                    gameData.gameTimer.currentSeconds--;
+                    updateGameTimerDisplay();
+                    saveGameData();
+                } else {
+                    pauseGameTimer();
+                    // Play sound or alert when timer ends
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioContext.createOscillator();
+                        oscillator.frequency.value = 800;
+                        oscillator.connect(audioContext.destination);
+                        oscillator.start();
+                        setTimeout(() => oscillator.stop(), 500);
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseGameTimer() {
+            gameData.gameTimer.isRunning = false;
+            clearInterval(gameTimerInterval);
+            document.getElementById('gameTimerStartBtn').style.display = 'inline-block';
+            document.getElementById('gameTimerPauseBtn').style.display = 'none';
+            saveGameData();
+        }
+
+        function resetGameTimer() {
+            pauseGameTimer();
+            gameData.gameTimer.currentSeconds = gameData.gameTimer.totalSeconds;
+            updateGameTimerDisplay();
+            saveGameData();
+        }
+
+        // Shot Clock Functions
+        function updateShotClockDisplay() {
+            const display = document.getElementById('shotClockDisplay');
+            display.textContent = gameData.shotClock.seconds;
+
+            // Color warnings
+            if (gameData.shotClock.seconds <= 5) {
+                display.className = 'timer-display danger';
+            } else if (gameData.shotClock.seconds <= 10) {
+                display.className = 'timer-display warning';
+            } else {
+                display.className = 'timer-display';
+            }
+        }
+
+        function startShotClock() {
+            if (gameData.shotClock.isRunning) return;
+
+            gameData.shotClock.isRunning = true;
+            document.getElementById('shotClockStartBtn').style.display = 'none';
+            document.getElementById('shotClockPauseBtn').style.display = 'inline-block';
+
+            shotClockInterval = setInterval(() => {
+                if (gameData.shotClock.seconds > 0) {
+                    gameData.shotClock.seconds--;
+                    updateShotClockDisplay();
+                    saveGameData();
+                } else {
+                    pauseShotClock();
+                    // Play sound when shot clock expires
+                    if (window.AudioContext || window.webkitAudioContext) {
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        const oscillator = audioContext.createOscillator();
+                        oscillator.frequency.value = 1000;
+                        oscillator.connect(audioContext.destination);
+                        oscillator.start();
+                        setTimeout(() => oscillator.stop(), 200);
+                    }
+                }
+            }, 1000);
+        }
+
+        function pauseShotClock() {
+            gameData.shotClock.isRunning = false;
+            clearInterval(shotClockInterval);
+            document.getElementById('shotClockStartBtn').style.display = 'inline-block';
+            document.getElementById('shotClockPauseBtn').style.display = 'none';
+            saveGameData();
+        }
+
+        function resetShotClock() {
+            pauseShotClock();
+            gameData.shotClock.seconds = 24;
+            updateShotClockDisplay();
+            saveGameData();
+        }
 
         // Dark Mode functionality
         function toggleDarkMode() {
@@ -1412,6 +1663,20 @@ Bryan Madriaga</textarea>
             gameData.team1.name = formData.team1Name || 'Team 1';
             gameData.team2.name = formData.team2Name || 'Team 2';
             gameData.quarters = parseInt(formData.quarters) || 4;
+            gameData.minutesPerQuarter = parseInt(formData.minutesPerQuarter) || 10;
+
+            // Initialize timer based on minutes per quarter
+            gameData.gameTimer.totalSeconds = gameData.minutesPerQuarter * 60;
+            gameData.gameTimer.currentSeconds = gameData.minutesPerQuarter * 60;
+            gameData.gameTimer.isRunning = false;
+
+            // Initialize shot clock
+            gameData.shotClock.seconds = 24;
+            gameData.shotClock.isRunning = false;
+
+            // Update timer displays
+            updateGameTimerDisplay();
+            updateShotClockDisplay();
 
             // Initialize team fouls
             for (let q = 1; q <= gameData.quarters; q++) {
@@ -2053,8 +2318,30 @@ Bryan Madriaga</textarea>
         .quarter-display {
             font-size: 2.5em;
             font-weight: 600;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
             color: #a0aec0;
+        }
+        .timer-row {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            margin-bottom: 50px;
+        }
+        .timer-box-cast {
+            text-align: center;
+        }
+        .timer-label-cast {
+            font-size: 1.5em;
+            color: #a0aec0;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .timer-value-cast {
+            font-size: 4em;
+            font-weight: 900;
+            color: #48bb78;
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
         .score-container {
             display: flex;
@@ -2155,6 +2442,15 @@ Bryan Madriaga</textarea>
                         const quarterText = openerCurrentQuarter === 'total' ? 'FINAL' : 'QUARTER ' + openerCurrentQuarter;
                         document.getElementById('quarterDisplay').textContent = quarterText;
 
+                        // Update timers
+                        const formatTime = (seconds) => {
+                            const mins = Math.floor(seconds / 60);
+                            const secs = seconds % 60;
+                            return mins + ':' + (secs < 10 ? '0' : '') + secs;
+                        };
+                        document.getElementById('gameTimerCast').textContent = formatTime(openerGameData.gameTimer.currentSeconds);
+                        document.getElementById('shotClockCast').textContent = openerGameData.shotClock.seconds;
+
                         const q = openerCurrentQuarter === 'total' ? 1 : openerCurrentQuarter;
                         const team1Fouls = openerGameData.team1.teamFouls[q] || 0;
                         const team2Fouls = openerGameData.team2.teamFouls[q] || 0;
@@ -2204,6 +2500,16 @@ Bryan Madriaga</textarea>
     <div class="scoreboard">
         <div class="game-title">` + gameData.gameName + `</div>
         <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
+        <div class="timer-row">
+            <div class="timer-box-cast">
+                <div class="timer-label-cast">Game Time</div>
+                <div class="timer-value-cast" id="gameTimerCast">` + formatTime(gameData.gameTimer.currentSeconds) + `</div>
+            </div>
+            <div class="timer-box-cast">
+                <div class="timer-label-cast">Shot Clock</div>
+                <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
+            </div>
+        </div>
         <div class="score-container">
             <div class="team-box">
                 <div class="team-name">` + gameData.team1.name + `</div>
@@ -2270,7 +2576,8 @@ Bryan Madriaga</textarea>
                 team2Name: document.getElementById('team2NameInput').value,
                 team1Players: document.getElementById('team1PlayersInput').value,
                 team2Players: document.getElementById('team2PlayersInput').value,
-                quarters: parseInt(document.getElementById('quartersInput').value)
+                quarters: parseInt(document.getElementById('quartersInput').value),
+                minutesPerQuarter: parseInt(document.getElementById('minutesPerQuarterInput').value)
             };
 
             hideSetupScreen();
