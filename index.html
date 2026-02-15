@@ -1686,14 +1686,27 @@ Bryan Madriaga</textarea>
                     saveGameData();
                 } else {
                     pauseShotClock();
-                    // Play sound when shot clock expires
+                    // Play buzzer sound when shot clock expires (multiple rapid beeps)
                     if (window.AudioContext || window.webkitAudioContext) {
                         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                        const oscillator = audioContext.createOscillator();
-                        oscillator.frequency.value = 1000;
-                        oscillator.connect(audioContext.destination);
-                        oscillator.start();
-                        setTimeout(() => oscillator.stop(), 200);
+
+                        // Create three rapid beeps for buzzer effect
+                        [0, 150, 300].forEach((delay) => {
+                            setTimeout(() => {
+                                const oscillator = audioContext.createOscillator();
+                                const gainNode = audioContext.createGain();
+
+                                oscillator.frequency.value = 800; // Lower frequency for buzzer sound
+                                oscillator.connect(gainNode);
+                                gainNode.connect(audioContext.destination);
+
+                                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+
+                                oscillator.start();
+                                setTimeout(() => oscillator.stop(), 100);
+                            }, delay);
+                        });
                     }
                 }
             }, 1000);
