@@ -2554,7 +2554,7 @@ Bryan Madriaga</textarea>
                     console.error('Error updating scoreboard:', e);
                 }
             }
-        }, 2000);
+        }, 1000); // Update every 1 second for smooth timer sync
     <\/script>
 <\/head>
 <body>
@@ -2610,7 +2610,7 @@ Bryan Madriaga</textarea>
                 </div>
             </div>
         </div>
-        <div class="refresh-note">🔄 Auto-updating every 2 seconds</div>
+        <div class="refresh-note">🔄 Auto-updating live</div>
     </div>
 <\/body>
 <\/html>
@@ -2708,6 +2708,8 @@ Bryan Madriaga</textarea>
                     team1: gameData.team1,
                     team2: gameData.team2,
                     mvp: gameData.mvp,
+                    gameTimer: gameData.gameTimer,
+                    shotClock: gameData.shotClock,
                     lastUpdated: Date.now()
                 };
 
