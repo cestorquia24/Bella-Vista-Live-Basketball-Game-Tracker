@@ -1580,6 +1580,8 @@ Bryan Madriaga</textarea>
             gameData.shotClock.seconds = 24;
             updateShotClockDisplay();
             saveGameData();
+            // Auto-start after reset
+            startShotClock();
         }
 
         // Manual timer adjustments
@@ -1609,6 +1611,8 @@ Bryan Madriaga</textarea>
             gameData.shotClock.seconds = 14;
             updateShotClockDisplay();
             saveGameData();
+            // Auto-start after reset
+            startShotClock();
         }
 
         // Dark Mode functionality
