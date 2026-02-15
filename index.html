@@ -1750,29 +1750,26 @@ Bryan Madriaga</textarea>
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
             if (type === 'shotClock') {
-                // Shot clock buzzer - realistic basketball arena buzzer (3 seconds)
-                // Real buzzers have multiple harmonics for that harsh, piercing sound
-
+                // Shot clock horn - long loud arena horn (3 seconds)
                 const gainNode = audioContext.createGain();
                 gainNode.connect(audioContext.destination);
 
-                // Create multiple oscillators for rich buzzer sound with harmonics
+                // Multi-harmonic horn sound (same as arena horn)
                 const frequencies = [
-                    440,  // Fundamental (A note)
-                    880,  // 2nd harmonic
-                    1320, // 3rd harmonic
-                    660   // Slightly detuned for realistic buzz
+                    300,  // Low fundamental
+                    400,  // Second tone
+                    500,  // Third harmonic
+                    600   // Fourth harmonic
                 ];
 
                 const oscillators = frequencies.map((freq, index) => {
                     const osc = audioContext.createOscillator();
                     const oscGain = audioContext.createGain();
 
-                    osc.type = 'square'; // Harsh buzzer tone
+                    osc.type = 'sawtooth'; // Horn-like sound
                     osc.frequency.value = freq;
 
-                    // Different volumes for each harmonic
-                    const volume = index === 0 ? 0.4 : 0.2 / (index + 1);
+                    const volume = 0.35 / (index + 1);
                     oscGain.gain.value = volume;
 
                     osc.connect(oscGain);
@@ -1794,16 +1791,16 @@ Bryan Madriaga</textarea>
                 }, 3000);
 
             } else if (type === 'gameEnd') {
-                // Game timer end - realistic arena horn with harmonics (2 seconds)
+                // Game timer end - long arena horn (3 seconds)
                 const gainNode = audioContext.createGain();
                 gainNode.connect(audioContext.destination);
 
                 // Multi-harmonic horn sound
                 const frequencies = [
-                    330,  // Low fundamental
-                    440,  // Second tone
-                    550,  // Third harmonic
-                    660   // Fourth harmonic
+                    280,  // Low fundamental (deeper than shot clock)
+                    380,  // Second tone
+                    480,  // Third harmonic
+                    580   // Fourth harmonic
                 ];
 
                 const oscillators = frequencies.map((freq, index) => {
@@ -1813,7 +1810,7 @@ Bryan Madriaga</textarea>
                     osc.type = 'sawtooth'; // Horn-like
                     osc.frequency.value = freq;
 
-                    const volume = 0.3 / (index + 1);
+                    const volume = 0.35 / (index + 1);
                     oscGain.gain.value = volume;
 
                     osc.connect(oscGain);
@@ -1822,14 +1819,14 @@ Bryan Madriaga</textarea>
                     return osc;
                 });
 
-                gainNode.gain.setValueAtTime(0.8, audioContext.currentTime); // Very loud
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 2);
+                gainNode.gain.setValueAtTime(0.9, audioContext.currentTime); // Very loud
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
 
                 oscillators.forEach(osc => osc.start());
 
                 setTimeout(() => {
                     oscillators.forEach(osc => osc.stop());
-                }, 2000);
+                }, 3000); // 3 second horn
             }
         }
 
