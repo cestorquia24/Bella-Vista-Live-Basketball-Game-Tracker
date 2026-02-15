@@ -83,8 +83,23 @@
             text-align: center;
             font-size: 2em;
             color: #a0aec0;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             font-weight: 700;
+        }
+
+        .game-timer-display {
+            text-align: center;
+            font-size: 1.5em;
+            color: #48bb78;
+            margin-bottom: 30px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .game-timer-label {
+            font-size: 0.9em;
+            color: #a0aec0;
+            margin-bottom: 5px;
         }
 
         .scores-container {
@@ -375,6 +390,10 @@
         <div id="content" style="display: none;">
             <div class="scoreboard">
                 <div class="quarter-display" id="quarterDisplay">Quarter 1</div>
+                <div class="game-timer-display">
+                    <div class="game-timer-label">Game Time</div>
+                    <div id="gameTimer">10:00</div>
+                </div>
                 <div class="scores-container">
                     <div class="team-score">
                         <div class="team-name team1-name" id="team1Name">Team 1</div>
@@ -473,6 +492,16 @@
             const currentQuarter = gameData.currentQuarter || 1;
             document.getElementById('quarterDisplay').textContent =
                 currentQuarter === 'total' ? 'FINAL' : `Quarter ${currentQuarter}`;
+
+            // Update game timer
+            const formatTime = (seconds) => {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            };
+            if (gameData.gameTimer && gameData.gameTimer.currentSeconds !== undefined) {
+                document.getElementById('gameTimer').textContent = formatTime(gameData.gameTimer.currentSeconds);
+            }
 
             // Update team names
             document.getElementById('team1Name').textContent = gameData.team1?.name || 'Team 1';
