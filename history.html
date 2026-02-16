@@ -1136,7 +1136,7 @@
                     totalBlocks += qStats.blocks || 0;
                 });
 
-                if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0) {
+                if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0 || totalSteals > 0 || totalBlocks > 0) {
                     modalHTML += `
                         <div class="modal-player">
                             <div class="player-name-modal">${player.name}</div>
@@ -1144,6 +1144,8 @@
                                 <span><strong>${totalPoints}</strong> PTS</span>
                                 <span><strong>${totalRebounds}</strong> REB</span>
                                 <span><strong>${totalAssists}</strong> AST</span>
+                                <span><strong>${totalSteals}</strong> STL</span>
+                                <span><strong>${totalBlocks}</strong> BLK</span>
                             </div>
                         </div>
                     `;
@@ -1159,14 +1161,16 @@
             `;
 
             game.team2.players.forEach(player => {
-                let totalPoints = 0, totalRebounds = 0, totalAssists = 0;
+                let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
                 Object.values(player.quarterStats).forEach(qStats => {
                     totalPoints += qStats.points || 0;
                     totalRebounds += qStats.rebounds || 0;
                     totalAssists += qStats.assists || 0;
+                    totalSteals += qStats.steals || 0;
+                    totalBlocks += qStats.blocks || 0;
                 });
 
-                if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0) {
+                if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0 || totalSteals > 0 || totalBlocks > 0) {
                     modalHTML += `
                         <div class="modal-player">
                             <div class="player-name-modal">${player.name}</div>
@@ -1174,6 +1178,8 @@
                                 <span><strong>${totalPoints}</strong> PTS</span>
                                 <span><strong>${totalRebounds}</strong> REB</span>
                                 <span><strong>${totalAssists}</strong> AST</span>
+                                <span><strong>${totalSteals}</strong> STL</span>
+                                <span><strong>${totalBlocks}</strong> BLK</span>
                             </div>
                         </div>
                     `;
