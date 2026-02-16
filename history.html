@@ -634,6 +634,112 @@
             box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2);
         }
 
+        /* League Leaders Styles */
+        .leaders-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .leader-category {
+            background: rgba(45, 55, 72, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        .leader-category-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #48bb78;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .leader-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .leader-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .leader-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(5px);
+        }
+
+        .leader-item.rank-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+            border-left: 4px solid #ffd700;
+        }
+
+        .leader-item.rank-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(192, 192, 192, 0.1) 100%);
+            border-left: 4px solid #c0c0c0;
+        }
+
+        .leader-item.rank-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.2) 0%, rgba(205, 127, 50, 0.1) 100%);
+            border-left: 4px solid #cd7f32;
+        }
+
+        .leader-rank {
+            font-size: 1.2em;
+            font-weight: 900;
+            color: #48bb78;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .leader-item.rank-1 .leader-rank {
+            color: #ffd700;
+        }
+
+        .leader-item.rank-2 .leader-rank {
+            color: #c0c0c0;
+        }
+
+        .leader-item.rank-3 .leader-rank {
+            color: #cd7f32;
+        }
+
+        .leader-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .leader-name {
+            font-weight: 600;
+            color: #e2e8f0;
+            font-size: 0.95em;
+        }
+
+        .leader-team {
+            font-size: 0.8em;
+            color: #a0aec0;
+        }
+
+        .leader-stat {
+            font-size: 1.3em;
+            font-weight: 900;
+            color: #48bb78;
+            min-width: 50px;
+            text-align: right;
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -673,6 +779,32 @@
                 width: 100%;
                 min-width: unset;
             }
+
+            .leaders-container {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+
+            .leader-category {
+                padding: 15px;
+            }
+
+            .leader-category-title {
+                font-size: 1.1em;
+            }
+
+            .leader-item {
+                padding: 10px;
+            }
+
+            .leader-rank {
+                font-size: 1em;
+                min-width: 25px;
+            }
+
+            .leader-stat {
+                font-size: 1.1em;
+            }
         }
     </style>
 </head>
@@ -693,6 +825,7 @@
             <button class="tab-btn active" onclick="switchTab('history')">🏀 Game History</button>
             <button class="tab-btn" onclick="switchTab('teams')">🏆 Team Standings</button>
             <button class="tab-btn" onclick="switchTab('players')">⭐ Player Stats</button>
+            <button class="tab-btn" onclick="switchTab('leaders')">👑 League Leaders</button>
         </div>
 
         <!-- Game History Tab -->
@@ -761,6 +894,41 @@
                 <div class="empty-state-icon">⭐</div>
                 <div class="empty-state-text">No player stats yet</div>
                 <p style="color: #718096;">Player statistics will appear after saving your first game.</p>
+            </div>
+        </div>
+
+        <!-- League Leaders Tab -->
+        <div id="leadersTab" class="tab-content">
+            <div class="leaders-container">
+                <div class="leader-category">
+                    <h3 class="leader-category-title">👑 Points Leaders</h3>
+                    <div class="leader-list" id="pointsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">🏀 Rebounds Leaders</h3>
+                    <div class="leader-list" id="reboundsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">🎯 Assists Leaders</h3>
+                    <div class="leader-list" id="assistsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">✋ Steals Leaders</h3>
+                    <div class="leader-list" id="stealsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">🚫 Blocks Leaders</h3>
+                    <div class="leader-list" id="blocksLeaders"></div>
+                </div>
+            </div>
+            <div id="emptyLeaders" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">👑</div>
+                <div class="empty-state-text">No league leaders yet</div>
+                <p style="color: #718096;">League leaders will appear after saving your first game.</p>
             </div>
         </div>
     </div>
@@ -1024,6 +1192,8 @@
                 document.getElementById('teamsTab').classList.add('active');
             } else if (tab === 'players') {
                 document.getElementById('playersTab').classList.add('active');
+            } else if (tab === 'leaders') {
+                document.getElementById('leadersTab').classList.add('active');
             }
 
             renderCurrentTab();
@@ -1037,6 +1207,8 @@
             } else if (currentTab === 'players') {
                 populateTeamFilter();
                 renderPlayerStats();
+            } else if (currentTab === 'leaders') {
+                renderLeagueLeaders();
             }
         }
 
@@ -1205,6 +1377,86 @@
 
         function filterPlayersByTeam() {
             renderPlayerStats();
+        }
+
+        function renderLeagueLeaders() {
+            const allPlayers = Object.values(seasonStandings.players);
+            const empty = document.getElementById('emptyLeaders');
+
+            // Filter out players with no stats
+            const activePlayers = allPlayers.filter(player =>
+                player.totalPoints > 0 ||
+                player.totalRebounds > 0 ||
+                player.totalAssists > 0 ||
+                player.totalSteals > 0 ||
+                player.totalBlocks > 0
+            );
+
+            if (activePlayers.length === 0) {
+                empty.style.display = 'block';
+                document.querySelector('.leaders-container').style.display = 'none';
+                return;
+            }
+
+            empty.style.display = 'none';
+            document.querySelector('.leaders-container').style.display = 'grid';
+
+            // Points Leaders
+            renderLeaderCategory(activePlayers, 'points', 'avgPoints', 'pointsLeaders', 'PPG');
+
+            // Rebounds Leaders
+            renderLeaderCategory(activePlayers, 'rebounds', 'avgRebounds', 'reboundsLeaders', 'RPG');
+
+            // Assists Leaders
+            renderLeaderCategory(activePlayers, 'assists', 'avgAssists', 'assistsLeaders', 'APG');
+
+            // Steals Leaders
+            renderLeaderCategory(activePlayers, 'steals', 'totalSteals', 'stealsLeaders', 'SPG', true);
+
+            // Blocks Leaders
+            renderLeaderCategory(activePlayers, 'blocks', 'totalBlocks', 'blocksLeaders', 'BPG', true);
+        }
+
+        function renderLeaderCategory(players, statName, sortKey, elementId, label, useAverage = false) {
+            const container = document.getElementById(elementId);
+
+            // Sort players by the stat and take top 10
+            const topPlayers = [...players]
+                .filter(p => p[sortKey] > 0)
+                .sort((a, b) => b[sortKey] - a[sortKey])
+                .slice(0, 10);
+
+            if (topPlayers.length === 0) {
+                container.innerHTML = '<div style="color: #718096; text-align: center; padding: 20px;">No data yet</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+
+            topPlayers.forEach((player, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? `rank-${rank}` : '';
+
+                // Calculate stat value
+                let statValue;
+                if (useAverage) {
+                    statValue = (player[sortKey] / player.gamesPlayed).toFixed(1);
+                } else {
+                    statValue = player[sortKey].toFixed(1);
+                }
+
+                const item = document.createElement('div');
+                item.className = `leader-item ${rankClass}`;
+                item.innerHTML = `
+                    <div class="leader-rank">${rank}</div>
+                    <div class="leader-info">
+                        <div class="leader-name">${player.playerName}</div>
+                        <div class="leader-team">${player.teamName}</div>
+                    </div>
+                    <div class="leader-stat">${statValue}</div>
+                `;
+                container.appendChild(item);
+            });
         }
 
         function calculateWinPercentage(team) {
