@@ -838,21 +838,18 @@
 
             // Initialize Firebase and load data
             initializeFirebase();
-            loadData();
-            renderCurrentTab();
+            loadData(); // This will call renderCurrentTab() when data is ready
 
             // Auto-refresh every 2 seconds to pick up new games from Firebase
             setInterval(function() {
                 loadData();
-                renderCurrentTab();
             }, 2000);
         });
 
         // Also refresh when tab becomes visible
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
-                loadData();
-                renderCurrentTab();
+                loadData(); // This will call renderCurrentTab() when data is ready
             }
         });
 
@@ -887,46 +884,59 @@
             } else {
                 // Fallback to localStorage only
                 loadFromLocalStorage();
+                renderCurrentTab();
             }
         }
 
         function loadFromFirebase() {
-            // Load game history from Firebase
-            database.ref('gameHistory').once('value').then((snapshot) => {
-                const firebaseHistory = snapshot.val();
-                if (firebaseHistory && Array.isArray(firebaseHistory)) {
-                    gameHistory = firebaseHistory;
-                    // Also save to localStorage as cache
-                    localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
-                } else {
-                    // If Firebase is empty, try localStorage
-                    loadFromLocalStorage();
-                }
-            }).catch((error) => {
-                console.error('Error loading history from Firebase:', error);
-                loadFromLocalStorage();
-            });
+            // Load both game history and season standings, then render
+            Promise.all([
+                // Load game history from Firebase
+                database.ref('gameHistory').once('value').then((snapshot) => {
+                    const firebaseHistory = snapshot.val();
+                    if (firebaseHistory && Array.isArray(firebaseHistory)) {
+                        gameHistory = firebaseHistory;
+                        // Also save to localStorage as cache
+                        localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+                    } else {
+                        // If Firebase is empty, try localStorage
+                        const saved = localStorage.getItem('basketballGameHistory');
+                        if (saved) {
+                            gameHistory = JSON.parse(saved);
+                        }
+                    }
+                }).catch((error) => {
+                    console.error('Error loading history from Firebase:', error);
+                    const saved = localStorage.getItem('basketballGameHistory');
+                    if (saved) {
+                        gameHistory = JSON.parse(saved);
+                    }
+                }),
 
-            // Load season standings from Firebase
-            database.ref('seasonStandings').once('value').then((snapshot) => {
-                const firebaseStandings = snapshot.val();
-                if (firebaseStandings) {
-                    seasonStandings = firebaseStandings;
-                    // Also save to localStorage as cache
-                    localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
-                } else {
-                    // If Firebase is empty, try localStorage
+                // Load season standings from Firebase
+                database.ref('seasonStandings').once('value').then((snapshot) => {
+                    const firebaseStandings = snapshot.val();
+                    if (firebaseStandings) {
+                        seasonStandings = firebaseStandings;
+                        // Also save to localStorage as cache
+                        localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
+                    } else {
+                        // If Firebase is empty, try localStorage
+                        const saved = localStorage.getItem('basketballSeasonStandings');
+                        if (saved) {
+                            seasonStandings = JSON.parse(saved);
+                        }
+                    }
+                }).catch((error) => {
+                    console.error('Error loading standings from Firebase:', error);
                     const saved = localStorage.getItem('basketballSeasonStandings');
                     if (saved) {
                         seasonStandings = JSON.parse(saved);
                     }
-                }
-            }).catch((error) => {
-                console.error('Error loading standings from Firebase:', error);
-                const saved = localStorage.getItem('basketballSeasonStandings');
-                if (saved) {
-                    seasonStandings = JSON.parse(saved);
-                }
+                })
+            ]).then(() => {
+                // Both data loaded - now render
+                renderCurrentTab();
             });
         }
 
