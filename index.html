@@ -1720,6 +1720,8 @@
         <div class="export-section">
             <div class="auto-save-indicator">✓ Auto-saving</div>
             <button class="export-btn" onclick="exportCSV()" style="background: #48bb78;">📄 Export Game Summary</button>
+            <button class="export-btn" onclick="finishAndSaveGame()" style="margin-left: 10px; background: #9f7aea;">🏁 Finish & Save Game</button>
+            <button class="export-btn" onclick="window.location.href='history.html'" style="margin-left: 10px; background: #ed8936;">📊 View History & Standings</button>
             <button class="export-btn" onclick="clearGameData()" style="margin-left: 10px; background: #f56565;">🗑️ Clear & Start New Game</button>
         </div>
     </div>
@@ -2943,6 +2945,150 @@
             link.href = url;
             link.download = `${gameData.gameName.replace(/\s/g, '_')}_Summary_${gameData.gameDate}.csv`;
             link.click();
+        }
+
+        // Game History Management Functions
+        function finishAndSaveGame() {
+            if (!confirm('Finish this game and save to history? This will start a fresh game.')) return;
+
+            // Calculate final scores
+            const team1Score = calculateTeamTotalPoints('team1');
+            const team2Score = calculateTeamTotalPoints('team2');
+
+            // Determine winner
+            let winner = '';
+            if (team1Score > team2Score) winner = gameData.team1.name;
+            else if (team2Score > team1Score) winner = gameData.team2.name;
+            else winner = 'TIE';
+
+            // Calculate quarter scores
+            const quarterScores = calculateQuarterScores();
+
+            // Create game record
+            const gameRecord = {
+                id: Date.now(),
+                gameName: gameData.gameName,
+                gameDate: gameData.gameDate,
+                finalScore: { team1: team1Score, team2: team2Score },
+                winner: winner,
+                team1: JSON.parse(JSON.stringify(gameData.team1)),
+                team2: JSON.parse(JSON.stringify(gameData.team2)),
+                quarterScores: quarterScores,
+                quarters: gameData.quarters,
+                mvp: gameData.mvp
+            };
+
+            // Save to history
+            let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
+            history.unshift(gameRecord);  // Add to beginning
+
+            // Limit to 100 games for performance
+            if (history.length > 100) {
+                history = history.slice(0, 100);
+            }
+
+            localStorage.setItem('basketballGameHistory', JSON.stringify(history));
+
+            // Update season standings
+            updateSeasonStandings(gameRecord);
+
+            // Clear current game and show setup
+            alert('Game saved successfully! Starting fresh game setup.');
+            clearGameData();
+        }
+
+        function calculateQuarterScores() {
+            const team1Scores = [];
+            const team2Scores = [];
+
+            for (let q = 1; q <= gameData.quarters; q++) {
+                let team1Q = 0, team2Q = 0;
+
+                gameData.team1.players.forEach(player => {
+                    team1Q += player.quarterStats[q].points || 0;
+                });
+                gameData.team2.players.forEach(player => {
+                    team2Q += player.quarterStats[q].points || 0;
+                });
+
+                team1Scores.push(team1Q);
+                team2Scores.push(team2Q);
+            }
+
+            return { team1: team1Scores, team2: team2Scores };
+        }
+
+        function updateSeasonStandings(gameRecord) {
+            let standings = JSON.parse(localStorage.getItem('basketballSeasonStandings') ||
+                '{"teams": {}, "players": {}}');
+
+            // Update team records
+            const team1Name = gameRecord.team1.name;
+            const team2Name = gameRecord.team2.name;
+
+            if (!standings.teams[team1Name]) {
+                standings.teams[team1Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 };
+            }
+            if (!standings.teams[team2Name]) {
+                standings.teams[team2Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 };
+            }
+
+            // Update win/loss
+            if (gameRecord.winner === team1Name) {
+                standings.teams[team1Name].wins++;
+                standings.teams[team2Name].losses++;
+            } else if (gameRecord.winner === team2Name) {
+                standings.teams[team2Name].wins++;
+                standings.teams[team1Name].losses++;
+            }
+            // If TIE, neither team gets a win or loss
+
+            // Update points
+            standings.teams[team1Name].pointsFor += gameRecord.finalScore.team1;
+            standings.teams[team1Name].pointsAgainst += gameRecord.finalScore.team2;
+            standings.teams[team2Name].pointsFor += gameRecord.finalScore.team2;
+            standings.teams[team2Name].pointsAgainst += gameRecord.finalScore.team1;
+            standings.teams[team1Name].lastPlayed = gameRecord.gameDate;
+            standings.teams[team2Name].lastPlayed = gameRecord.gameDate;
+
+            // Update player stats
+            updatePlayerSeasonStats(standings, gameRecord.team1, team1Name);
+            updatePlayerSeasonStats(standings, gameRecord.team2, team2Name);
+
+            localStorage.setItem('basketballSeasonStandings', JSON.stringify(standings));
+        }
+
+        function updatePlayerSeasonStats(standings, teamData, teamName) {
+            teamData.players.forEach(player => {
+                const key = `${teamName}_${player.name}`;
+                const totalStats = calculateTotalStats(player);
+
+                if (!standings.players[key]) {
+                    standings.players[key] = {
+                        teamName: teamName,
+                        playerName: player.name,
+                        gamesPlayed: 0,
+                        totalPoints: 0,
+                        totalRebounds: 0,
+                        totalAssists: 0,
+                        totalSteals: 0,
+                        totalBlocks: 0,
+                        totalFouls: 0
+                    };
+                }
+
+                const p = standings.players[key];
+                p.gamesPlayed++;
+                p.totalPoints += totalStats.points;
+                p.totalRebounds += totalStats.rebounds;
+                p.totalAssists += totalStats.assists;
+                p.totalSteals += totalStats.steals;
+                p.totalBlocks += totalStats.blocks;
+                p.totalFouls += totalStats.fouls;
+                p.avgPoints = parseFloat((p.totalPoints / p.gamesPlayed).toFixed(1));
+                p.avgRebounds = parseFloat((p.totalRebounds / p.gamesPlayed).toFixed(1));
+                p.avgAssists = parseFloat((p.totalAssists / p.gamesPlayed).toFixed(1));
+            });
         }
 
         // Cast Mode - Open scoreboard in new window
