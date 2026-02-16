@@ -1238,6 +1238,42 @@
             background-color: white;
         }
 
+        .team-logo-preview {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin: 10px auto;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            background: white;
+            padding: 5px;
+        }
+
+        .team-logo-header {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            margin-right: 15px;
+            vertical-align: middle;
+            border-radius: 8px;
+            background: white;
+            padding: 3px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .team-logo-scoreboard {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin: 0 auto 15px auto;
+            display: block;
+            border-radius: 12px;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
         .form-group textarea {
             min-height: 150px;
             resize: vertical;
@@ -1316,6 +1352,7 @@
                             <option value="Red Blood Cells">Red Blood Cells</option>
                             <option value="Porpol Ravens">Porpol Ravens</option>
                         </select>
+                        <img id="team1LogoPreview" class="team-logo-preview" style="display: none;" alt="Team 1 Logo">
                     </div>
                     <div class="form-group">
                         <label for="team2Selector">Team 2</label>
@@ -1330,6 +1367,7 @@
                             <option value="Red Blood Cells">Red Blood Cells</option>
                             <option value="Porpol Ravens">Porpol Ravens</option>
                         </select>
+                        <img id="team2LogoPreview" class="team-logo-preview" style="display: none;" alt="Team 2 Logo">
                     </div>
                 </div>
 
@@ -1383,11 +1421,13 @@
             <div class="quarter-info" id="currentQuarterDisplay">Quarter 1</div>
             <div class="scoreboard-top-row">
                 <div class="score-team">
+                    <img id="scoreTeam1Logo" class="team-logo-scoreboard" style="display: none;" alt="Team 1 Logo">
                     <div class="score-team-name" id="scoreTeam1Name">Team Violet</div>
                     <div class="score-value" id="scoreTeam1Value">0</div>
                 </div>
                 <div class="score-vs">VS</div>
                 <div class="score-team">
+                    <img id="scoreTeam2Logo" class="team-logo-scoreboard" style="display: none;" alt="Team 2 Logo">
                     <div class="score-team-name" id="scoreTeam2Name">Team Yellow</div>
                     <div class="score-value" id="scoreTeam2Value">0</div>
                 </div>
@@ -1683,12 +1723,24 @@
             ]
         };
 
+        // Team Logos Mapping
+        const TEAM_LOGOS = {
+            'Orange Inferno': 'logos/Orange Inferno.jpg',
+            'Gray Wolves': 'logos/Gray Wolves.jpeg',
+            'Green Bulls': 'logos/Green Bulls.jpg',
+            'Bella Vista Blue': 'logos/Bella Vista Blue.png',
+            'Black Hoopers': 'logos/Black Hoopers.jpg',
+            'Yellow Slashers': 'logos/Yellow Slashers.png',
+            'Red Blood Cells': 'logos/Red Blood Cells.jpg',
+            'Porpol Ravens': 'logos/Porpol Ravens.jpeg'
+        };
+
         // Game data structure
         const gameData = {
             gameName: '',
             gameDate: new Date().toISOString().split('T')[0],
-            team1: { name: '', players: [], teamFouls: {} },
-            team2: { name: '', players: [], teamFouls: {} },
+            team1: { name: '', logo: '', players: [], teamFouls: {} },
+            team2: { name: '', logo: '', players: [], teamFouls: {} },
             quarters: 4,
             minutesPerQuarter: 10,
             mvp: null,
@@ -2150,6 +2202,11 @@
             gameData.gameName = formData.gameName || 'Basketball Game';
             gameData.team1.name = formData.team1Name || 'Team 1';
             gameData.team2.name = formData.team2Name || 'Team 2';
+
+            // Set team logos
+            gameData.team1.logo = TEAM_LOGOS[formData.team1Name] || '';
+            gameData.team2.logo = TEAM_LOGOS[formData.team2Name] || '';
+
             gameData.quarters = parseInt(formData.quarters) || 4;
             gameData.minutesPerQuarter = parseInt(formData.minutesPerQuarter) || 10;
 
@@ -2206,8 +2263,22 @@
             window.currentQuarter = currentQuarter; // Make sure it's accessible globally
             document.getElementById('gameName').textContent = gameData.gameName;
             document.getElementById('gameDate').textContent = gameData.gameDate;
-            document.getElementById('team1Name').textContent = gameData.team1.name;
-            document.getElementById('team2Name').textContent = gameData.team2.name;
+
+            // Update team names with logos
+            const team1Header = document.getElementById('team1Name');
+            const team2Header = document.getElementById('team2Name');
+
+            if (gameData.team1.logo) {
+                team1Header.innerHTML = `<img src="${gameData.team1.logo}" class="team-logo-header" alt="${gameData.team1.name}">${gameData.team1.name}`;
+            } else {
+                team1Header.textContent = gameData.team1.name;
+            }
+
+            if (gameData.team2.logo) {
+                team2Header.innerHTML = `<img src="${gameData.team2.logo}" class="team-logo-header" alt="${gameData.team2.name}">${gameData.team2.name}`;
+            } else {
+                team2Header.textContent = gameData.team2.name;
+            }
 
             renderQuarterSelector();
             renderPlayers('team1', gameData.team1.players);
@@ -2291,8 +2362,28 @@
             const team1Total = calculateTeamTotalPoints('team1');
             const team2Total = calculateTeamTotalPoints('team2');
 
+            // Update team names
             document.getElementById('scoreTeam1Name').textContent = gameData.team1.name;
             document.getElementById('scoreTeam2Name').textContent = gameData.team2.name;
+
+            // Update team logos
+            const team1Logo = document.getElementById('scoreTeam1Logo');
+            const team2Logo = document.getElementById('scoreTeam2Logo');
+
+            if (gameData.team1.logo) {
+                team1Logo.src = gameData.team1.logo;
+                team1Logo.style.display = 'block';
+            } else {
+                team1Logo.style.display = 'none';
+            }
+
+            if (gameData.team2.logo) {
+                team2Logo.src = gameData.team2.logo;
+                team2Logo.style.display = 'block';
+            } else {
+                team2Logo.style.display = 'none';
+            }
+
             document.getElementById('scoreTeam1Value').textContent = team1Total;
             document.getElementById('scoreTeam2Value').textContent = team2Total;
 
@@ -2871,6 +2962,17 @@
             text-align: center;
             position: relative;
         }
+        .team-logo-cast {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            margin: 0 auto 20px auto;
+            display: block;
+            border-radius: 20px;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
         .possession-indicator {
             font-size: 5em;
             margin: 20px 0;
@@ -3074,6 +3176,7 @@
         </div>
         <div class="score-container">
             <div class="team-box">
+                ` + (gameData.team1.logo ? `<img src="${gameData.team1.logo}" class="team-logo-cast" alt="${gameData.team1.name}">` : '') + `
                 <div class="team-name">` + gameData.team1.name + `</div>
                 <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
                 <div class="team-score" id="team1Score">` + team1Score + `</div>
@@ -3081,6 +3184,7 @@
             </div>
             <div class="vs-text">VS</div>
             <div class="team-box">
+                ` + (gameData.team2.logo ? `<img src="${gameData.team2.logo}" class="team-logo-cast" alt="${gameData.team2.name}">` : '') + `
                 <div class="team-name">` + gameData.team2.name + `</div>
                 <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
                 <div class="team-score" id="team2Score">` + team2Score + `</div>
@@ -3126,15 +3230,24 @@
         function loadTeamPlayers(teamNumber) {
             const selectorId = `team${teamNumber}Selector`;
             const playersInputId = `team${teamNumber}PlayersInput`;
+            const logoPreviewId = `team${teamNumber}LogoPreview`;
 
             const teamName = document.getElementById(selectorId).value;
             const playersTextarea = document.getElementById(playersInputId);
+            const logoPreview = document.getElementById(logoPreviewId);
 
             if (teamName && PREDEFINED_TEAMS[teamName]) {
                 // Load players for selected team
                 playersTextarea.value = PREDEFINED_TEAMS[teamName].join('\n');
+
+                // Show logo preview
+                if (TEAM_LOGOS[teamName]) {
+                    logoPreview.src = TEAM_LOGOS[teamName];
+                    logoPreview.style.display = 'block';
+                }
             } else {
                 playersTextarea.value = '';
+                logoPreview.style.display = 'none';
             }
 
             // Auto-generate game name when both teams are selected
