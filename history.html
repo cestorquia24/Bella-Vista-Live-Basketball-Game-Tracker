@@ -1183,6 +1183,9 @@
             const teamFilter = document.getElementById('teamFilter');
             const teams = Object.keys(seasonStandings.teams).sort();
 
+            // Preserve the currently selected value
+            const currentSelection = teamFilter.value;
+
             // Clear existing options except "All Teams"
             teamFilter.innerHTML = '<option value="">All Teams</option>';
 
@@ -1193,6 +1196,11 @@
                 option.textContent = teamName;
                 teamFilter.appendChild(option);
             });
+
+            // Restore the previously selected value if it still exists
+            if (currentSelection && teams.includes(currentSelection)) {
+                teamFilter.value = currentSelection;
+            }
         }
 
         function filterPlayersByTeam() {
