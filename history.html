@@ -595,6 +595,45 @@
             margin-bottom: 30px;
         }
 
+        .filter-bar {
+            background: rgba(45, 55, 72, 0.9);
+            padding: 15px 20px;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #cbd5e0;
+            font-size: 1em;
+        }
+
+        .team-filter-select {
+            padding: 10px 15px;
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            background: #1a202c;
+            color: white;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px;
+        }
+
+        .team-filter-select:hover {
+            border-color: #667eea;
+        }
+
+        .team-filter-select:focus {
+            outline: none;
+            border-color: #48bb78;
+            box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.2);
+        }
+
         @media (max-width: 768px) {
             .header h1 {
                 font-size: 1.8em;
@@ -622,6 +661,17 @@
 
             th, td {
                 padding: 10px 8px;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 12px 15px;
+            }
+
+            .team-filter-select {
+                width: 100%;
+                min-width: unset;
             }
         }
     </style>
@@ -683,6 +733,12 @@
 
         <!-- Player Stats Tab -->
         <div id="playersTab" class="tab-content">
+            <div class="filter-bar">
+                <label for="teamFilter" class="filter-label">Filter by Team:</label>
+                <select id="teamFilter" class="team-filter-select" onchange="filterPlayersByTeam()">
+                    <option value="">All Teams</option>
+                </select>
+            </div>
             <div class="table-container">
                 <table id="playersTable">
                     <thead>
@@ -979,6 +1035,7 @@
             } else if (currentTab === 'teams') {
                 renderTeamStandings();
             } else if (currentTab === 'players') {
+                populateTeamFilter();
                 renderPlayerStats();
             }
         }
@@ -1074,16 +1131,24 @@
         function renderPlayerStats() {
             const tbody = document.getElementById('playersTableBody');
             const empty = document.getElementById('emptyPlayers');
+            const teamFilter = document.getElementById('teamFilter').value;
             const allPlayers = Object.values(seasonStandings.players);
 
-            // Filter out players with no stats (only show players who recorded at least one stat)
-            const players = allPlayers.filter(player =>
-                player.totalPoints > 0 ||
-                player.totalRebounds > 0 ||
-                player.totalAssists > 0 ||
-                player.totalSteals > 0 ||
-                player.totalBlocks > 0
-            );
+            let players;
+
+            if (teamFilter) {
+                // Specific team selected - show ALL players from that team (even with zero stats)
+                players = allPlayers.filter(player => player.teamName === teamFilter);
+            } else {
+                // "All Teams" selected - filter out players with no stats
+                players = allPlayers.filter(player =>
+                    player.totalPoints > 0 ||
+                    player.totalRebounds > 0 ||
+                    player.totalAssists > 0 ||
+                    player.totalSteals > 0 ||
+                    player.totalBlocks > 0
+                );
+            }
 
             if (players.length === 0) {
                 tbody.innerHTML = '';
@@ -1112,6 +1177,26 @@
                 `;
                 tbody.appendChild(row);
             });
+        }
+
+        function populateTeamFilter() {
+            const teamFilter = document.getElementById('teamFilter');
+            const teams = Object.keys(seasonStandings.teams).sort();
+
+            // Clear existing options except "All Teams"
+            teamFilter.innerHTML = '<option value="">All Teams</option>';
+
+            // Add team options
+            teams.forEach(teamName => {
+                const option = document.createElement('option');
+                option.value = teamName;
+                option.textContent = teamName;
+                teamFilter.appendChild(option);
+            });
+        }
+
+        function filterPlayersByTeam() {
+            renderPlayerStats();
         }
 
         function calculateWinPercentage(team) {
