@@ -1137,15 +1137,18 @@
                 });
 
                 if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0 || totalSteals > 0 || totalBlocks > 0) {
+                    let statsHTML = '';
+                    if (totalPoints > 0) statsHTML += `<span><strong>${totalPoints}</strong> PTS</span>`;
+                    if (totalRebounds > 0) statsHTML += `<span><strong>${totalRebounds}</strong> REB</span>`;
+                    if (totalAssists > 0) statsHTML += `<span><strong>${totalAssists}</strong> AST</span>`;
+                    if (totalSteals > 0) statsHTML += `<span><strong>${totalSteals}</strong> STL</span>`;
+                    if (totalBlocks > 0) statsHTML += `<span><strong>${totalBlocks}</strong> BLK</span>`;
+
                     modalHTML += `
                         <div class="modal-player">
                             <div class="player-name-modal">${player.name}</div>
                             <div class="player-stats-modal">
-                                <span><strong>${totalPoints}</strong> PTS</span>
-                                <span><strong>${totalRebounds}</strong> REB</span>
-                                <span><strong>${totalAssists}</strong> AST</span>
-                                <span><strong>${totalSteals}</strong> STL</span>
-                                <span><strong>${totalBlocks}</strong> BLK</span>
+                                ${statsHTML}
                             </div>
                         </div>
                     `;
@@ -1171,15 +1174,18 @@
                 });
 
                 if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0 || totalSteals > 0 || totalBlocks > 0) {
+                    let statsHTML = '';
+                    if (totalPoints > 0) statsHTML += `<span><strong>${totalPoints}</strong> PTS</span>`;
+                    if (totalRebounds > 0) statsHTML += `<span><strong>${totalRebounds}</strong> REB</span>`;
+                    if (totalAssists > 0) statsHTML += `<span><strong>${totalAssists}</strong> AST</span>`;
+                    if (totalSteals > 0) statsHTML += `<span><strong>${totalSteals}</strong> STL</span>`;
+                    if (totalBlocks > 0) statsHTML += `<span><strong>${totalBlocks}</strong> BLK</span>`;
+
                     modalHTML += `
                         <div class="modal-player">
                             <div class="player-name-modal">${player.name}</div>
                             <div class="player-stats-modal">
-                                <span><strong>${totalPoints}</strong> PTS</span>
-                                <span><strong>${totalRebounds}</strong> REB</span>
-                                <span><strong>${totalAssists}</strong> AST</span>
-                                <span><strong>${totalSteals}</strong> STL</span>
-                                <span><strong>${totalBlocks}</strong> BLK</span>
+                                ${statsHTML}
                             </div>
                         </div>
                     `;
