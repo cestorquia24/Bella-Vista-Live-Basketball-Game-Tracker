@@ -2991,6 +2991,9 @@
             // Update season standings
             updateSeasonStandings(gameRecord);
 
+            // Push to Firebase for cross-device sync
+            pushHistoryToFirebase(history);
+
             // Clear current game and show setup
             alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nStarting fresh game setup...');
             clearGameData();
@@ -3055,6 +3058,9 @@
             updatePlayerSeasonStats(standings, gameRecord.team2, team2Name);
 
             localStorage.setItem('basketballSeasonStandings', JSON.stringify(standings));
+
+            // Push standings to Firebase for cross-device sync
+            pushStandingsToFirebase(standings);
         }
 
         function updatePlayerSeasonStats(standings, teamData, teamName) {
@@ -3679,6 +3685,36 @@
                 pushLiveUpdate();
             }
         };
+
+        // Push game history to Firebase for cross-device sync
+        function pushHistoryToFirebase(history) {
+            if (!database) {
+                console.log('Firebase not initialized, skipping history sync');
+                return;
+            }
+
+            try {
+                database.ref('gameHistory').set(history);
+                console.log('✅ Game history synced to Firebase');
+            } catch (error) {
+                console.error('Failed to push history to Firebase:', error);
+            }
+        }
+
+        // Push season standings to Firebase for cross-device sync
+        function pushStandingsToFirebase(standings) {
+            if (!database) {
+                console.log('Firebase not initialized, skipping standings sync');
+                return;
+            }
+
+            try {
+                database.ref('seasonStandings').set(standings);
+                console.log('✅ Season standings synced to Firebase');
+            } catch (error) {
+                console.error('Failed to push standings to Firebase:', error);
+            }
+        }
 
         // Load live updates preference on page load
         setTimeout(loadLiveUpdatesPreference, 1000);

@@ -733,12 +733,18 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <script>
         let currentTab = 'history';
         let gameHistory = [];
         let seasonStandings = { teams: {}, players: {} };
         let currentSort = { column: null, order: 'asc' };
         let isAdminMode = false;
+        let firebaseInitialized = false;
+        let database = null;
 
         // Admin Mode Functions
         function toggleAdminMode() {
@@ -830,10 +836,12 @@
                 document.getElementById('adminToggle').classList.add('active');
             }
 
+            // Initialize Firebase and load data
+            initializeFirebase();
             loadData();
             renderCurrentTab();
 
-            // Auto-refresh every 2 seconds to pick up new games from other tabs
+            // Auto-refresh every 2 seconds to pick up new games from Firebase
             setInterval(function() {
                 loadData();
                 renderCurrentTab();
@@ -848,7 +856,81 @@
             }
         });
 
+        // Initialize Firebase
+        function initializeFirebase() {
+            try {
+                if (!firebaseInitialized) {
+                    const firebaseConfig = {
+                        apiKey: "AIzaSyCRjX0GdMHSNeykGuxclCgSc3XpY04-oEE",
+                        authDomain: "bella-vista-league-live-score.firebaseapp.com",
+                        databaseURL: "https://bella-vista-league-live-score-default-rtdb.asia-southeast1.firebasedatabase.app",
+                        projectId: "bella-vista-league-live-score",
+                        storageBucket: "bella-vista-league-live-score.firebasestorage.app",
+                        messagingSenderId: "563016772281",
+                        appId: "1:563016772281:web:e2c3b5d3a08c2bc9308968"
+                    };
+                    firebase.initializeApp(firebaseConfig);
+                    database = firebase.database();
+                    firebaseInitialized = true;
+                    console.log('Firebase initialized for history sync');
+                }
+            } catch (error) {
+                console.error('Firebase initialization failed:', error);
+                // Continue without Firebase, use localStorage only
+            }
+        }
+
         function loadData() {
+            if (database) {
+                // Load from Firebase (synced across all devices)
+                loadFromFirebase();
+            } else {
+                // Fallback to localStorage only
+                loadFromLocalStorage();
+            }
+        }
+
+        function loadFromFirebase() {
+            // Load game history from Firebase
+            database.ref('gameHistory').once('value').then((snapshot) => {
+                const firebaseHistory = snapshot.val();
+                if (firebaseHistory && Array.isArray(firebaseHistory)) {
+                    gameHistory = firebaseHistory;
+                    // Also save to localStorage as cache
+                    localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+                } else {
+                    // If Firebase is empty, try localStorage
+                    loadFromLocalStorage();
+                }
+            }).catch((error) => {
+                console.error('Error loading history from Firebase:', error);
+                loadFromLocalStorage();
+            });
+
+            // Load season standings from Firebase
+            database.ref('seasonStandings').once('value').then((snapshot) => {
+                const firebaseStandings = snapshot.val();
+                if (firebaseStandings) {
+                    seasonStandings = firebaseStandings;
+                    // Also save to localStorage as cache
+                    localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
+                } else {
+                    // If Firebase is empty, try localStorage
+                    const saved = localStorage.getItem('basketballSeasonStandings');
+                    if (saved) {
+                        seasonStandings = JSON.parse(saved);
+                    }
+                }
+            }).catch((error) => {
+                console.error('Error loading standings from Firebase:', error);
+                const saved = localStorage.getItem('basketballSeasonStandings');
+                if (saved) {
+                    seasonStandings = JSON.parse(saved);
+                }
+            });
+        }
+
+        function loadFromLocalStorage() {
             try {
                 gameHistory = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
                 seasonStandings = JSON.parse(localStorage.getItem('basketballSeasonStandings') ||
@@ -1120,6 +1202,12 @@
             // Recalculate standings from scratch
             recalculateStandings();
 
+            // Sync to Firebase
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                console.log('✅ Deleted game synced to Firebase');
+            }
+
             // Re-render
             renderCurrentTab();
             alert('Game deleted successfully!');
@@ -1135,6 +1223,12 @@
             });
 
             localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
+
+            // Sync to Firebase
+            if (database) {
+                database.ref('seasonStandings').set(seasonStandings);
+                console.log('✅ Recalculated standings synced to Firebase');
+            }
         }
 
         function updateSeasonStandingsFromGame(gameRecord) {
