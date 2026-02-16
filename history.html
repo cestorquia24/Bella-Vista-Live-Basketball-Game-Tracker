@@ -807,6 +807,127 @@
                 font-size: 1.1em;
             }
         }
+
+        /* Player Game Log Styles */
+        .player-name-clickable {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .player-name-clickable:hover {
+            color: #5a67d8;
+            text-decoration: underline;
+        }
+
+        .player-log-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .player-log-header h2 {
+            font-size: 2em;
+            color: #48bb78;
+            margin-bottom: 5px;
+        }
+
+        .player-log-header .player-team {
+            font-size: 1.2em;
+            color: #a0aec0;
+        }
+
+        .player-stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(72, 187, 120, 0.1);
+            border-radius: 12px;
+        }
+
+        .summary-stat {
+            text-align: center;
+        }
+
+        .summary-stat-label {
+            font-size: 0.9em;
+            color: #a0aec0;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .summary-stat-value {
+            font-size: 1.8em;
+            color: #48bb78;
+            font-weight: 900;
+        }
+
+        .game-log-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .game-log-table th {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 700;
+            color: #48bb78;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.5);
+            font-size: 0.9em;
+        }
+
+        .game-log-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0;
+            text-align: center;
+            font-size: 0.9em;
+        }
+
+        .game-log-table tr:hover td {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .game-log-table .stat-highlight {
+            font-weight: 700;
+            color: #48bb78;
+        }
+
+        .game-log-table .career-high {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+            font-weight: 900;
+            color: #ffd700;
+        }
+
+        .game-result-win {
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .game-result-loss {
+            color: #fc8181;
+            font-weight: 600;
+        }
+
+        .mvp-badge {
+            display: inline-block;
+            margin-left: 5px;
+            color: #f39c12;
+            font-size: 1.1em;
+        }
+
+        .no-games-message {
+            text-align: center;
+            padding: 40px;
+            color: #a0aec0;
+            font-size: 1.1em;
+        }
     </style>
 </head>
 <body>
@@ -955,6 +1076,14 @@
                 <button class="password-modal-btn cancel" onclick="closePasswordModal()">Cancel</button>
                 <button class="password-modal-btn submit" onclick="submitPassword()">Submit</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Player Game Log Modal -->
+    <div id="playerGameLogModal" class="modal">
+        <div class="modal-content" style="max-width: 1100px;">
+            <button class="modal-close" onclick="closePlayerGameLog()">&times;</button>
+            <div id="playerGameLogBody"></div>
         </div>
     </div>
 
@@ -1338,7 +1467,7 @@
             players.forEach(player => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="stat-highlight">${player.playerName}</td>
+                    <td><span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span></td>
                     <td>${player.teamName}</td>
                     <td>${player.gamesPlayed}</td>
                     <td class="stat-highlight">${player.avgPoints}</td>
@@ -1451,7 +1580,7 @@
                 item.innerHTML = `
                     <div class="leader-rank">${rank}</div>
                     <div class="leader-info">
-                        <div class="leader-name">${player.playerName}</div>
+                        <div class="leader-name"><span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span></div>
                         <div class="leader-team">${player.teamName}</div>
                     </div>
                     <div class="leader-stat">${statValue}</div>
@@ -1694,10 +1823,242 @@
             // Sorting logic can be added here if needed
         }
 
+        // Player Game Log Functions
+        function openPlayerGameLog(playerName, teamName) {
+            // Find all games where this player participated
+            const playerGames = [];
+
+            gameHistory.forEach(game => {
+                let playerStats = null;
+                let isTeam1 = false;
+
+                // Check if player is in team1
+                const team1Player = game.team1.players.find(p => p.name === playerName);
+                if (team1Player && game.team1.name === teamName) {
+                    playerStats = team1Player;
+                    isTeam1 = true;
+                }
+
+                // Check if player is in team2
+                const team2Player = game.team2.players.find(p => p.name === playerName);
+                if (team2Player && game.team2.name === teamName) {
+                    playerStats = team2Player;
+                    isTeam1 = false;
+                }
+
+                if (playerStats) {
+                    // Calculate totals for this game
+                    let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0, totalFouls = 0;
+                    Object.values(playerStats.quarterStats).forEach(qStats => {
+                        totalPoints += qStats.points || 0;
+                        totalRebounds += qStats.rebounds || 0;
+                        totalAssists += qStats.assists || 0;
+                        totalSteals += qStats.steals || 0;
+                        totalBlocks += qStats.blocks || 0;
+                        totalFouls += qStats.fouls || 0;
+                    });
+
+                    // Determine opponent and result
+                    const opponent = isTeam1 ? game.team2.name : game.team1.name;
+                    const playerTeamScore = isTeam1 ? game.finalScore.team1 : game.finalScore.team2;
+                    const opponentScore = isTeam1 ? game.finalScore.team2 : game.finalScore.team1;
+                    const result = playerTeamScore > opponentScore ? 'W' : (playerTeamScore < opponentScore ? 'L' : 'T');
+
+                    // Check if player was MVP
+                    const wasMVP = game.mvp && game.mvp.name === playerName;
+
+                    playerGames.push({
+                        date: game.gameDate,
+                        opponent: opponent,
+                        result: result,
+                        score: `${playerTeamScore}-${opponentScore}`,
+                        points: totalPoints,
+                        rebounds: totalRebounds,
+                        assists: totalAssists,
+                        steals: totalSteals,
+                        blocks: totalBlocks,
+                        fouls: totalFouls,
+                        wasMVP: wasMVP
+                    });
+                }
+            });
+
+            if (playerGames.length === 0) {
+                alert('No game history found for this player.');
+                return;
+            }
+
+            // Sort by date (most recent first)
+            playerGames.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            // Calculate career highs
+            const careerHighs = {
+                points: Math.max(...playerGames.map(g => g.points)),
+                rebounds: Math.max(...playerGames.map(g => g.rebounds)),
+                assists: Math.max(...playerGames.map(g => g.assists)),
+                steals: Math.max(...playerGames.map(g => g.steals)),
+                blocks: Math.max(...playerGames.map(g => g.blocks))
+            };
+
+            // Calculate season averages
+            const seasonAvgs = {
+                games: playerGames.length,
+                ppg: (playerGames.reduce((sum, g) => sum + g.points, 0) / playerGames.length).toFixed(1),
+                rpg: (playerGames.reduce((sum, g) => sum + g.rebounds, 0) / playerGames.length).toFixed(1),
+                apg: (playerGames.reduce((sum, g) => sum + g.assists, 0) / playerGames.length).toFixed(1),
+                spg: (playerGames.reduce((sum, g) => sum + g.steals, 0) / playerGames.length).toFixed(1),
+                bpg: (playerGames.reduce((sum, g) => sum + g.blocks, 0) / playerGames.length).toFixed(1)
+            };
+
+            // Calculate recent form (last 5 games)
+            const recentGames = playerGames.slice(0, Math.min(5, playerGames.length));
+            const recentAvgs = {
+                ppg: (recentGames.reduce((sum, g) => sum + g.points, 0) / recentGames.length).toFixed(1),
+                rpg: (recentGames.reduce((sum, g) => sum + g.rebounds, 0) / recentGames.length).toFixed(1),
+                apg: (recentGames.reduce((sum, g) => sum + g.assists, 0) / recentGames.length).toFixed(1)
+            };
+
+            // Render modal
+            renderPlayerGameLog(playerName, teamName, playerGames, careerHighs, seasonAvgs, recentAvgs);
+        }
+
+        function renderPlayerGameLog(playerName, teamName, playerGames, careerHighs, seasonAvgs, recentAvgs) {
+            const modalBody = document.getElementById('playerGameLogBody');
+
+            let html = `
+                <div class="player-log-header">
+                    <h2>${playerName}</h2>
+                    <div class="player-team">${teamName}</div>
+                </div>
+
+                <div class="player-stats-summary">
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">Games</div>
+                        <div class="summary-stat-value">${seasonAvgs.games}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">PPG</div>
+                        <div class="summary-stat-value">${seasonAvgs.ppg}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">RPG</div>
+                        <div class="summary-stat-value">${seasonAvgs.rpg}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">APG</div>
+                        <div class="summary-stat-value">${seasonAvgs.apg}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">SPG</div>
+                        <div class="summary-stat-value">${seasonAvgs.spg}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">BPG</div>
+                        <div class="summary-stat-value">${seasonAvgs.bpg}</div>
+                    </div>
+                </div>
+
+                <h3 style="color: #48bb78; margin: 20px 0 10px 0; font-size: 1.3em;">📊 Game-by-Game Performance</h3>
+                <table class="game-log-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Opponent</th>
+                            <th>Result</th>
+                            <th>PTS</th>
+                            <th>REB</th>
+                            <th>AST</th>
+                            <th>STL</th>
+                            <th>BLK</th>
+                            <th>FLS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            playerGames.forEach(game => {
+                const resultClass = game.result === 'W' ? 'game-result-win' : (game.result === 'L' ? 'game-result-loss' : '');
+                const mvpBadge = game.wasMVP ? '<span class="mvp-badge">⭐</span>' : '';
+
+                html += `
+                    <tr>
+                        <td>${game.date}</td>
+                        <td>vs ${game.opponent}</td>
+                        <td class="${resultClass}">${game.result} ${game.score}${mvpBadge}</td>
+                        <td class="${game.points === careerHighs.points ? 'career-high' : 'stat-highlight'}">${game.points}</td>
+                        <td class="${game.rebounds === careerHighs.rebounds ? 'career-high' : ''}">${game.rebounds}</td>
+                        <td class="${game.assists === careerHighs.assists ? 'career-high' : ''}">${game.assists}</td>
+                        <td class="${game.steals === careerHighs.steals ? 'career-high' : ''}">${game.steals}</td>
+                        <td class="${game.blocks === careerHighs.blocks ? 'career-high' : ''}">${game.blocks}</td>
+                        <td>${game.fouls}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+
+                <h3 style="color: #48bb78; margin: 30px 0 10px 0; font-size: 1.3em;">🏆 Career Highs</h3>
+                <div class="player-stats-summary">
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">Points</div>
+                        <div class="summary-stat-value" style="color: #ffd700;">${careerHighs.points}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">Rebounds</div>
+                        <div class="summary-stat-value" style="color: #ffd700;">${careerHighs.rebounds}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">Assists</div>
+                        <div class="summary-stat-value" style="color: #ffd700;">${careerHighs.assists}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">Steals</div>
+                        <div class="summary-stat-value" style="color: #ffd700;">${careerHighs.steals}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">Blocks</div>
+                        <div class="summary-stat-value" style="color: #ffd700;">${careerHighs.blocks}</div>
+                    </div>
+                </div>
+
+                <h3 style="color: #48bb78; margin: 30px 0 10px 0; font-size: 1.3em;">🔥 Recent Form (Last ${Math.min(5, playerGames.length)} Games)</h3>
+                <div class="player-stats-summary">
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">PPG</div>
+                        <div class="summary-stat-value">${recentAvgs.ppg}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">RPG</div>
+                        <div class="summary-stat-value">${recentAvgs.rpg}</div>
+                    </div>
+                    <div class="summary-stat">
+                        <div class="summary-stat-label">APG</div>
+                        <div class="summary-stat-value">${recentAvgs.apg}</div>
+                    </div>
+                </div>
+            `;
+
+            modalBody.innerHTML = html;
+            document.getElementById('playerGameLogModal').classList.add('active');
+        }
+
+        function closePlayerGameLog() {
+            document.getElementById('playerGameLogModal').classList.remove('active');
+        }
+
         // Close modal when clicking outside
         document.getElementById('gameModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeModal();
+            }
+        });
+
+        // Close player game log modal when clicking outside
+        document.getElementById('playerGameLogModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePlayerGameLog();
             }
         });
     </script>
