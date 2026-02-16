@@ -3368,24 +3368,15 @@
         function loadTeamPlayers(teamNumber) {
             const selectorId = `team${teamNumber}Selector`;
             const playersInputId = `team${teamNumber}PlayersInput`;
-            const logoPreviewId = `team${teamNumber}LogoPreview`;
 
             const teamName = document.getElementById(selectorId).value;
             const playersTextarea = document.getElementById(playersInputId);
-            const logoPreview = document.getElementById(logoPreviewId);
 
             if (teamName && PREDEFINED_TEAMS[teamName]) {
                 // Load players for selected team
                 playersTextarea.value = PREDEFINED_TEAMS[teamName].join('\n');
-
-                // Show logo preview
-                if (TEAM_LOGOS[teamName]) {
-                    logoPreview.src = TEAM_LOGOS[teamName];
-                    logoPreview.style.display = 'block';
-                }
             } else {
                 playersTextarea.value = '';
-                logoPreview.style.display = 'none';
             }
 
             // Auto-generate game name when both teams are selected
