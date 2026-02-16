@@ -363,6 +363,38 @@
             box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
         }
 
+        .no-live-game-banner {
+            background: linear-gradient(135deg, rgba(245, 101, 101, 0.9) 0%, rgba(234, 88, 12, 0.9) 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            box-shadow: 0 4px 16px rgba(245, 101, 101, 0.4);
+        }
+
+        .past-game-badge {
+            background: #f39c12;
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 700;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .live-indicator.past-game {
+            background: #718096;
+        }
+
+        .live-indicator.past-game .live-dot {
+            background: #cbd5e0;
+            animation: none;
+        }
+
         @media (max-width: 768px) {
             .spectator-logo-display {
                 width: 90px;
@@ -451,6 +483,10 @@
             🔄 Connecting to live game...
         </div>
 
+        <div id="noLiveGameBanner" class="no-live-game-banner" style="display: none;">
+            📺 There's no live game at the moment. Showing the most recent game.
+        </div>
+
         <div id="content" style="display: none;">
             <div class="scoreboard">
                 <div class="quarter-display" id="quarterDisplay">Quarter 1</div>
@@ -517,22 +553,28 @@
         // Initialize Firebase
         let database;
         let gameRef;
+        let historyRef;
+        const LIVE_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
 
         try {
             firebase.initializeApp(firebaseConfig);
             database = firebase.database();
             gameRef = database.ref('liveGame');
+            historyRef = database.ref('gameHistory');
 
             // Listen for live updates
             gameRef.on('value', (snapshot) => {
                 const gameData = snapshot.val();
-                if (gameData) {
-                    updateDisplay(gameData);
+                if (gameData && isGameLive(gameData)) {
+                    // Active live game found
+                    updateDisplay(gameData, true);
                     document.getElementById('loading').style.display = 'none';
+                    document.getElementById('noLiveGameBanner').style.display = 'none';
                     document.getElementById('content').style.display = 'block';
                     updateConnectionStatus(true);
                 } else {
-                    showError('No active game found. Start tracking from the main page.');
+                    // No live game or stale data - load most recent game
+                    loadMostRecentGame();
                 }
             }, (error) => {
                 showError('Connection error: ' + error.message);
@@ -549,10 +591,86 @@
             console.error(error);
         }
 
-        function updateDisplay(gameData) {
+        function isGameLive(gameData) {
+            // Check if lastUpdated timestamp exists and is recent (within 5 minutes)
+            if (!gameData.lastUpdated) return false;
+            const now = Date.now();
+            const timeDiff = now - gameData.lastUpdated;
+            return timeDiff < LIVE_THRESHOLD;
+        }
+
+        function loadMostRecentGame() {
+            // Try to load from Firebase history first
+            if (historyRef) {
+                historyRef.once('value').then((snapshot) => {
+                    const history = snapshot.val();
+                    if (history && Array.isArray(history) && history.length > 0) {
+                        // Get most recent game (first in array)
+                        const mostRecentGame = history[0];
+                        displayPastGame(mostRecentGame);
+                    } else {
+                        // Try localStorage as fallback
+                        loadFromLocalStorage();
+                    }
+                }).catch((error) => {
+                    console.error('Error loading history from Firebase:', error);
+                    loadFromLocalStorage();
+                });
+            } else {
+                loadFromLocalStorage();
+            }
+        }
+
+        function loadFromLocalStorage() {
+            try {
+                const history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
+                if (history.length > 0) {
+                    const mostRecentGame = history[0];
+                    displayPastGame(mostRecentGame);
+                } else {
+                    showError('No games available. Start tracking from the main page.');
+                }
+            } catch (e) {
+                console.error('Error loading from localStorage:', e);
+                showError('No games available. Start tracking from the main page.');
+            }
+        }
+
+        function displayPastGame(gameRecord) {
+            // Convert game record to the format expected by updateDisplay
+            const gameData = {
+                gameName: gameRecord.gameName,
+                gameDate: gameRecord.gameDate,
+                currentQuarter: 'total',
+                team1: gameRecord.team1,
+                team2: gameRecord.team2,
+                mvp: gameRecord.mvp,
+                gameTimer: {
+                    currentSeconds: 0
+                },
+                lastUpdated: null
+            };
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('noLiveGameBanner').style.display = 'block';
+            document.getElementById('content').style.display = 'block';
+            updateDisplay(gameData, false);
+        }
+
+        function updateDisplay(gameData, isLive) {
             // Update game info
             document.getElementById('gameName').textContent = gameData.gameName || 'Basketball Game';
             document.getElementById('gameDate').textContent = gameData.gameDate || '-';
+
+            // Update live indicator based on isLive parameter
+            const liveIndicator = document.querySelector('.live-indicator');
+            if (isLive) {
+                liveIndicator.classList.remove('past-game');
+                liveIndicator.innerHTML = '<div class="live-dot"></div>LIVE';
+            } else {
+                liveIndicator.classList.add('past-game');
+                liveIndicator.innerHTML = '<div class="live-dot"></div>FINAL';
+            }
 
             // Update quarter
             const currentQuarter = gameData.currentQuarter || 1;
