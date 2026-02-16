@@ -3064,11 +3064,12 @@
 
         function updatePlayerSeasonStats(standings, teamData, teamName) {
             teamData.players.forEach(player => {
-                const key = `${teamName}_${player.name}`;
+                // Sanitize key for Firebase - replace invalid characters
+                const sanitizedKey = `${teamName}_${player.name}`.replace(/[.#$\/\[\]]/g, '-');
                 const totalStats = calculateTotalStats(player);
 
-                if (!standings.players[key]) {
-                    standings.players[key] = {
+                if (!standings.players[sanitizedKey]) {
+                    standings.players[sanitizedKey] = {
                         teamName: teamName,
                         playerName: player.name,
                         gamesPlayed: 0,
@@ -3081,7 +3082,7 @@
                     };
                 }
 
-                const p = standings.players[key];
+                const p = standings.players[sanitizedKey];
                 p.gamesPlayed++;
                 p.totalPoints += totalStats.points;
                 p.totalRebounds += totalStats.rebounds;

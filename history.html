@@ -1289,7 +1289,8 @@
 
         function updatePlayerStatsFromGame(teamData, teamName) {
             teamData.players.forEach(player => {
-                const key = `${teamName}_${player.name}`;
+                // Sanitize key for Firebase - replace invalid characters
+                const key = `${teamName}_${player.name}`.replace(/[.#$\/\[\]]/g, '-');
 
                 // Calculate totals for this game
                 let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0, totalFouls = 0;
