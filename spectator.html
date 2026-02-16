@@ -140,20 +140,16 @@
             min-width: 250px;
         }
 
-        .team-name {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .team1-name {
-            color: #667eea;
-        }
-
-        .team2-name {
-            color: #f56565;
+        .team-logo-spectator {
+            width: 180px;
+            height: 180px;
+            object-fit: contain;
+            margin: 0 auto 20px auto;
+            display: block;
+            border-radius: 12px;
+            background: white;
+            padding: 15px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
 
         .score {
@@ -360,8 +356,10 @@
                 gap: 20px;
             }
 
-            .team-name {
-                font-size: 1.8em;
+            .team-logo-spectator {
+                width: 120px;
+                height: 120px;
+                padding: 10px;
             }
 
             .score {
@@ -426,13 +424,13 @@
                 </div>
                 <div class="scores-container">
                     <div class="team-score">
-                        <div class="team-name team1-name" id="team1Name">Team 1</div>
+                        <img id="team1Logo" class="team-logo-spectator" style="display: none;" alt="Team 1 Logo">
                         <div class="score" id="team1Score">0</div>
                         <div class="team-fouls" id="team1Fouls">Team Fouls: 0</div>
                     </div>
                     <div class="vs-text">VS</div>
                     <div class="team-score">
-                        <div class="team-name team2-name" id="team2Name">Team 2</div>
+                        <img id="team2Logo" class="team-logo-spectator" style="display: none;" alt="Team 2 Logo">
                         <div class="score" id="team2Score">0</div>
                         <div class="team-fouls" id="team2Fouls">Team Fouls: 0</div>
                     </div>
@@ -533,9 +531,23 @@
                 document.getElementById('gameTimer').textContent = formatTime(gameData.gameTimer.currentSeconds);
             }
 
-            // Update team names
-            document.getElementById('team1Name').textContent = gameData.team1?.name || 'Team 1';
-            document.getElementById('team2Name').textContent = gameData.team2?.name || 'Team 2';
+            // Update team logos
+            const team1Logo = document.getElementById('team1Logo');
+            const team2Logo = document.getElementById('team2Logo');
+
+            if (gameData.team1?.logo) {
+                team1Logo.src = gameData.team1.logo;
+                team1Logo.style.display = 'block';
+            } else {
+                team1Logo.style.display = 'none';
+            }
+
+            if (gameData.team2?.logo) {
+                team2Logo.src = gameData.team2.logo;
+                team2Logo.style.display = 'block';
+            } else {
+                team2Logo.style.display = 'none';
+            }
 
             // Calculate and update scores
             const team1Score = calculateTeamScore(gameData.team1);
