@@ -902,8 +902,10 @@
                 grid-template-columns: 1fr;
             }
 
-            .score-team-name {
-                font-size: 1em;
+            .team-logo-scoreboard {
+                width: 100px;
+                height: 100px;
+                padding: 8px;
             }
 
             .score-value {
@@ -1067,8 +1069,10 @@
                 font-size: 0.95em;
             }
 
-            .score-team-name {
-                font-size: 0.85em;
+            .team-logo-scoreboard {
+                width: 80px;
+                height: 80px;
+                padding: 6px;
             }
 
             .score-value {
@@ -1263,14 +1267,14 @@
         }
 
         .team-logo-scoreboard {
-            width: 80px;
-            height: 80px;
+            width: 150px;
+            height: 150px;
             object-fit: contain;
             margin: 0 auto 15px auto;
             display: block;
             border-radius: 12px;
             background: white;
-            padding: 8px;
+            padding: 10px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
         }
 
@@ -1536,13 +1540,11 @@
             <div class="scoreboard-top-row">
                 <div class="score-team">
                     <img id="scoreTeam1Logo" class="team-logo-scoreboard" style="display: none;" alt="Team 1 Logo">
-                    <div class="score-team-name" id="scoreTeam1Name">Team Violet</div>
                     <div class="score-value" id="scoreTeam1Value">0</div>
                 </div>
                 <div class="score-vs">VS</div>
                 <div class="score-team">
                     <img id="scoreTeam2Logo" class="team-logo-scoreboard" style="display: none;" alt="Team 2 Logo">
-                    <div class="score-team-name" id="scoreTeam2Name">Team Yellow</div>
                     <div class="score-value" id="scoreTeam2Value">0</div>
                 </div>
             </div>
@@ -2476,10 +2478,6 @@
             const team1Total = calculateTeamTotalPoints('team1');
             const team2Total = calculateTeamTotalPoints('team2');
 
-            // Update team names
-            document.getElementById('scoreTeam1Name').textContent = gameData.team1.name;
-            document.getElementById('scoreTeam2Name').textContent = gameData.team2.name;
-
             // Update team logos
             const team1Logo = document.getElementById('scoreTeam1Logo');
             const team2Logo = document.getElementById('scoreTeam2Logo');
@@ -3362,6 +3360,9 @@
 
             // Load players for this team
             loadTeamPlayers(teamNumber);
+
+            // Auto-generate game name immediately
+            updateGameName();
         }
 
         function loadTeamPlayers(teamNumber) {
