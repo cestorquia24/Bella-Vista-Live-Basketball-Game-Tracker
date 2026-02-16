@@ -2945,7 +2945,7 @@
 
         // Game History Management Functions
         function finishAndSaveGame() {
-            if (!confirm('Finish and save this game? This will:\n- Export game summary to CSV\n- Save to game history\n- Clear tracker for new game')) return;
+            if (!confirm('Finish and save this game? This will:\n- Export game summary to CSV\n- Save to game history')) return;
 
             // First, export CSV
             exportCSV();
@@ -2994,9 +2994,8 @@
             // Push to Firebase for cross-device sync
             pushHistoryToFirebase(history);
 
-            // Clear current game and show setup
-            alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nStarting fresh game setup...');
-            clearGameData();
+            // Success message - game data stays in tracker
+            alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nGame data is still in the tracker. Use "Clear & Start New Game" when ready for a new game.');
         }
 
         function calculateQuarterScores() {
