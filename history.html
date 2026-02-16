@@ -1074,7 +1074,16 @@
         function renderPlayerStats() {
             const tbody = document.getElementById('playersTableBody');
             const empty = document.getElementById('emptyPlayers');
-            const players = Object.values(seasonStandings.players);
+            const allPlayers = Object.values(seasonStandings.players);
+
+            // Filter out players with no stats (only show players who recorded at least one stat)
+            const players = allPlayers.filter(player =>
+                player.totalPoints > 0 ||
+                player.totalRebounds > 0 ||
+                player.totalAssists > 0 ||
+                player.totalSteals > 0 ||
+                player.totalBlocks > 0
+            );
 
             if (players.length === 0) {
                 tbody.innerHTML = '';
