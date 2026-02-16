@@ -3075,14 +3075,14 @@
             position: relative;
         }
         .team-logo-cast {
-            width: 150px;
-            height: 150px;
+            width: 250px;
+            height: 250px;
             object-fit: contain;
-            margin: 0 auto 20px auto;
+            margin: 0 auto 30px auto;
             display: block;
             border-radius: 20px;
             background: white;
-            padding: 15px;
+            padding: 20px;
             box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         }
         .possession-indicator {
@@ -3289,7 +3289,6 @@
         <div class="score-container">
             <div class="team-box">
                 ` + (gameData.team1.logo ? `<img src="${gameData.team1.logo}" class="team-logo-cast" alt="${gameData.team1.name}">` : '') + `
-                <div class="team-name">` + gameData.team1.name + `</div>
                 <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
                 <div class="team-score" id="team1Score">` + team1Score + `</div>
                 <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
@@ -3297,7 +3296,6 @@
             <div class="vs-text">VS</div>
             <div class="team-box">
                 ` + (gameData.team2.logo ? `<img src="${gameData.team2.logo}" class="team-logo-cast" alt="${gameData.team2.name}">` : '') + `
-                <div class="team-name">` + gameData.team2.name + `</div>
                 <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
                 <div class="team-score" id="team2Score">` + team2Score + `</div>
                 <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
