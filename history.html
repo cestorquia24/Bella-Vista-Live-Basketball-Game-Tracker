@@ -146,6 +146,112 @@
             display: block;
         }
 
+        /* Password Modal Styles */
+        .password-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-modal.active {
+            display: flex;
+        }
+
+        .password-modal-content {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 30px 40px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+
+        .password-modal h3 {
+            color: #48bb78;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .password-input-group {
+            margin-bottom: 20px;
+        }
+
+        .password-input-group label {
+            display: block;
+            color: #cbd5e0;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .password-input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            background: #1a202c;
+            color: white;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .password-input-group input:focus {
+            outline: none;
+            border-color: #48bb78;
+        }
+
+        .password-modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .password-modal-btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .password-modal-btn.submit {
+            background: #48bb78;
+            color: white;
+        }
+
+        .password-modal-btn.submit:hover {
+            background: #38a169;
+        }
+
+        .password-modal-btn.cancel {
+            background: #718096;
+            color: white;
+        }
+
+        .password-modal-btn.cancel:hover {
+            background: #4a5568;
+        }
+
+        .password-error {
+            color: #fc8181;
+            font-size: 0.9em;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .password-error.show {
+            display: block;
+        }
+
         .tabs {
             display: flex;
             justify-content: center;
@@ -613,6 +719,22 @@
         </div>
     </div>
 
+    <!-- Password Modal -->
+    <div id="passwordModal" class="password-modal">
+        <div class="password-modal-content">
+            <h3>🔐 Admin Authentication</h3>
+            <div class="password-input-group">
+                <label for="adminPasswordInput">Enter Admin Password:</label>
+                <input type="password" id="adminPasswordInput" placeholder="Password" autocomplete="off">
+                <div class="password-error" id="passwordError">Incorrect password!</div>
+            </div>
+            <div class="password-modal-buttons">
+                <button class="password-modal-btn cancel" onclick="closePasswordModal()">Cancel</button>
+                <button class="password-modal-btn submit" onclick="submitPassword()">Submit</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentTab = 'history';
         let gameHistory = [];
@@ -630,19 +752,75 @@
                 document.getElementById('adminToggle').textContent = '🔓 Admin Mode';
                 document.getElementById('adminToggle').classList.remove('active');
             } else {
-                // Enter admin mode - check password
-                const password = prompt('Enter admin password:');
-                if (password === 'Hoopers') {
-                    isAdminMode = true;
-                    sessionStorage.setItem('adminMode', 'true');
-                    document.body.classList.add('admin-mode');
-                    document.getElementById('adminToggle').textContent = '🔒 Exit Admin';
-                    document.getElementById('adminToggle').classList.add('active');
-                } else if (password !== null) {
-                    alert('Incorrect password!');
-                }
+                // Enter admin mode - show password modal
+                showPasswordModal();
             }
         }
+
+        function showPasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            const input = document.getElementById('adminPasswordInput');
+            const error = document.getElementById('passwordError');
+
+            // Reset modal state
+            input.value = '';
+            error.classList.remove('show');
+
+            // Show modal and focus input
+            modal.classList.add('active');
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function closePasswordModal() {
+            const modal = document.getElementById('passwordModal');
+            const input = document.getElementById('adminPasswordInput');
+            const error = document.getElementById('passwordError');
+
+            input.value = '';
+            error.classList.remove('show');
+            modal.classList.remove('active');
+        }
+
+        function submitPassword() {
+            const input = document.getElementById('adminPasswordInput');
+            const error = document.getElementById('passwordError');
+            const password = input.value;
+
+            if (password === 'Hoopers') {
+                // Correct password - enable admin mode
+                isAdminMode = true;
+                sessionStorage.setItem('adminMode', 'true');
+                document.body.classList.add('admin-mode');
+                document.getElementById('adminToggle').textContent = '🔒 Exit Admin';
+                document.getElementById('adminToggle').classList.add('active');
+                closePasswordModal();
+            } else {
+                // Incorrect password - show error
+                error.classList.add('show');
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Handle Enter key in password input
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('adminPasswordInput');
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        submitPassword();
+                    }
+                });
+            }
+        });
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('passwordModal');
+            if (e.target === modal) {
+                closePasswordModal();
+            }
+        });
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', function() {
