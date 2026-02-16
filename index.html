@@ -1719,9 +1719,8 @@
 
         <div class="export-section">
             <div class="auto-save-indicator">✓ Auto-saving</div>
-            <button class="export-btn" onclick="exportCSV()" style="background: #48bb78;">📄 Export Game Summary</button>
-            <button class="export-btn" onclick="finishAndSaveGame()" style="margin-left: 10px; background: #9f7aea;">🏁 Finish & Save Game</button>
-            <button class="export-btn" onclick="window.location.href='history.html'" style="margin-left: 10px; background: #ed8936;">📊 View History & Standings</button>
+            <button class="export-btn" onclick="finishAndSaveGame()" style="background: #48bb78;">🏁 Finish & Save Game</button>
+            <button class="export-btn" onclick="window.location.href='history.html'" style="margin-left: 10px; background: #667eea;">📊 View History & Standings</button>
             <button class="export-btn" onclick="clearGameData()" style="margin-left: 10px; background: #f56565;">🗑️ Clear & Start New Game</button>
         </div>
     </div>
@@ -2949,7 +2948,10 @@
 
         // Game History Management Functions
         function finishAndSaveGame() {
-            if (!confirm('Finish this game and save to history? This will start a fresh game.')) return;
+            if (!confirm('Finish and save this game? This will:\n- Export game summary to CSV\n- Save to game history\n- Clear tracker for new game')) return;
+
+            // First, export CSV
+            exportCSV();
 
             // Calculate final scores
             const team1Score = calculateTeamTotalPoints('team1');
@@ -2993,7 +2995,7 @@
             updateSeasonStandings(gameRecord);
 
             // Clear current game and show setup
-            alert('Game saved successfully! Starting fresh game setup.');
+            alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nStarting fresh game setup...');
             clearGameData();
         }
 
