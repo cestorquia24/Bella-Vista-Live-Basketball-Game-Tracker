@@ -489,7 +489,6 @@
         <div class="header">
             <h1>📊 Game History & Standings</h1>
             <div class="header-buttons">
-                <a href="index.html" class="back-button">← Back to Tracker</a>
                 <a href="spectator.html" class="spectator-button">📺 View Live Game</a>
             </div>
         </div>
@@ -582,6 +581,20 @@
         window.addEventListener('DOMContentLoaded', function() {
             loadData();
             renderCurrentTab();
+
+            // Auto-refresh every 2 seconds to pick up new games from other tabs
+            setInterval(function() {
+                loadData();
+                renderCurrentTab();
+            }, 2000);
+        });
+
+        // Also refresh when tab becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                loadData();
+                renderCurrentTab();
+            }
         });
 
         function loadData() {
