@@ -106,6 +106,46 @@
             box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
         }
 
+        .admin-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #718096;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .admin-toggle:hover {
+            background: #4a5568;
+            transform: translateY(-2px);
+        }
+
+        .admin-toggle.active {
+            background: #f56565;
+            box-shadow: 0 4px 16px rgba(245, 101, 101, 0.5);
+        }
+
+        .admin-toggle.active:hover {
+            background: #e53e3e;
+        }
+
+        /* Hide delete buttons by default, show only in admin mode */
+        .delete-btn {
+            display: none;
+        }
+
+        body.admin-mode .delete-btn {
+            display: block;
+        }
+
         .tabs {
             display: flex;
             justify-content: center;
@@ -493,6 +533,8 @@
             </div>
         </div>
 
+        <button class="admin-toggle" id="adminToggle" onclick="toggleAdminMode()">🔓 Admin Mode</button>
+
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('history')">🏀 Game History</button>
             <button class="tab-btn" onclick="switchTab('teams')">🏆 Team Standings</button>
@@ -576,9 +618,42 @@
         let gameHistory = [];
         let seasonStandings = { teams: {}, players: {} };
         let currentSort = { column: null, order: 'asc' };
+        let isAdminMode = false;
+
+        // Admin Mode Functions
+        function toggleAdminMode() {
+            if (isAdminMode) {
+                // Exit admin mode
+                isAdminMode = false;
+                sessionStorage.removeItem('adminMode');
+                document.body.classList.remove('admin-mode');
+                document.getElementById('adminToggle').textContent = '🔓 Admin Mode';
+                document.getElementById('adminToggle').classList.remove('active');
+            } else {
+                // Enter admin mode - check password
+                const password = prompt('Enter admin password:');
+                if (password === 'Hoopers') {
+                    isAdminMode = true;
+                    sessionStorage.setItem('adminMode', 'true');
+                    document.body.classList.add('admin-mode');
+                    document.getElementById('adminToggle').textContent = '🔒 Exit Admin';
+                    document.getElementById('adminToggle').classList.add('active');
+                } else if (password !== null) {
+                    alert('Incorrect password!');
+                }
+            }
+        }
 
         // Load data on page load
         window.addEventListener('DOMContentLoaded', function() {
+            // Check if admin mode was previously enabled
+            if (sessionStorage.getItem('adminMode') === 'true') {
+                isAdminMode = true;
+                document.body.classList.add('admin-mode');
+                document.getElementById('adminToggle').textContent = '🔒 Exit Admin';
+                document.getElementById('adminToggle').classList.add('active');
+            }
+
             loadData();
             renderCurrentTab();
 
