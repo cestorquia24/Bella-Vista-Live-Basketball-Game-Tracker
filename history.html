@@ -59,6 +59,13 @@
             color: #48bb78;
         }
 
+        .header-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
         .back-button {
             padding: 12px 30px;
             background: #667eea;
@@ -77,6 +84,26 @@
             background: #5a67d8;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .spectator-button {
+            padding: 12px 30px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .spectator-button:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
         }
 
         .tabs {
@@ -461,7 +488,10 @@
 
         <div class="header">
             <h1>📊 Game History & Standings</h1>
-            <a href="index.html" class="back-button">← Back to Tracker</a>
+            <div class="header-buttons">
+                <a href="index.html" class="back-button">← Back to Tracker</a>
+                <a href="spectator.html" class="spectator-button">📺 View Live Game</a>
+            </div>
         </div>
 
         <div class="tabs">

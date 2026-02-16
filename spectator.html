@@ -341,6 +341,29 @@
             color: #fc8181;
         }
 
+        .history-button {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .history-button:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+        }
+
         @media (max-width: 768px) {
             .spectator-logo-display {
                 width: 90px;
@@ -391,6 +414,20 @@
 
             .player-stat-item {
                 font-size: 0.8em;
+            }
+
+            .history-button {
+                bottom: 70px;
+                left: 10px;
+                padding: 10px 20px;
+                font-size: 0.85em;
+            }
+
+            .connection-status {
+                bottom: 10px;
+                right: 10px;
+                padding: 10px 16px;
+                font-size: 0.85em;
             }
         }
     </style>
@@ -454,6 +491,8 @@
                 <div class="mvp-stats" id="mvpStats"></div>
             </div>
         </div>
+
+        <a href="history.html" class="history-button">📊 View History & Standings</a>
 
         <div class="connection-status">
             <span id="connectionStatus" class="status-connected">● Connected</span>
