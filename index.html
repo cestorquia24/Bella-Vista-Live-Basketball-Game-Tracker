@@ -1215,7 +1215,8 @@
         }
 
         .form-group input,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 12px;
             border: 2px solid #e2e8f0;
@@ -1226,9 +1227,15 @@
         }
 
         .form-group input:focus,
-        .form-group textarea:focus {
+        .form-group textarea:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        .team-selector {
+            cursor: pointer;
+            background-color: white;
         }
 
         .form-group textarea {
@@ -1295,53 +1302,52 @@
             <img src="belaLogo1.jpg" alt="Bella Vista Basketball League" class="setup-logo-top">
             <h2>🏀 Setup Basketball Game</h2>
             <form id="gameSetupForm" onsubmit="startGameFromForm(event); return false;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="team1Selector">Team 1</label>
+                        <select id="team1Selector" class="team-selector" onchange="loadTeamPlayers(1)" required>
+                            <option value="">-- Select Team 1 --</option>
+                            <option value="Orange Inferno">Orange Inferno</option>
+                            <option value="Gray Wolves">Gray Wolves</option>
+                            <option value="Green Bulls">Green Bulls</option>
+                            <option value="Bella Vista Blue">Bella Vista Blue</option>
+                            <option value="Black Hoopers">Black Hoopers</option>
+                            <option value="Yellow Slashers">Yellow Slashers</option>
+                            <option value="Red Blood Cells">Red Blood Cells</option>
+                            <option value="Porpol Ravens">Porpol Ravens</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="team2Selector">Team 2</label>
+                        <select id="team2Selector" class="team-selector" onchange="loadTeamPlayers(2)" required>
+                            <option value="">-- Select Team 2 --</option>
+                            <option value="Orange Inferno">Orange Inferno</option>
+                            <option value="Gray Wolves">Gray Wolves</option>
+                            <option value="Green Bulls">Green Bulls</option>
+                            <option value="Bella Vista Blue">Bella Vista Blue</option>
+                            <option value="Black Hoopers">Black Hoopers</option>
+                            <option value="Yellow Slashers">Yellow Slashers</option>
+                            <option value="Red Blood Cells">Red Blood Cells</option>
+                            <option value="Porpol Ravens">Porpol Ravens</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="gameNameInput">Game Name</label>
-                    <input type="text" id="gameNameInput" value="Violet vs. Yellow" required>
+                    <input type="text" id="gameNameInput" value="" placeholder="Will auto-generate from teams" required>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="team1NameInput">Team 1 Name</label>
-                        <input type="text" id="team1NameInput" value="Team Violet" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="team2NameInput">Team 2 Name</label>
-                        <input type="text" id="team2NameInput" value="Team Yellow" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
+                <div class="form-row" style="display: none;">
                     <div class="form-group">
                         <label for="team1PlayersInput">Team 1 Players</label>
-                        <textarea id="team1PlayersInput" required>Estorquia # 18
-S. Suyo # 24
-Perez #8
-Puno #30
-Concepcion #13
-Amaro #14
-Borja #7
-Ramos #25
-Campos #28
-Prado #12
-Mariano #29</textarea>
-                        <small>One player per line. First 5 will be starters.</small>
+                        <textarea id="team1PlayersInput" required></textarea>
+                        <small>Auto-populated from team selection</small>
                     </div>
                     <div class="form-group">
                         <label for="team2PlayersInput">Team 2 Players</label>
-                        <textarea id="team2PlayersInput" required>Randolf Bacal
-Marlon Germedia
-Josh Mendoza
-Felix Lorenzo
-James Salonga
-Mark Joseph Bayeta
-Ronald Sspanol
-Basty Valenzuela
-RM Guilalas
-Lance Concepcion
-Nurjan Macaaya
-Bryan Madriaga</textarea>
-                        <small>One player per line. First 5 will be starters.</small>
+                        <textarea id="team2PlayersInput" required></textarea>
+                        <small>Auto-populated from team selection</small>
                     </div>
                 </div>
 
@@ -1564,6 +1570,118 @@ Bryan Madriaga</textarea>
 
     <script>
         console.log('Basketball Tracker v2.6 - Game Timer + Shot Clock');
+
+        // Predefined Teams Database
+        const PREDEFINED_TEAMS = {
+            'Orange Inferno': [
+                'Melgar #28',
+                'Francisco #24',
+                'Taguiam #1',
+                'Arriola #13',
+                'Dolorso #12',
+                'Inocencio #7',
+                'Apodaca #3',
+                'Maglangit #31',
+                'Rafael #8',
+                'Paronda #77',
+                'Peñaflor #14',
+                'Dantes #15'
+            ],
+            'Gray Wolves': [
+                'Lagazo #2',
+                'Jade #08',
+                'Estuaria #45',
+                'Mendoza #06',
+                'Geres #11',
+                'B. Gozon #7',
+                'Delos Reyes #24',
+                'Jamolangue #22',
+                'Matociños #0',
+                'Papruz #18',
+                'Vargas #28',
+                'Ong #15'
+            ],
+            'Green Bulls': [
+                'Cruz #5',
+                'Digo #13',
+                'Torralba #18',
+                'Tabuan #31',
+                'Frogosa #19',
+                'Ligan #09',
+                'Isidro #12',
+                'Tan #1',
+                'Balatucan #25',
+                'Concepcion #21',
+                'Geres #23',
+                'Mariano #52'
+            ],
+            'Bella Vista Blue': [
+                'Digo #4',
+                'Tonel #92',
+                'Valeza #1',
+                'Razon #08',
+                'Yu #2',
+                'Manguba #19',
+                'Fario #17',
+                'Fahad #25',
+                'Jess #16',
+                'Aguilar Jr. #11',
+                'Barredo #20',
+                'Fajardo #15'
+            ],
+            'Black Hoopers': [
+                'Sollodin #24',
+                'Sollodin #3',
+                'Suyo #23',
+                'Tiquia #91',
+                'Francisco #28',
+                'Talens #7',
+                'Panuncia #8',
+                'Tan Sanchez #14',
+                'Argueza #20',
+                'Miclat #21',
+                'Amador #321'
+            ],
+            'Yellow Slashers': [
+                'Bacal #5',
+                'Germedia #24',
+                'Bayeta #9',
+                'Español #17',
+                'Guilalas #8',
+                'Salonga #18',
+                'Mendoza #6',
+                'Concepcion #30',
+                'Venezuela #28',
+                'Madriaga #10'
+            ],
+            'Red Blood Cells': [
+                'Santillan #29',
+                'Agualada #26',
+                'Segura #51',
+                'Lucero #15',
+                'Agapay #11',
+                'Calesterio #25',
+                'Roberto #31',
+                'Geres #18',
+                'Jabez #17',
+                'Tan Sanchez #1',
+                'Regpala #38',
+                'Lo #04'
+            ],
+            'Porpol Ravens': [
+                'Estorquia #18',
+                'S. Suyo #24',
+                'Perez #8',
+                'Puno #30',
+                'Concepcion #13',
+                'Amaro #14',
+                'Borja #7',
+                'Ramos #25',
+                'Campos #28',
+                'Prado #12',
+                'Mariano #29'
+            ]
+        };
 
         // Game data structure
         const gameData = {
@@ -3005,6 +3123,34 @@ Bryan Madriaga</textarea>
         }
 
         // Setup screen functions
+        function loadTeamPlayers(teamNumber) {
+            const selectorId = `team${teamNumber}Selector`;
+            const playersInputId = `team${teamNumber}PlayersInput`;
+
+            const teamName = document.getElementById(selectorId).value;
+            const playersTextarea = document.getElementById(playersInputId);
+
+            if (teamName && PREDEFINED_TEAMS[teamName]) {
+                // Load players for selected team
+                playersTextarea.value = PREDEFINED_TEAMS[teamName].join('\n');
+            } else {
+                playersTextarea.value = '';
+            }
+
+            // Auto-generate game name when both teams are selected
+            updateGameName();
+        }
+
+        function updateGameName() {
+            const team1 = document.getElementById('team1Selector').value;
+            const team2 = document.getElementById('team2Selector').value;
+            const gameNameInput = document.getElementById('gameNameInput');
+
+            if (team1 && team2) {
+                gameNameInput.value = `${team1} vs ${team2}`;
+            }
+        }
+
         function showSetupScreen() {
             document.getElementById('setupScreen').classList.remove('hidden');
         }
@@ -3018,8 +3164,8 @@ Bryan Madriaga</textarea>
 
             const formData = {
                 gameName: document.getElementById('gameNameInput').value,
-                team1Name: document.getElementById('team1NameInput').value,
-                team2Name: document.getElementById('team2NameInput').value,
+                team1Name: document.getElementById('team1Selector').value,
+                team2Name: document.getElementById('team2Selector').value,
                 team1Players: document.getElementById('team1PlayersInput').value,
                 team2Players: document.getElementById('team2PlayersInput').value,
                 quarters: parseInt(document.getElementById('quartersInput').value),
