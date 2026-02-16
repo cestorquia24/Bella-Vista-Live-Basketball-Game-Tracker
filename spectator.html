@@ -657,16 +657,20 @@
                     // Only show players with stats
                     if (stats.points > 0 || stats.rebounds > 0 || stats.assists > 0 ||
                         stats.steals > 0 || stats.blocks > 0 || stats.fouls > 0) {
+
+                        let statsHTML = '';
+                        if (stats.points > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.points}</strong> PTS</span>`;
+                        if (stats.rebounds > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.rebounds}</strong> REB</span>`;
+                        if (stats.assists > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.assists}</strong> AST</span>`;
+                        if (stats.steals > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.steals}</strong> STL</span>`;
+                        if (stats.blocks > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.blocks}</strong> BLK</span>`;
+                        if (stats.fouls > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.fouls}</strong> F</span>`;
+
                         playersHTML += `
                             <div class="player-stat-row">
                                 <div class="player-stat-name">${player.name}</div>
                                 <div class="player-stat-values">
-                                    <span class="player-stat-item"><strong>${stats.points}</strong> PTS</span>
-                                    <span class="player-stat-item"><strong>${stats.rebounds}</strong> REB</span>
-                                    <span class="player-stat-item"><strong>${stats.assists}</strong> AST</span>
-                                    <span class="player-stat-item"><strong>${stats.steals}</strong> STL</span>
-                                    <span class="player-stat-item"><strong>${stats.blocks}</strong> BLK</span>
-                                    <span class="player-stat-item"><strong>${stats.fouls}</strong> F</span>
+                                    ${statsHTML}
                                 </div>
                             </div>
                         `;
@@ -709,28 +713,44 @@
                         stats.blocks += qStats.blocks || 0;
                     });
 
-                    mvpStats.innerHTML = `
-                        <div class="mvp-stat">
-                            <div class="mvp-stat-label">PTS</div>
-                            <div class="mvp-stat-value">${stats.points}</div>
-                        </div>
-                        <div class="mvp-stat">
-                            <div class="mvp-stat-label">REB</div>
-                            <div class="mvp-stat-value">${stats.rebounds}</div>
-                        </div>
-                        <div class="mvp-stat">
-                            <div class="mvp-stat-label">AST</div>
-                            <div class="mvp-stat-value">${stats.assists}</div>
-                        </div>
-                        <div class="mvp-stat">
-                            <div class="mvp-stat-label">STL</div>
-                            <div class="mvp-stat-value">${stats.steals}</div>
-                        </div>
-                        <div class="mvp-stat">
-                            <div class="mvp-stat-label">BLK</div>
-                            <div class="mvp-stat-value">${stats.blocks}</div>
-                        </div>
-                    `;
+                    let mvpStatsHTML = '';
+                    if (stats.points > 0) {
+                        mvpStatsHTML += `
+                            <div class="mvp-stat">
+                                <div class="mvp-stat-label">PTS</div>
+                                <div class="mvp-stat-value">${stats.points}</div>
+                            </div>`;
+                    }
+                    if (stats.rebounds > 0) {
+                        mvpStatsHTML += `
+                            <div class="mvp-stat">
+                                <div class="mvp-stat-label">REB</div>
+                                <div class="mvp-stat-value">${stats.rebounds}</div>
+                            </div>`;
+                    }
+                    if (stats.assists > 0) {
+                        mvpStatsHTML += `
+                            <div class="mvp-stat">
+                                <div class="mvp-stat-label">AST</div>
+                                <div class="mvp-stat-value">${stats.assists}</div>
+                            </div>`;
+                    }
+                    if (stats.steals > 0) {
+                        mvpStatsHTML += `
+                            <div class="mvp-stat">
+                                <div class="mvp-stat-label">STL</div>
+                                <div class="mvp-stat-value">${stats.steals}</div>
+                            </div>`;
+                    }
+                    if (stats.blocks > 0) {
+                        mvpStatsHTML += `
+                            <div class="mvp-stat">
+                                <div class="mvp-stat-label">BLK</div>
+                                <div class="mvp-stat-value">${stats.blocks}</div>
+                            </div>`;
+                    }
+
+                    mvpStats.innerHTML = mvpStatsHTML;
                 }
             }
 
