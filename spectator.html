@@ -592,6 +592,11 @@
         }
 
         function isGameLive(gameData) {
+            // Check explicit isLive flag first
+            if (gameData.isLive === false) {
+                return false;
+            }
+
             // Check if lastUpdated timestamp exists and is recent (within 5 minutes)
             if (!gameData.lastUpdated) return false;
             const now = Date.now();

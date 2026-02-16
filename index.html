@@ -3619,7 +3619,7 @@
 
         // Push live updates to Firebase
         function pushLiveUpdate() {
-            if (!liveUpdatesEnabled || !database) return;
+            if (!database) return;
 
             try {
                 const liveData = {
@@ -3631,6 +3631,7 @@
                     mvp: gameData.mvp,
                     gameTimer: gameData.gameTimer,
                     shotClock: gameData.shotClock,
+                    isLive: liveUpdatesEnabled,
                     lastUpdated: Date.now()
                 };
 
@@ -3657,6 +3658,7 @@
                 } else {
                     btn.textContent = '📡 Live: OFF';
                     btn.style.background = '#718096';
+                    pushLiveUpdate(); // Push final update with isLive = false
                 }
             }
 
