@@ -4626,8 +4626,57 @@
                                 // Load remote data into local game
                                 isUpdatingFromFirebase = true;
 
-                                if (remoteData.team1) gameData.team1 = remoteData.team1;
-                                if (remoteData.team2) gameData.team2 = remoteData.team2;
+                                // SMART MERGE: Don't replace, merge intelligently
+                                if (remoteData.team1 && remoteData.team1.players) {
+                                    remoteData.team1.players.forEach((remotePlayer, index) => {
+                                        const localPlayer = gameData.team1.players[index];
+                                        if (localPlayer && remotePlayer) {
+                                            // Merge each quarter's stats - take the MAXIMUM value
+                                            Object.keys(localPlayer.quarterStats).forEach(quarter => {
+                                                const localStats = localPlayer.quarterStats[quarter];
+                                                const remoteStats = remotePlayer.quarterStats[quarter];
+                                                if (remoteStats) {
+                                                    localStats.points = Math.max(localStats.points || 0, remoteStats.points || 0);
+                                                    localStats.rebounds = Math.max(localStats.rebounds || 0, remoteStats.rebounds || 0);
+                                                    localStats.assists = Math.max(localStats.assists || 0, remoteStats.assists || 0);
+                                                    localStats.steals = Math.max(localStats.steals || 0, remoteStats.steals || 0);
+                                                    localStats.blocks = Math.max(localStats.blocks || 0, remoteStats.blocks || 0);
+                                                    localStats.fouls = Math.max(localStats.fouls || 0, remoteStats.fouls || 0);
+                                                }
+                                            });
+                                            localPlayer.name = remotePlayer.name;
+                                            localPlayer.isStarter = remotePlayer.isStarter;
+                                        }
+                                    });
+                                    gameData.team1.teamFouls = remoteData.team1.teamFouls || {};
+                                    gameData.team1.timeoutsRemaining = remoteData.team1.timeoutsRemaining || 2;
+                                }
+
+                                if (remoteData.team2 && remoteData.team2.players) {
+                                    remoteData.team2.players.forEach((remotePlayer, index) => {
+                                        const localPlayer = gameData.team2.players[index];
+                                        if (localPlayer && remotePlayer) {
+                                            // Merge each quarter's stats - take the MAXIMUM value
+                                            Object.keys(localPlayer.quarterStats).forEach(quarter => {
+                                                const localStats = localPlayer.quarterStats[quarter];
+                                                const remoteStats = remotePlayer.quarterStats[quarter];
+                                                if (remoteStats) {
+                                                    localStats.points = Math.max(localStats.points || 0, remoteStats.points || 0);
+                                                    localStats.rebounds = Math.max(localStats.rebounds || 0, remoteStats.rebounds || 0);
+                                                    localStats.assists = Math.max(localStats.assists || 0, remoteStats.assists || 0);
+                                                    localStats.steals = Math.max(localStats.steals || 0, remoteStats.steals || 0);
+                                                    localStats.blocks = Math.max(localStats.blocks || 0, remoteStats.blocks || 0);
+                                                    localStats.fouls = Math.max(localStats.fouls || 0, remoteStats.fouls || 0);
+                                                }
+                                            });
+                                            localPlayer.name = remotePlayer.name;
+                                            localPlayer.isStarter = remotePlayer.isStarter;
+                                        }
+                                    });
+                                    gameData.team2.teamFouls = remoteData.team2.teamFouls || {};
+                                    gameData.team2.timeoutsRemaining = remoteData.team2.timeoutsRemaining || 2;
+                                }
+
                                 if (remoteData.mvp) gameData.mvp = remoteData.mvp;
                                 if (remoteData.gameTimer) gameData.gameTimer = remoteData.gameTimer;
                                 if (remoteData.shotClock) gameData.shotClock = remoteData.shotClock;
@@ -4742,15 +4791,59 @@
                     isUpdatingFromFirebase = true;
                     lastProcessedTimestamp = theirLastUpdate;
 
-                    // Update local game data with remote changes
-                    if (remoteData.team1) {
-                        gameData.team1.players = remoteData.team1.players;
+                    // SMART MERGE: Combine remote and local changes instead of replacing
+                    // For each player, take the MAXIMUM value for each stat (both users could be updating different stats)
+
+                    if (remoteData.team1 && remoteData.team1.players) {
+                        remoteData.team1.players.forEach((remotePlayer, index) => {
+                            const localPlayer = gameData.team1.players[index];
+                            if (localPlayer && remotePlayer) {
+                                // Merge each quarter's stats - take the MAXIMUM value (most recent update wins)
+                                Object.keys(localPlayer.quarterStats).forEach(quarter => {
+                                    const localStats = localPlayer.quarterStats[quarter];
+                                    const remoteStats = remotePlayer.quarterStats[quarter];
+                                    if (remoteStats) {
+                                        localStats.points = Math.max(localStats.points || 0, remoteStats.points || 0);
+                                        localStats.rebounds = Math.max(localStats.rebounds || 0, remoteStats.rebounds || 0);
+                                        localStats.assists = Math.max(localStats.assists || 0, remoteStats.assists || 0);
+                                        localStats.steals = Math.max(localStats.steals || 0, remoteStats.steals || 0);
+                                        localStats.blocks = Math.max(localStats.blocks || 0, remoteStats.blocks || 0);
+                                        localStats.fouls = Math.max(localStats.fouls || 0, remoteStats.fouls || 0);
+                                    }
+                                });
+                                // Sync player name and starter status
+                                localPlayer.name = remotePlayer.name;
+                                localPlayer.isStarter = remotePlayer.isStarter;
+                            }
+                        });
+                        // Sync team fouls and timeouts
                         gameData.team1.teamFouls = remoteData.team1.teamFouls || {};
                         gameData.team1.timeoutsRemaining = remoteData.team1.timeoutsRemaining || 2;
                     }
 
-                    if (remoteData.team2) {
-                        gameData.team2.players = remoteData.team2.players;
+                    if (remoteData.team2 && remoteData.team2.players) {
+                        remoteData.team2.players.forEach((remotePlayer, index) => {
+                            const localPlayer = gameData.team2.players[index];
+                            if (localPlayer && remotePlayer) {
+                                // Merge each quarter's stats - take the MAXIMUM value
+                                Object.keys(localPlayer.quarterStats).forEach(quarter => {
+                                    const localStats = localPlayer.quarterStats[quarter];
+                                    const remoteStats = remotePlayer.quarterStats[quarter];
+                                    if (remoteStats) {
+                                        localStats.points = Math.max(localStats.points || 0, remoteStats.points || 0);
+                                        localStats.rebounds = Math.max(localStats.rebounds || 0, remoteStats.rebounds || 0);
+                                        localStats.assists = Math.max(localStats.assists || 0, remoteStats.assists || 0);
+                                        localStats.steals = Math.max(localStats.steals || 0, remoteStats.steals || 0);
+                                        localStats.blocks = Math.max(localStats.blocks || 0, remoteStats.blocks || 0);
+                                        localStats.fouls = Math.max(localStats.fouls || 0, remoteStats.fouls || 0);
+                                    }
+                                });
+                                // Sync player name and starter status
+                                localPlayer.name = remotePlayer.name;
+                                localPlayer.isStarter = remotePlayer.isStarter;
+                            }
+                        });
+                        // Sync team fouls and timeouts
                         gameData.team2.teamFouls = remoteData.team2.teamFouls || {};
                         gameData.team2.timeoutsRemaining = remoteData.team2.timeoutsRemaining || 2;
                     }
