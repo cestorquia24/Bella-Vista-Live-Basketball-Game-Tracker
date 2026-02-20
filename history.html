@@ -1092,6 +1092,18 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
+        // Team Logos Mapping
+        const TEAM_LOGOS = {
+            'Orange Inferno': 'logos/Orange Inferno.jpg',
+            'Gray Wolves': 'logos/Gray Wolves.jpeg',
+            'Green Bulls': 'logos/Green Bulls.jpg',
+            'Bella Vista Blue': 'logos/Bella Vista Blue.png',
+            'Black Hoopers': 'logos/Black Hoopers.jpg',
+            'Yellow Slashers': 'logos/Yellow Slashers.png',
+            'Red Blood Cells': 'logos/Red Blood Cells.jpg',
+            'Porpol Ravens': 'logos/Porpol Ravens.jpeg'
+        };
+
         let currentTab = 'history';
         let gameHistory = [];
         let seasonStandings = { teams: {}, players: {} };
@@ -1412,10 +1424,14 @@
             tbody.innerHTML = '';
             teamsArray.forEach((team, index) => {
                 const row = document.createElement('tr');
+                const teamLogo = TEAM_LOGOS[team.name] || '';
+                const logoHTML = teamLogo ? `<img src="${teamLogo}" class="team-logo-table" alt="${team.name}">` : '';
+
                 row.innerHTML = `
                     <td class="rank-cell">#${index + 1}</td>
                     <td>
                         <div class="team-cell">
+                            ${logoHTML}
                             <div>${team.name}</div>
                         </div>
                     </td>
@@ -1466,8 +1482,16 @@
             tbody.innerHTML = '';
             players.forEach(player => {
                 const row = document.createElement('tr');
+                const teamLogo = TEAM_LOGOS[player.teamName] || '';
+                const logoHTML = teamLogo ? `<img src="${teamLogo}" class="team-logo-table" alt="${player.teamName}">` : '';
+
                 row.innerHTML = `
-                    <td><span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span></td>
+                    <td>
+                        <div class="team-cell">
+                            ${logoHTML}
+                            <span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span>
+                        </div>
+                    </td>
                     <td>${player.teamName}</td>
                     <td>${player.gamesPlayed}</td>
                     <td class="stat-highlight">${player.avgPoints}</td>
@@ -1566,6 +1590,8 @@
             topPlayers.forEach((player, index) => {
                 const rank = index + 1;
                 const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                const teamLogo = TEAM_LOGOS[player.teamName] || '';
+                const logoHTML = teamLogo ? `<img src="${teamLogo}" class="team-logo-table" alt="${player.teamName}">` : '';
 
                 // Calculate stat value
                 let statValue;
@@ -1579,6 +1605,7 @@
                 item.className = `leader-item ${rankClass}`;
                 item.innerHTML = `
                     <div class="leader-rank">${rank}</div>
+                    ${logoHTML}
                     <div class="leader-info">
                         <div class="leader-name"><span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span></div>
                         <div class="leader-team">${player.teamName}</div>
@@ -1924,9 +1951,12 @@
 
         function renderPlayerGameLog(playerName, teamName, playerGames, careerHighs, seasonAvgs, recentAvgs) {
             const modalBody = document.getElementById('playerGameLogBody');
+            const teamLogo = TEAM_LOGOS[teamName] || '';
+            const logoHTML = teamLogo ? `<img src="${teamLogo}" style="width: 80px; height: 80px; object-fit: contain; margin: 0 auto 15px auto; display: block; border-radius: 8px;" alt="${teamName}">` : '';
 
             let html = `
                 <div class="player-log-header">
+                    ${logoHTML}
                     <h2>${playerName}</h2>
                     <div class="player-team">${teamName}</div>
                 </div>
