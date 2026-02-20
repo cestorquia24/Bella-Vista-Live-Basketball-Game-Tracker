@@ -4595,7 +4595,7 @@
         }
 
         // Toggle live updates on/off
-        function toggleLiveUpdates() {
+        async function toggleLiveUpdates() {
             if (!firebaseInitialized) {
                 initializeFirebase();
             }
@@ -4605,10 +4605,62 @@
             const btn = document.getElementById('liveUpdatesBtn');
             if (btn) {
                 if (liveUpdatesEnabled) {
+                    btn.textContent = '📡 Syncing...';
+                    btn.style.background = '#f6ad55';
+
+                    // FIRST: Fetch current Firebase data and sync if newer
+                    try {
+                        const snapshot = await database.ref('liveGame').once('value');
+                        const remoteData = snapshot.val();
+
+                        if (remoteData && remoteData.isLive) {
+                            console.log('📥 Found active game in Firebase, syncing...');
+
+                            // Check if remote data is newer
+                            const ourLastUpdate = gameData.lastUpdated || 0;
+                            const theirLastUpdate = remoteData.lastUpdated || 0;
+
+                            if (theirLastUpdate > ourLastUpdate) {
+                                console.log('⬇️ Remote data is newer, loading from Firebase');
+
+                                // Load remote data into local game
+                                isUpdatingFromFirebase = true;
+
+                                if (remoteData.team1) gameData.team1 = remoteData.team1;
+                                if (remoteData.team2) gameData.team2 = remoteData.team2;
+                                if (remoteData.mvp) gameData.mvp = remoteData.mvp;
+                                if (remoteData.gameTimer) gameData.gameTimer = remoteData.gameTimer;
+                                if (remoteData.shotClock) gameData.shotClock = remoteData.shotClock;
+                                if (remoteData.currentQuarter) {
+                                    currentQuarter = remoteData.currentQuarter;
+                                    window.currentQuarter = currentQuarter;
+                                }
+                                if (remoteData.possession !== undefined) gameData.possession = remoteData.possession;
+
+                                gameData.lastUpdated = theirLastUpdate;
+
+                                // Save and re-render
+                                originalSaveGameData();
+                                renderGame();
+
+                                console.log('✅ Synced with Firebase successfully');
+
+                                setTimeout(() => {
+                                    isUpdatingFromFirebase = false;
+                                }, 200);
+                            } else {
+                                console.log('⬆️ Local data is newer or same, will push to Firebase');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Failed to fetch initial Firebase data:', error);
+                    }
+
+                    // THEN: Start listening and pushing
                     btn.textContent = '📡 Live: ON';
                     btn.style.background = '#48bb78';
-                    pushLiveUpdate(); // Push initial update
                     subscribeToFirebaseUpdates(); // Start listening for changes
+                    pushLiveUpdate(); // Push our current state
                 } else {
                     btn.textContent = '📡 Live: OFF';
                     btn.style.background = '#718096';
@@ -4639,6 +4691,7 @@
         // Flag to prevent infinite sync loops
         let isUpdatingFromFirebase = false;
         let firebaseListener = null;
+        let lastProcessedTimestamp = 0; // Track what we've already processed
 
         // Subscribe to Firebase changes (Two-Way Sync)
         function subscribeToFirebaseUpdates() {
@@ -4650,24 +4703,44 @@
                     database.ref('liveGame').off('value', firebaseListener);
                 }
 
+                console.log('🔔 Subscribing to Firebase updates...');
+
                 // Listen for changes
                 firebaseListener = database.ref('liveGame').on('value', (snapshot) => {
                     const remoteData = snapshot.val();
 
-                    // Ignore if no data or if we're the ones who just pushed
-                    if (!remoteData || isUpdatingFromFirebase) return;
+                    // Ignore if no data
+                    if (!remoteData) {
+                        console.log('⚠️ No remote data in Firebase');
+                        return;
+                    }
 
-                    // Check if this update is newer than our last update
-                    const ourLastUpdate = gameData.lastUpdated || 0;
+                    // Ignore if we're currently pushing
+                    if (isUpdatingFromFirebase) {
+                        console.log('🔄 Skipping - currently updating from Firebase');
+                        return;
+                    }
+
                     const theirLastUpdate = remoteData.lastUpdated || 0;
+                    const ourLastUpdate = gameData.lastUpdated || 0;
 
-                    // Only apply if their update is newer
-                    if (theirLastUpdate <= ourLastUpdate) return;
+                    // Skip if we've already processed this exact timestamp
+                    if (theirLastUpdate === lastProcessedTimestamp) {
+                        console.log('⏭️ Already processed timestamp:', theirLastUpdate);
+                        return;
+                    }
 
-                    console.log('📥 Receiving remote update from Firebase');
+                    // Skip if remote data is older or same as ours
+                    if (theirLastUpdate <= ourLastUpdate) {
+                        console.log('⏭️ Skipping older/same update. Remote:', theirLastUpdate, 'Local:', ourLastUpdate);
+                        return;
+                    }
+
+                    console.log('📥 Receiving NEWER remote update. Remote:', theirLastUpdate, 'Local:', ourLastUpdate);
 
                     // Set flag to prevent push loop
                     isUpdatingFromFirebase = true;
+                    lastProcessedTimestamp = theirLastUpdate;
 
                     // Update local game data with remote changes
                     if (remoteData.team1) {
@@ -4696,6 +4769,10 @@
                         updateShotClockDisplay();
                     }
 
+                    if (remoteData.possession !== undefined) {
+                        gameData.possession = remoteData.possession;
+                    }
+
                     // Update current quarter if changed
                     if (remoteData.currentQuarter && remoteData.currentQuarter !== currentQuarter) {
                         currentQuarter = remoteData.currentQuarter;
@@ -4716,6 +4793,7 @@
                     updateTeamFoulsDisplay();
                     updateTimeoutDisplay();
                     updateMVPDisplay();
+                    updatePossessionButtons();
 
                     // If Quick Stats Panel is open, refresh it
                     const quickStatsModal = document.getElementById('quickStatsModal');
@@ -4731,9 +4809,9 @@
                     }, 100);
                 });
 
-                console.log('🔔 Subscribed to Firebase updates');
+                console.log('✅ Successfully subscribed to Firebase updates');
             } catch (error) {
-                console.error('Failed to subscribe to Firebase updates:', error);
+                console.error('❌ Failed to subscribe to Firebase updates:', error);
             }
         }
 
