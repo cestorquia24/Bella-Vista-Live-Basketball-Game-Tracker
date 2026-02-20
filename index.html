@@ -2509,6 +2509,28 @@
 
         function clearGameData() {
             if (confirm('Clear all game data and start a new game?')) {
+                // Turn off live updates
+                liveUpdatesEnabled = false;
+                localStorage.removeItem('liveUpdatesEnabled');
+
+                // Update live button UI
+                const liveBtn = document.getElementById('liveUpdatesBtn');
+                if (liveBtn) {
+                    liveBtn.textContent = '📡 Live: OFF';
+                    liveBtn.style.background = '#718096';
+                }
+
+                // Clear Firebase live game data
+                if (database) {
+                    try {
+                        database.ref('liveGame').remove();
+                        console.log('✅ Cleared live game from Firebase');
+                    } catch (error) {
+                        console.error('Failed to clear Firebase live game:', error);
+                    }
+                }
+
+                // Clear local storage
                 localStorage.removeItem('basketballGameData');
                 localStorage.removeItem('basketballCurrentQuarter');
                 localStorage.removeItem('basketballActionHistory');
