@@ -726,14 +726,20 @@
             document.getElementById('quarterDisplay').textContent =
                 currentQuarter === 'total' ? 'FINAL' : `Quarter ${currentQuarter}`;
 
-            // Update game timer
-            const formatTime = (seconds) => {
-                const mins = Math.floor(seconds / 60);
-                const secs = seconds % 60;
-                return `${mins}:${secs.toString().padStart(2, '0')}`;
-            };
-            if (gameData.gameTimer && gameData.gameTimer.currentSeconds !== undefined) {
-                document.getElementById('gameTimer').textContent = formatTime(gameData.gameTimer.currentSeconds);
+            // Update game timer - hide for final games
+            const gameTimerDisplay = document.querySelector('.game-timer-display');
+            if (isLive) {
+                gameTimerDisplay.style.display = 'block';
+                const formatTime = (seconds) => {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins}:${secs.toString().padStart(2, '0')}`;
+                };
+                if (gameData.gameTimer && gameData.gameTimer.currentSeconds !== undefined) {
+                    document.getElementById('gameTimer').textContent = formatTime(gameData.gameTimer.currentSeconds);
+                }
+            } else {
+                gameTimerDisplay.style.display = 'none';
             }
 
             // Update team logos
@@ -760,18 +766,36 @@
             document.getElementById('team1Score').textContent = team1Score;
             document.getElementById('team2Score').textContent = team2Score;
 
-            // Update team fouls
+            // Update team fouls - hide for final games
             const q = currentQuarter === 'total' ? 1 : currentQuarter;
-            document.getElementById('team1Fouls').textContent = `Team Fouls: ${gameData.team1?.teamFouls?.[q] || 0}`;
-            document.getElementById('team2Fouls').textContent = `Team Fouls: ${gameData.team2?.teamFouls?.[q] || 0}`;
+            const team1Fouls = document.getElementById('team1Fouls');
+            const team2Fouls = document.getElementById('team2Fouls');
+            if (isLive) {
+                team1Fouls.style.display = 'block';
+                team2Fouls.style.display = 'block';
+                team1Fouls.textContent = `Team Fouls: ${gameData.team1?.teamFouls?.[q] || 0}`;
+                team2Fouls.textContent = `Team Fouls: ${gameData.team2?.teamFouls?.[q] || 0}`;
+            } else {
+                team1Fouls.style.display = 'none';
+                team2Fouls.style.display = 'none';
+            }
 
-            // Update timeouts
-            const team1TimeoutsRemaining = gameData.team1?.timeoutsRemaining || 0;
-            const team2TimeoutsRemaining = gameData.team2?.timeoutsRemaining || 0;
-            const team1TimeoutIcons = '⏸️'.repeat(team1TimeoutsRemaining) || '—';
-            const team2TimeoutIcons = '⏸️'.repeat(team2TimeoutsRemaining) || '—';
-            document.getElementById('team1Timeouts').textContent = `Timeouts: ${team1TimeoutIcons} (${team1TimeoutsRemaining})`;
-            document.getElementById('team2Timeouts').textContent = `Timeouts: ${team2TimeoutIcons} (${team2TimeoutsRemaining})`;
+            // Update timeouts - hide for final games
+            const team1Timeouts = document.getElementById('team1Timeouts');
+            const team2Timeouts = document.getElementById('team2Timeouts');
+            if (isLive) {
+                team1Timeouts.style.display = 'block';
+                team2Timeouts.style.display = 'block';
+                const team1TimeoutsRemaining = gameData.team1?.timeoutsRemaining || 0;
+                const team2TimeoutsRemaining = gameData.team2?.timeoutsRemaining || 0;
+                const team1TimeoutIcons = '⏸️'.repeat(team1TimeoutsRemaining) || '—';
+                const team2TimeoutIcons = '⏸️'.repeat(team2TimeoutsRemaining) || '—';
+                team1Timeouts.textContent = `Timeouts: ${team1TimeoutIcons} (${team1TimeoutsRemaining})`;
+                team2Timeouts.textContent = `Timeouts: ${team2TimeoutIcons} (${team2TimeoutsRemaining})`;
+            } else {
+                team1Timeouts.style.display = 'none';
+                team2Timeouts.style.display = 'none';
+            }
 
             // Update team stats
             updateTeamStats('team1', gameData.team1, currentQuarter);
