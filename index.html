@@ -1908,6 +1908,99 @@
             font-size: 1.2em;
         }
 
+        .quick-stats-team-fouls {
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: 2px solid #fc8181;
+        }
+
+        .quick-stats-fouls-label {
+            text-align: center;
+            font-weight: 700;
+            color: #c53030;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .quick-stats-fouls-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quick-stats-fouls-value {
+            font-size: 2em;
+            font-weight: 900;
+            color: #c53030;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .quick-stat-btn.fouls-minus,
+        .quick-stat-btn.fouls-plus {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quick-stat-btn.fouls-minus:hover,
+        .quick-stat-btn.fouls-plus:hover {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.5);
+        }
+
+        .quick-stats-section-title {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin: 15px 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .quick-stats-buttons.points-row {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .quick-stat-btn.pt1 {
+            background: linear-gradient(135deg, #bee3f8 0%, #90cdf4 100%);
+            color: #2c5282;
+        }
+
+        .quick-stat-btn.pt1:hover {
+            background: linear-gradient(135deg, #90cdf4 0%, #63b3ed 100%);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        .quick-stat-btn.pt2 {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            color: #22543d;
+        }
+
+        .quick-stat-btn.pt2:hover {
+            background: linear-gradient(135deg, #9ae6b4 0%, #68d391 100%);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .quick-stat-btn.pt3 {
+            background: linear-gradient(135deg, #fbd38d 0%, #f6ad55 100%);
+            color: #7c2d12;
+        }
+
+        .quick-stat-btn.pt3:hover {
+            background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+        }
+
         @media (max-width: 768px) {
             .quick-stats-fab {
                 width: 60px;
@@ -4470,6 +4563,26 @@
             const container = document.getElementById('quickStatsPlayers');
             container.innerHTML = '';
 
+            // Add Team Fouls section at the top
+            const q = currentQuarter === 'total' ? 1 : currentQuarter;
+            const teamFouls = gameData[team].teamFouls[q] || 0;
+
+            const teamFoulsSection = document.createElement('div');
+            teamFoulsSection.className = 'quick-stats-team-fouls';
+            teamFoulsSection.innerHTML = `
+                <div class="quick-stats-fouls-label">Team Fouls (Q${q})</div>
+                <div class="quick-stats-fouls-controls">
+                    <button class="quick-stat-btn fouls-minus" onclick="quickTeamFoulsUpdate('${team}', -1)">
+                        <span class="quick-stat-icon">−</span>
+                    </button>
+                    <div class="quick-stats-fouls-value">${teamFouls}</div>
+                    <button class="quick-stat-btn fouls-plus" onclick="quickTeamFoulsUpdate('${team}', 1)">
+                        <span class="quick-stat-icon">+</span>
+                    </button>
+                </div>
+            `;
+            container.appendChild(teamFoulsSection);
+
             const players = gameData[team].players;
 
             players.forEach(player => {
@@ -4480,20 +4593,33 @@
 
                 playerCard.innerHTML = `
                     <div class="quick-stats-player-name">${player.name}</div>
+                    <div class="quick-stats-section-title">Points</div>
+                    <div class="quick-stats-buttons points-row">
+                        <button class="quick-stat-btn pt1" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 1)">
+                            <span class="quick-stat-label">+1: ${stats.points}</span>
+                        </button>
+                        <button class="quick-stat-btn pt2" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 2)">
+                            <span class="quick-stat-label">+2: ${stats.points}</span>
+                        </button>
+                        <button class="quick-stat-btn pt3" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 3)">
+                            <span class="quick-stat-label">+3: ${stats.points}</span>
+                        </button>
+                    </div>
+                    <div class="quick-stats-section-title">Other Stats</div>
                     <div class="quick-stats-buttons">
-                        <button class="quick-stat-btn reb" onclick="quickStatUpdate('${team}', ${player.id}, 'rebounds')">
+                        <button class="quick-stat-btn reb" onclick="quickStatUpdate('${team}', ${player.id}, 'rebounds', 1)">
                             <span class="quick-stat-icon">🏀</span>
                             <span class="quick-stat-label">REB: ${stats.rebounds}</span>
                         </button>
-                        <button class="quick-stat-btn ast" onclick="quickStatUpdate('${team}', ${player.id}, 'assists')">
+                        <button class="quick-stat-btn ast" onclick="quickStatUpdate('${team}', ${player.id}, 'assists', 1)">
                             <span class="quick-stat-icon">🤝</span>
                             <span class="quick-stat-label">AST: ${stats.assists}</span>
                         </button>
-                        <button class="quick-stat-btn stl" onclick="quickStatUpdate('${team}', ${player.id}, 'steals')">
+                        <button class="quick-stat-btn stl" onclick="quickStatUpdate('${team}', ${player.id}, 'steals', 1)">
                             <span class="quick-stat-icon">🖐️</span>
                             <span class="quick-stat-label">STL: ${stats.steals}</span>
                         </button>
-                        <button class="quick-stat-btn blk" onclick="quickStatUpdate('${team}', ${player.id}, 'blocks')">
+                        <button class="quick-stat-btn blk" onclick="quickStatUpdate('${team}', ${player.id}, 'blocks', 1)">
                             <span class="quick-stat-icon">🚫</span>
                             <span class="quick-stat-label">BLK: ${stats.blocks}</span>
                         </button>
@@ -4504,11 +4630,16 @@
             });
         }
 
-        function quickStatUpdate(team, playerId, statName) {
-            // Update the stat (increment by 1)
-            updateStat(team, playerId, statName, 1);
+        function quickStatUpdate(team, playerId, statName, value = 1) {
+            // Update the stat (increment by value)
+            updateStat(team, playerId, statName, value);
 
             // Re-render the current team's players to show updated stats
+            renderQuickStatsPlayers(team);
+        }
+
+        function quickTeamFoulsUpdate(team, change) {
+            updateTeamFouls(team, change);
             renderQuickStatsPlayers(team);
         }
 
