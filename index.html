@@ -4687,12 +4687,13 @@
                                 if (remoteData.possession !== undefined) gameData.possession = remoteData.possession;
 
                                 gameData.lastUpdated = theirLastUpdate;
+                                lastRemoteTimestamp = theirLastUpdate; // Track when we received this remote update
 
                                 // Save and re-render
                                 originalSaveGameData();
                                 renderGame();
 
-                                console.log('✅ Synced with Firebase successfully');
+                                console.log('✅ Synced with Firebase successfully at', theirLastUpdate);
 
                                 setTimeout(() => {
                                     isUpdatingFromFirebase = false;
@@ -4874,6 +4875,7 @@
 
                     // Update timestamp
                     gameData.lastUpdated = theirLastUpdate;
+                    lastRemoteTimestamp = theirLastUpdate; // Track when we received this remote update
 
                     // Save to localStorage (without triggering Firebase push)
                     originalSaveGameData();
@@ -4894,7 +4896,7 @@
                         renderQuickStatsPlayers(currentQuickStatsTeam);
                     }
 
-                    console.log('✅ UI updated with remote changes');
+                    console.log('✅ UI updated with remote changes at', theirLastUpdate);
 
                     // Clear flag after a brief delay
                     setTimeout(() => {
@@ -4917,16 +4919,27 @@
             }
         }
 
+        // Track the last remote timestamp we received
+        let lastRemoteTimestamp = 0;
+
         // Override saveGameData to also push live updates
         const originalSaveGameData = saveGameData;
         saveGameData = function() {
             originalSaveGameData();
 
-            // Only push if not receiving an update
+            // Only push if not receiving an update AND we have local changes newer than last remote
             if (liveUpdatesEnabled && !isUpdatingFromFirebase) {
-                // Add timestamp to track latest update
-                gameData.lastUpdated = Date.now();
-                pushLiveUpdate();
+                const now = Date.now();
+
+                // Only push if this is a genuinely new local change
+                // (not just a merge from remote data)
+                if (now > lastRemoteTimestamp + 500) { // 500ms buffer to avoid pushing right after receiving
+                    gameData.lastUpdated = now;
+                    pushLiveUpdate();
+                    console.log('⬆️ Pushing local changes to Firebase at', now);
+                } else {
+                    console.log('⏭️ Skipping push - too soon after receiving remote update');
+                }
             }
         };
 
