@@ -404,6 +404,17 @@
             background: #667eea;
             color: white;
             border-color: #667eea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .quarter-btn-logo {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            border-radius: 4px;
         }
 
         .quarter-btn:hover:not(.active) {
@@ -508,6 +519,26 @@
         .team-section > * {
             position: relative;
             z-index: 1;
+        }
+
+        .team-floating-logo {
+            position: sticky;
+            top: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            opacity: 0.3;
+            transition: opacity 0.3s;
+            margin-left: auto;
+            display: block;
+            pointer-events: none;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+            z-index: 5;
+        }
+
+        .team-floating-logo:hover {
+            opacity: 0.6;
         }
 
         .team-section h2 {
@@ -875,6 +906,44 @@
 
         .stat-btn.plus:hover {
             background: #68d391;
+        }
+
+        /* Team 1 stat buttons - Blue theme */
+        .team1 .stat-btn.plus {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .team1 .stat-btn.plus:hover {
+            background: #90cdf4;
+        }
+
+        .team1 .stat-btn.minus {
+            background: #fbd38d;
+            color: #7c2d12;
+        }
+
+        .team1 .stat-btn.minus:hover {
+            background: #f6ad55;
+        }
+
+        /* Team 2 stat buttons - Red theme */
+        .team2 .stat-btn.plus {
+            background: #fbb6ce;
+            color: #97266d;
+        }
+
+        .team2 .stat-btn.plus:hover {
+            background: #f687b3;
+        }
+
+        .team2 .stat-btn.minus {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        .team2 .stat-btn.minus:hover {
+            background: #fc8181;
         }
 
         .stat-value {
@@ -1819,6 +1888,7 @@
         <div class="teams-container">
             <div class="team-section team1">
                 <h2 id="team1Name">Team Violet</h2>
+                <img id="team1FloatingLogo" class="team-floating-logo" style="display: none;" alt="Team 1">
 
                 <div class="team-fouls-section">
                     <div class="team-fouls-label">Team Fouls (Quarter <span id="team1FoulsQuarter">1</span>)</div>
@@ -1856,6 +1926,7 @@
 
             <div class="team-section team2">
                 <h2 id="team2Name">Team Yellow</h2>
+                <img id="team2FloatingLogo" class="team-floating-logo" style="display: none;" alt="Team 2">
 
                 <div class="team-fouls-section">
                     <div class="team-fouls-label">Team Fouls (Quarter <span id="team2FoulsQuarter">1</span>)</div>
@@ -2579,6 +2650,12 @@
                 if (team1Section) {
                     team1Section.style.setProperty('--team-logo-bg', `url('${gameData.team1.logo}')`);
                 }
+                // Set floating logo for team1
+                const team1FloatingLogo = document.getElementById('team1FloatingLogo');
+                if (team1FloatingLogo) {
+                    team1FloatingLogo.src = gameData.team1.logo;
+                    team1FloatingLogo.style.display = 'block';
+                }
             } else {
                 team1Header.textContent = gameData.team1.name;
             }
@@ -2589,6 +2666,12 @@
                 const team2Section = document.querySelector('.team-section.team2');
                 if (team2Section) {
                     team2Section.style.setProperty('--team-logo-bg', `url('${gameData.team2.logo}')`);
+                }
+                // Set floating logo for team2
+                const team2FloatingLogo = document.getElementById('team2FloatingLogo');
+                if (team2FloatingLogo) {
+                    team2FloatingLogo.src = gameData.team2.logo;
+                    team2FloatingLogo.style.display = 'block';
                 }
             } else {
                 team2Header.textContent = gameData.team2.name;
@@ -2841,7 +2924,32 @@
             for (let q = 1; q <= gameData.quarters; q++) {
                 const btn = document.createElement('button');
                 btn.className = 'quarter-btn' + (q === currentQuarter ? ' active' : '');
-                btn.textContent = `Quarter ${q}`;
+
+                if (q === currentQuarter) {
+                    // Add team logos to active quarter
+                    if (gameData.team1.logo) {
+                        const logo1 = document.createElement('img');
+                        logo1.src = gameData.team1.logo;
+                        logo1.className = 'quarter-btn-logo';
+                        logo1.alt = gameData.team1.name;
+                        btn.appendChild(logo1);
+                    }
+
+                    const text = document.createElement('span');
+                    text.textContent = `Quarter ${q}`;
+                    btn.appendChild(text);
+
+                    if (gameData.team2.logo) {
+                        const logo2 = document.createElement('img');
+                        logo2.src = gameData.team2.logo;
+                        logo2.className = 'quarter-btn-logo';
+                        logo2.alt = gameData.team2.name;
+                        btn.appendChild(logo2);
+                    }
+                } else {
+                    btn.textContent = `Quarter ${q}`;
+                }
+
                 btn.onclick = () => switchQuarter(q);
                 selector.appendChild(btn);
             }
