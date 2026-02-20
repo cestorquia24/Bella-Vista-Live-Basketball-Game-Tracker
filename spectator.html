@@ -171,6 +171,13 @@
             font-weight: 600;
         }
 
+        .team-timeouts {
+            margin-top: 10px;
+            font-size: 1.1em;
+            color: #40a9ff;
+            font-weight: 600;
+        }
+
         .stats-section {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -499,12 +506,14 @@
                         <img id="team1Logo" class="team-logo-spectator" style="display: none;" alt="Team 1 Logo">
                         <div class="score" id="team1Score">0</div>
                         <div class="team-fouls" id="team1Fouls">Team Fouls: 0</div>
+                        <div class="team-timeouts" id="team1Timeouts">Timeouts: ⏸️⏸️ (2)</div>
                     </div>
                     <div class="vs-text">VS</div>
                     <div class="team-score">
                         <img id="team2Logo" class="team-logo-spectator" style="display: none;" alt="Team 2 Logo">
                         <div class="score" id="team2Score">0</div>
                         <div class="team-fouls" id="team2Fouls">Team Fouls: 0</div>
+                        <div class="team-timeouts" id="team2Timeouts">Timeouts: ⏸️⏸️ (2)</div>
                     </div>
                 </div>
             </div>
@@ -720,6 +729,14 @@
             const q = currentQuarter === 'total' ? 1 : currentQuarter;
             document.getElementById('team1Fouls').textContent = `Team Fouls: ${gameData.team1?.teamFouls?.[q] || 0}`;
             document.getElementById('team2Fouls').textContent = `Team Fouls: ${gameData.team2?.teamFouls?.[q] || 0}`;
+
+            // Update timeouts
+            const team1TimeoutsRemaining = gameData.team1?.timeoutsRemaining || 0;
+            const team2TimeoutsRemaining = gameData.team2?.timeoutsRemaining || 0;
+            const team1TimeoutIcons = '⏸️'.repeat(team1TimeoutsRemaining) || '—';
+            const team2TimeoutIcons = '⏸️'.repeat(team2TimeoutsRemaining) || '—';
+            document.getElementById('team1Timeouts').textContent = `Timeouts: ${team1TimeoutIcons} (${team1TimeoutsRemaining})`;
+            document.getElementById('team2Timeouts').textContent = `Timeouts: ${team2TimeoutIcons} (${team2TimeoutsRemaining})`;
 
             // Update team stats
             updateTeamStats('team1', gameData.team1, currentQuarter);

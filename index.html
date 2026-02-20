@@ -654,6 +654,77 @@
             text-align: center;
         }
 
+        /* Timeout Section Styles */
+        .timeout-section {
+            background: #e6f7ff;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 2px solid #91d5ff;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .timeout-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .timeout-label {
+            font-weight: 700;
+            color: #0050b3;
+            font-size: 0.95em;
+        }
+
+        .timeout-icons {
+            font-size: 1.3em;
+            letter-spacing: 3px;
+        }
+
+        .timeout-count {
+            font-weight: 700;
+            color: #0050b3;
+            font-size: 1.1em;
+        }
+
+        .timeout-btn {
+            background: linear-gradient(135deg, #1890ff 0%, #0050b3 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .timeout-btn:hover {
+            background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .timeout-btn:active {
+            transform: translateY(0);
+        }
+
+        .timeout-btn:disabled {
+            background: #d9d9d9;
+            color: #8c8c8c;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .timeout-btn:disabled:hover {
+            background: #d9d9d9;
+            transform: none;
+            box-shadow: none;
+        }
+
         .player-row:hover {
             background: var(--player-hover-bg);
         }
@@ -1675,6 +1746,15 @@
                     </div>
                 </div>
 
+                <div class="timeout-section">
+                    <div class="timeout-display">
+                        <div class="timeout-label">Timeouts Remaining:</div>
+                        <div class="timeout-icons" id="team1TimeoutIcons">⏸️⏸️</div>
+                        <div class="timeout-count" id="team1TimeoutCount">(2)</div>
+                    </div>
+                    <button class="timeout-btn" onclick="useTimeout('team1')">Use Timeout</button>
+                </div>
+
                 <div class="lineup-section">
                     <div class="lineup-title starting">🏀 On Court LineUp (5 Players)</div>
                     <div id="team1Starting" class="players-list">
@@ -1698,6 +1778,15 @@
                         <div class="team-fouls-value" id="team2FoulsValue">0</div>
                         <button class="stat-btn plus" onclick="updateTeamFouls('team2', 1)">+</button>
                     </div>
+                </div>
+
+                <div class="timeout-section">
+                    <div class="timeout-display">
+                        <div class="timeout-label">Timeouts Remaining:</div>
+                        <div class="timeout-icons" id="team2TimeoutIcons">⏸️⏸️</div>
+                        <div class="timeout-count" id="team2TimeoutCount">(2)</div>
+                    </div>
+                    <button class="timeout-btn" onclick="useTimeout('team2')">Use Timeout</button>
                 </div>
 
                 <div class="lineup-section">
@@ -1853,8 +1942,8 @@
         const gameData = {
             gameName: '',
             gameDate: new Date().toISOString().split('T')[0],
-            team1: { name: '', logo: '', players: [], teamFouls: {} },
-            team2: { name: '', logo: '', players: [], teamFouls: {} },
+            team1: { name: '', logo: '', players: [], teamFouls: {}, timeoutsRemaining: 2, currentHalf: 1 },
+            team2: { name: '', logo: '', players: [], teamFouls: {}, timeoutsRemaining: 2, currentHalf: 1 },
             quarters: 4,
             minutesPerQuarter: 10,
             mvp: null,
@@ -2290,6 +2379,10 @@
                 case 'teamFouls':
                     gameData[action.team].teamFouls[action.quarter] = action.oldValue;
                     break;
+                case 'timeout':
+                    gameData[action.team].timeoutsRemaining = action.oldValue;
+                    updateTimeoutDisplay();
+                    break;
                 case 'starter':
                     const p = gameData[action.team].players.find(p => p.id === action.playerId);
                     if (p) p.isStarter = action.oldValue;
@@ -2342,6 +2435,12 @@
                 gameData.team1.teamFouls[q] = 0;
                 gameData.team2.teamFouls[q] = 0;
             }
+
+            // Initialize timeouts (1st half = 2 timeouts, 2nd half = 3 timeouts)
+            gameData.team1.timeoutsRemaining = 2;
+            gameData.team1.currentHalf = 1;
+            gameData.team2.timeoutsRemaining = 2;
+            gameData.team2.currentHalf = 1;
 
             // Parse players - first 5 are starters
             const team1PlayersList = formData.team1Players.split('\n').filter(p => p.trim());
@@ -2400,6 +2499,7 @@
             updateTotals();
             updateLiveScoreboard();
             updateTeamFoulsDisplay();
+            updateTimeoutDisplay();
             populateMVPSelector();
             updateMVPDisplay();
             updatePossessionButtons();
@@ -2539,6 +2639,63 @@
             saveGameData();
         }
 
+        // Timeout Management Functions
+        function useTimeout(team) {
+            if (gameData[team].timeoutsRemaining <= 0) {
+                alert('No timeouts remaining for this half!');
+                return;
+            }
+
+            const oldValue = gameData[team].timeoutsRemaining;
+
+            recordAction({
+                type: 'timeout',
+                team: team,
+                oldValue: oldValue
+            });
+
+            gameData[team].timeoutsRemaining--;
+            updateTimeoutDisplay();
+            saveGameData();
+        }
+
+        function updateTimeoutDisplay() {
+            // Team 1
+            const team1Icons = '⏸️'.repeat(gameData.team1.timeoutsRemaining);
+            document.getElementById('team1TimeoutIcons').textContent = team1Icons || '—';
+            document.getElementById('team1TimeoutCount').textContent = `(${gameData.team1.timeoutsRemaining})`;
+
+            const team1Btn = document.querySelector('.team1 .timeout-btn');
+            if (team1Btn) {
+                team1Btn.disabled = gameData.team1.timeoutsRemaining <= 0;
+            }
+
+            // Team 2
+            const team2Icons = '⏸️'.repeat(gameData.team2.timeoutsRemaining);
+            document.getElementById('team2TimeoutIcons').textContent = team2Icons || '—';
+            document.getElementById('team2TimeoutCount').textContent = `(${gameData.team2.timeoutsRemaining})`;
+
+            const team2Btn = document.querySelector('.team2 .timeout-btn');
+            if (team2Btn) {
+                team2Btn.disabled = gameData.team2.timeoutsRemaining <= 0;
+            }
+        }
+
+        function checkHalftimeTimeoutReset() {
+            // When entering Q3 (start of 2nd half), reset timeouts to 3
+            if (currentQuarter === 3 && gameData.team1.currentHalf === 1) {
+                gameData.team1.currentHalf = 2;
+                gameData.team1.timeoutsRemaining = 3;
+                gameData.team2.currentHalf = 2;
+                gameData.team2.timeoutsRemaining = 3;
+                updateTimeoutDisplay();
+                saveGameData();
+
+                // Show notification
+                alert('Halftime! Timeouts reset to 3 for each team.');
+            }
+        }
+
         function renderQuarterSelector() {
             const selector = document.getElementById('quarterSelector');
             selector.innerHTML = '';
@@ -2561,6 +2718,10 @@
         function switchQuarter(quarter) {
             currentQuarter = quarter;
             window.currentQuarter = quarter; // Update global for cast mode
+
+            // Check if entering Q3 for halftime timeout reset
+            checkHalftimeTimeoutReset();
+
             renderQuarterSelector();
             renderPlayers('team1', gameData.team1.players);
             renderPlayers('team2', gameData.team2.players);
