@@ -1678,6 +1678,255 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* Quick Stats Panel Styles */
+        .quick-stats-fab {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+            transition: all 0.3s;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quick-stats-fab:hover {
+            transform: scale(1.1) translateY(-3px);
+            box-shadow: 0 8px 28px rgba(102, 126, 234, 0.7);
+        }
+
+        .quick-stats-fab:active {
+            transform: scale(0.95);
+        }
+
+        .quick-stats-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .quick-stats-modal.active {
+            display: flex;
+        }
+
+        .quick-stats-content {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 25px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideUpFade 0.3s ease-out;
+        }
+
+        @keyframes slideUpFade {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quick-stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+        }
+
+        .quick-stats-header h3 {
+            font-size: 1.5em;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .quick-stats-close {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: var(--text-secondary);
+            cursor: pointer;
+            line-height: 1;
+            transition: all 0.2s;
+        }
+
+        .quick-stats-close:hover {
+            color: var(--text-primary);
+            transform: rotate(90deg);
+        }
+
+        .quick-stats-team-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-stats-team-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-stats-team-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .quick-stats-team-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .quick-stats-players {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .quick-stats-player {
+            background: var(--secondary-bg);
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            transition: all 0.2s;
+        }
+
+        .quick-stats-player:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .quick-stats-player-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .quick-stats-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .quick-stat-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .quick-stat-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quick-stat-btn.reb {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
+        .quick-stat-btn.reb:hover {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+        }
+
+        .quick-stat-btn.ast {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .quick-stat-btn.ast:hover {
+            background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        .quick-stat-btn.stl {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        }
+
+        .quick-stat-btn.stl:hover {
+            background: linear-gradient(135deg, #dd6b20 0%, #c05621 100%);
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.4);
+        }
+
+        .quick-stat-btn.blk {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+        }
+
+        .quick-stat-btn.blk:hover {
+            background: linear-gradient(135deg, #805ad5 0%, #6b46c1 100%);
+            box-shadow: 0 4px 12px rgba(159, 122, 234, 0.4);
+        }
+
+        .quick-stat-label {
+            font-size: 0.75em;
+            opacity: 0.9;
+        }
+
+        .quick-stat-icon {
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .quick-stats-fab {
+                width: 60px;
+                height: 60px;
+                font-size: 1.6em;
+                bottom: 20px;
+                right: 20px;
+            }
+
+            .quick-stats-content {
+                width: 95%;
+                padding: 20px;
+                max-height: 90vh;
+            }
+
+            .quick-stats-buttons {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -2025,6 +2274,34 @@
             <button class="export-btn" onclick="finishAndSaveGame()" style="background: #48bb78;">🏁 Finish & Save Game</button>
             <button class="export-btn" onclick="window.open('history.html', '_blank')" style="margin-left: 10px; background: #667eea;">📊 View History & Standings</button>
             <button class="export-btn" onclick="clearGameData()" style="margin-left: 10px; background: #f56565;">🗑️ Clear & Start New Game</button>
+        </div>
+
+        <!-- Quick Stats Floating Button -->
+        <button class="quick-stats-fab" id="quickStatsFab" onclick="openQuickStats()" title="Quick Stats Panel">
+            📊
+        </button>
+
+        <!-- Quick Stats Modal -->
+        <div class="quick-stats-modal" id="quickStatsModal">
+            <div class="quick-stats-content">
+                <div class="quick-stats-header">
+                    <h3>⚡ Quick Stats Entry</h3>
+                    <button class="quick-stats-close" onclick="closeQuickStats()">&times;</button>
+                </div>
+
+                <div class="quick-stats-team-selector">
+                    <button class="quick-stats-team-btn active" id="quickStatsTeam1Btn" onclick="switchQuickStatsTeam('team1')">
+                        <span id="quickStatsTeam1Name">Team 1</span>
+                    </button>
+                    <button class="quick-stats-team-btn" id="quickStatsTeam2Btn" onclick="switchQuickStatsTeam('team2')">
+                        <span id="quickStatsTeam2Name">Team 2</span>
+                    </button>
+                </div>
+
+                <div class="quick-stats-players" id="quickStatsPlayers">
+                    <!-- Players will be rendered here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -4138,6 +4415,103 @@
             initializeGame(formData);
             return false;
         }
+
+        // Quick Stats Panel Functions
+        let currentQuickStatsTeam = 'team1';
+
+        function openQuickStats() {
+            if (currentQuarter === 'total') {
+                alert('Quick Stats is only available during game quarters, not in Total view.');
+                return;
+            }
+
+            // Update team names in selector
+            document.getElementById('quickStatsTeam1Name').textContent = gameData.team1.name || 'Team 1';
+            document.getElementById('quickStatsTeam2Name').textContent = gameData.team2.name || 'Team 2';
+
+            // Show modal
+            document.getElementById('quickStatsModal').classList.add('active');
+
+            // Render players for current team
+            renderQuickStatsPlayers(currentQuickStatsTeam);
+        }
+
+        function closeQuickStats() {
+            document.getElementById('quickStatsModal').classList.remove('active');
+        }
+
+        function switchQuickStatsTeam(team) {
+            currentQuickStatsTeam = team;
+
+            // Update button states
+            const team1Btn = document.getElementById('quickStatsTeam1Btn');
+            const team2Btn = document.getElementById('quickStatsTeam2Btn');
+
+            if (team === 'team1') {
+                team1Btn.classList.add('active');
+                team2Btn.classList.remove('active');
+            } else {
+                team2Btn.classList.add('active');
+                team1Btn.classList.remove('active');
+            }
+
+            // Render players for selected team
+            renderQuickStatsPlayers(team);
+        }
+
+        function renderQuickStatsPlayers(team) {
+            const container = document.getElementById('quickStatsPlayers');
+            container.innerHTML = '';
+
+            const players = gameData[team].players;
+
+            players.forEach(player => {
+                const playerCard = document.createElement('div');
+                playerCard.className = 'quick-stats-player';
+
+                const stats = player.quarterStats[currentQuarter];
+
+                playerCard.innerHTML = `
+                    <div class="quick-stats-player-name">${player.name}</div>
+                    <div class="quick-stats-buttons">
+                        <button class="quick-stat-btn reb" onclick="quickStatUpdate('${team}', ${player.id}, 'rebounds')">
+                            <span class="quick-stat-icon">🏀</span>
+                            <span class="quick-stat-label">REB: ${stats.rebounds}</span>
+                        </button>
+                        <button class="quick-stat-btn ast" onclick="quickStatUpdate('${team}', ${player.id}, 'assists')">
+                            <span class="quick-stat-icon">🤝</span>
+                            <span class="quick-stat-label">AST: ${stats.assists}</span>
+                        </button>
+                        <button class="quick-stat-btn stl" onclick="quickStatUpdate('${team}', ${player.id}, 'steals')">
+                            <span class="quick-stat-icon">🖐️</span>
+                            <span class="quick-stat-label">STL: ${stats.steals}</span>
+                        </button>
+                        <button class="quick-stat-btn blk" onclick="quickStatUpdate('${team}', ${player.id}, 'blocks')">
+                            <span class="quick-stat-icon">🚫</span>
+                            <span class="quick-stat-label">BLK: ${stats.blocks}</span>
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(playerCard);
+            });
+        }
+
+        function quickStatUpdate(team, playerId, statName) {
+            // Update the stat (increment by 1)
+            updateStat(team, playerId, statName, 1);
+
+            // Re-render the current team's players to show updated stats
+            renderQuickStatsPlayers(team);
+        }
+
+        // Close modal when clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('quickStatsModal');
+            if (e.target === modal) {
+                closeQuickStats();
+            }
+        });
 
         // Check if we have saved data on page load
         window.addEventListener('DOMContentLoaded', function() {
