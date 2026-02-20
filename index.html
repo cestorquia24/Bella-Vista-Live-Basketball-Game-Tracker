@@ -4692,7 +4692,10 @@
 
         // Push live updates to Firebase
         function pushLiveUpdate() {
-            if (!database) return;
+            if (!database) {
+                console.log('❌ Cannot push - Firebase not initialized');
+                return;
+            }
 
             try {
                 const liveData = {
@@ -4705,12 +4708,22 @@
                     gameTimer: gameData.gameTimer,
                     shotClock: gameData.shotClock,
                     isLive: liveUpdatesEnabled,
-                    lastUpdated: Date.now()
+                    lastUpdated: Date.now(),
+                    possession: gameData.possession
                 };
 
+                console.log('📤 Pushing to Firebase:', {
+                    gameName: liveData.gameName,
+                    isLive: liveData.isLive,
+                    lastUpdated: new Date(liveData.lastUpdated).toLocaleTimeString(),
+                    team1Score: calculateTeamTotalPoints('team1'),
+                    team2Score: calculateTeamTotalPoints('team2')
+                });
+
                 database.ref('liveGame').set(liveData);
+                console.log('✅ Push successful');
             } catch (error) {
-                console.error('Failed to push live update:', error);
+                console.error('❌ Failed to push live update:', error);
             }
         }
 

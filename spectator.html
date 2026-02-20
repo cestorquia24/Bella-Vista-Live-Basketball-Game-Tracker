@@ -717,8 +717,16 @@
             // Listen for live updates
             gameRef.on('value', (snapshot) => {
                 const gameData = snapshot.val();
+                console.log('📥 Spectator received Firebase update:', gameData ? 'Data exists' : 'No data');
+                if (gameData) {
+                    console.log('  - isLive flag:', gameData.isLive);
+                    console.log('  - lastUpdated:', gameData.lastUpdated ? new Date(gameData.lastUpdated).toLocaleTimeString() : 'missing');
+                    console.log('  - isGameLive() result:', isGameLive(gameData));
+                }
+
                 if (gameData && isGameLive(gameData)) {
                     // Active live game found
+                    console.log('✅ Live game detected, updating display');
                     updateDisplay(gameData, true);
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('noLiveGameBanner').style.display = 'none';
@@ -726,6 +734,7 @@
                     updateConnectionStatus(true);
                 } else {
                     // No live game or stale data - load most recent game
+                    console.log('⚠️ No live game, loading most recent game');
                     loadMostRecentGame();
                 }
             }, (error) => {
