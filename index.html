@@ -2451,7 +2451,8 @@
             shotClock: {
                 seconds: 24,
                 isRunning: false
-            }
+            },
+            lastUpdated: 0 // Timestamp for sync conflict resolution
         };
 
         // Make gameData globally accessible for cast mode
@@ -2854,6 +2855,9 @@
                     liveBtn.style.background = '#718096';
                 }
 
+                // Unsubscribe from Firebase updates
+                unsubscribeFromFirebaseUpdates();
+
                 // Clear Firebase live game data
                 if (database) {
                     try {
@@ -2947,6 +2951,9 @@
             // Initialize shot clock
             gameData.shotClock.seconds = 24;
             gameData.shotClock.isRunning = false;
+
+            // Initialize timestamp for sync
+            gameData.lastUpdated = Date.now();
 
             // Update timer displays
             updateGameTimerDisplay();
@@ -4601,10 +4608,12 @@
                     btn.textContent = '📡 Live: ON';
                     btn.style.background = '#48bb78';
                     pushLiveUpdate(); // Push initial update
+                    subscribeToFirebaseUpdates(); // Start listening for changes
                 } else {
                     btn.textContent = '📡 Live: OFF';
                     btn.style.background = '#718096';
                     pushLiveUpdate(); // Push final update with isLive = false
+                    unsubscribeFromFirebaseUpdates(); // Stop listening
                 }
             }
 
@@ -4622,6 +4631,118 @@
                     btn.textContent = '📡 Live: ON';
                     btn.style.background = '#48bb78';
                 }
+                // Subscribe to Firebase updates
+                subscribeToFirebaseUpdates();
+            }
+        }
+
+        // Flag to prevent infinite sync loops
+        let isUpdatingFromFirebase = false;
+        let firebaseListener = null;
+
+        // Subscribe to Firebase changes (Two-Way Sync)
+        function subscribeToFirebaseUpdates() {
+            if (!database) return;
+
+            try {
+                // Remove existing listener if any
+                if (firebaseListener) {
+                    database.ref('liveGame').off('value', firebaseListener);
+                }
+
+                // Listen for changes
+                firebaseListener = database.ref('liveGame').on('value', (snapshot) => {
+                    const remoteData = snapshot.val();
+
+                    // Ignore if no data or if we're the ones who just pushed
+                    if (!remoteData || isUpdatingFromFirebase) return;
+
+                    // Check if this update is newer than our last update
+                    const ourLastUpdate = gameData.lastUpdated || 0;
+                    const theirLastUpdate = remoteData.lastUpdated || 0;
+
+                    // Only apply if their update is newer
+                    if (theirLastUpdate <= ourLastUpdate) return;
+
+                    console.log('📥 Receiving remote update from Firebase');
+
+                    // Set flag to prevent push loop
+                    isUpdatingFromFirebase = true;
+
+                    // Update local game data with remote changes
+                    if (remoteData.team1) {
+                        gameData.team1.players = remoteData.team1.players;
+                        gameData.team1.teamFouls = remoteData.team1.teamFouls || {};
+                        gameData.team1.timeoutsRemaining = remoteData.team1.timeoutsRemaining || 2;
+                    }
+
+                    if (remoteData.team2) {
+                        gameData.team2.players = remoteData.team2.players;
+                        gameData.team2.teamFouls = remoteData.team2.teamFouls || {};
+                        gameData.team2.timeoutsRemaining = remoteData.team2.timeoutsRemaining || 2;
+                    }
+
+                    if (remoteData.mvp) {
+                        gameData.mvp = remoteData.mvp;
+                    }
+
+                    if (remoteData.gameTimer) {
+                        gameData.gameTimer = remoteData.gameTimer;
+                        updateGameTimerDisplay();
+                    }
+
+                    if (remoteData.shotClock) {
+                        gameData.shotClock = remoteData.shotClock;
+                        updateShotClockDisplay();
+                    }
+
+                    // Update current quarter if changed
+                    if (remoteData.currentQuarter && remoteData.currentQuarter !== currentQuarter) {
+                        currentQuarter = remoteData.currentQuarter;
+                        window.currentQuarter = currentQuarter;
+                    }
+
+                    // Update timestamp
+                    gameData.lastUpdated = theirLastUpdate;
+
+                    // Save to localStorage (without triggering Firebase push)
+                    originalSaveGameData();
+
+                    // Re-render UI to show remote changes
+                    renderPlayers('team1', gameData.team1.players);
+                    renderPlayers('team2', gameData.team2.players);
+                    updateTotals();
+                    updateLiveScoreboard();
+                    updateTeamFoulsDisplay();
+                    updateTimeoutDisplay();
+                    updateMVPDisplay();
+
+                    // If Quick Stats Panel is open, refresh it
+                    const quickStatsModal = document.getElementById('quickStatsModal');
+                    if (quickStatsModal && quickStatsModal.classList.contains('active')) {
+                        renderQuickStatsPlayers(currentQuickStatsTeam);
+                    }
+
+                    console.log('✅ UI updated with remote changes');
+
+                    // Clear flag after a brief delay
+                    setTimeout(() => {
+                        isUpdatingFromFirebase = false;
+                    }, 100);
+                });
+
+                console.log('🔔 Subscribed to Firebase updates');
+            } catch (error) {
+                console.error('Failed to subscribe to Firebase updates:', error);
+            }
+        }
+
+        // Unsubscribe from Firebase updates
+        function unsubscribeFromFirebaseUpdates() {
+            if (database && firebaseListener) {
+                database.ref('liveGame').off('value', firebaseListener);
+                firebaseListener = null;
+                console.log('🔕 Unsubscribed from Firebase updates');
             }
         }
 
@@ -4629,7 +4750,11 @@
         const originalSaveGameData = saveGameData;
         saveGameData = function() {
             originalSaveGameData();
-            if (liveUpdatesEnabled) {
+
+            // Only push if not receiving an update
+            if (liveUpdatesEnabled && !isUpdatingFromFirebase) {
+                // Add timestamp to track latest update
+                gameData.lastUpdated = Date.now();
                 pushLiveUpdate();
             }
         };
