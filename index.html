@@ -96,8 +96,8 @@
             position: absolute;
             top: 15px;
             left: 20px;
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
             filter: drop-shadow(0 4px 12px rgba(0,0,0,0.8));
             z-index: 10;
@@ -480,22 +480,52 @@
             padding: 20px;
             overflow-y: auto;
             height: 100%;
+            position: relative;
+            border-left: 5px solid #667eea;
+        }
+
+        .team-section.team2 {
+            border-left-color: #f56565;
+        }
+
+        .team-section::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+            background-image: var(--team-logo-bg, none);
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .team-section > * {
+            position: relative;
+            z-index: 1;
         }
 
         .team-section h2 {
             color: var(--text-primary);
             margin-bottom: 15px;
             padding-bottom: 8px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 4px solid #667eea;
             font-size: 1.5em;
             position: sticky;
             top: 0;
             background: var(--team-section-bg);
             z-index: 10;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
         }
 
         .team-section.team2 h2 {
             border-bottom-color: #f56565;
+            box-shadow: 0 2px 8px rgba(245, 101, 101, 0.3);
         }
 
         .lineup-section {
@@ -994,10 +1024,21 @@
             }
 
             .header-logo-display {
-                width: 70px;
-                height: 70px;
+                width: 90px;
+                height: 90px;
                 top: 10px;
                 left: 10px;
+            }
+
+            .team-logo-header {
+                width: 60px;
+                height: 60px;
+            }
+
+            .team-logo-scoreboard {
+                width: 140px;
+                height: 140px;
+                padding: 8px;
             }
 
             .header h1 {
@@ -1366,8 +1407,8 @@
         }
 
         .team-logo-header {
-            width: 50px;
-            height: 50px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
             margin-right: 15px;
             vertical-align: middle;
@@ -1377,14 +1418,15 @@
         }
 
         .team-logo-scoreboard {
-            width: 150px;
-            height: 150px;
+            width: 200px;
+            height: 200px;
             object-fit: contain;
             margin: 0 auto 15px auto;
             display: block;
             border-radius: 12px;
             padding: 10px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.4));
         }
 
         .team-selection-grid {
@@ -2532,12 +2574,22 @@
 
             if (gameData.team1.logo) {
                 team1Header.innerHTML = `<img src="${gameData.team1.logo}" class="team-logo-header" alt="${gameData.team1.name}">${gameData.team1.name}`;
+                // Set background watermark for team1 section
+                const team1Section = document.querySelector('.team-section.team1');
+                if (team1Section) {
+                    team1Section.style.setProperty('--team-logo-bg', `url('${gameData.team1.logo}')`);
+                }
             } else {
                 team1Header.textContent = gameData.team1.name;
             }
 
             if (gameData.team2.logo) {
                 team2Header.innerHTML = `<img src="${gameData.team2.logo}" class="team-logo-header" alt="${gameData.team2.name}">${gameData.team2.name}`;
+                // Set background watermark for team2 section
+                const team2Section = document.querySelector('.team-section.team2');
+                if (team2Section) {
+                    team2Section.style.setProperty('--team-logo-bg', `url('${gameData.team2.logo}')`);
+                }
             } else {
                 team2Header.textContent = gameData.team2.name;
             }
