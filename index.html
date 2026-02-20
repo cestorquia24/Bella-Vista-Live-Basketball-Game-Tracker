@@ -1899,6 +1899,16 @@
             box-shadow: 0 4px 12px rgba(159, 122, 234, 0.4);
         }
 
+        .quick-stat-btn.foul {
+            background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+            color: #7c2d12;
+        }
+
+        .quick-stat-btn.foul:hover {
+            background: linear-gradient(135deg, #fdba74 0%, #fb923c 100%);
+            box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
+        }
+
         .quick-stat-label {
             font-size: 0.75em;
             opacity: 0.9;
@@ -4563,26 +4573,6 @@
             const container = document.getElementById('quickStatsPlayers');
             container.innerHTML = '';
 
-            // Add Team Fouls section at the top
-            const q = currentQuarter === 'total' ? 1 : currentQuarter;
-            const teamFouls = gameData[team].teamFouls[q] || 0;
-
-            const teamFoulsSection = document.createElement('div');
-            teamFoulsSection.className = 'quick-stats-team-fouls';
-            teamFoulsSection.innerHTML = `
-                <div class="quick-stats-fouls-label">Team Fouls (Q${q})</div>
-                <div class="quick-stats-fouls-controls">
-                    <button class="quick-stat-btn fouls-minus" onclick="quickTeamFoulsUpdate('${team}', -1)">
-                        <span class="quick-stat-icon">−</span>
-                    </button>
-                    <div class="quick-stats-fouls-value">${teamFouls}</div>
-                    <button class="quick-stat-btn fouls-plus" onclick="quickTeamFoulsUpdate('${team}', 1)">
-                        <span class="quick-stat-icon">+</span>
-                    </button>
-                </div>
-            `;
-            container.appendChild(teamFoulsSection);
-
             const players = gameData[team].players;
 
             players.forEach(player => {
@@ -4623,6 +4613,10 @@
                             <span class="quick-stat-icon">🚫</span>
                             <span class="quick-stat-label">BLK: ${stats.blocks}</span>
                         </button>
+                        <button class="quick-stat-btn foul" onclick="quickStatUpdate('${team}', ${player.id}, 'fouls', 1)">
+                            <span class="quick-stat-icon">⚠️</span>
+                            <span class="quick-stat-label">FOUL: ${stats.fouls}</span>
+                        </button>
                     </div>
                 `;
 
@@ -4635,11 +4629,6 @@
             updateStat(team, playerId, statName, value);
 
             // Re-render the current team's players to show updated stats
-            renderQuickStatsPlayers(team);
-        }
-
-        function quickTeamFoulsUpdate(team, change) {
-            updateTeamFouls(team, change);
             renderQuickStatsPlayers(team);
         }
 
