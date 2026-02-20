@@ -690,7 +690,13 @@
             font-size: 1.1em;
         }
 
+        .timeout-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
         .timeout-btn {
+            flex: 1;
             background: linear-gradient(135deg, #1890ff 0%, #0050b3 100%);
             color: white;
             border: none;
@@ -721,6 +727,41 @@
 
         .timeout-btn:disabled:hover {
             background: #d9d9d9;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .timeout-undo-btn {
+            background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .timeout-undo-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #73d13d 0%, #52c41a 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(82, 196, 26, 0.3);
+        }
+
+        .timeout-undo-btn:active {
+            transform: translateY(0);
+        }
+
+        .timeout-undo-btn:disabled {
+            background: #d9d9d9;
+            color: #8c8c8c;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .timeout-undo-btn:disabled:hover {
             transform: none;
             box-shadow: none;
         }
@@ -1752,7 +1793,10 @@
                         <div class="timeout-icons" id="team1TimeoutIcons">⏸️⏸️</div>
                         <div class="timeout-count" id="team1TimeoutCount">(2)</div>
                     </div>
-                    <button class="timeout-btn" onclick="useTimeout('team1')">Use Timeout</button>
+                    <div class="timeout-buttons">
+                        <button class="timeout-btn" onclick="useTimeout('team1')">Use Timeout</button>
+                        <button class="timeout-undo-btn" id="team1TimeoutUndoBtn" onclick="undoTimeout('team1')" disabled>↶ Undo</button>
+                    </div>
                 </div>
 
                 <div class="lineup-section">
@@ -1786,7 +1830,10 @@
                         <div class="timeout-icons" id="team2TimeoutIcons">⏸️⏸️</div>
                         <div class="timeout-count" id="team2TimeoutCount">(2)</div>
                     </div>
-                    <button class="timeout-btn" onclick="useTimeout('team2')">Use Timeout</button>
+                    <div class="timeout-buttons">
+                        <button class="timeout-btn" onclick="useTimeout('team2')">Use Timeout</button>
+                        <button class="timeout-undo-btn" id="team2TimeoutUndoBtn" onclick="undoTimeout('team2')" disabled>↶ Undo</button>
+                    </div>
                 </div>
 
                 <div class="lineup-section">
@@ -1965,6 +2012,7 @@
         let currentQuarter = 1;
         let actionHistory = [];
         const MAX_HISTORY = 50;
+        let lastTimeoutAction = { team1: null, team2: null }; // Track last timeout per team
 
         // Make currentQuarter accessible globally for cast mode
         window.currentQuarter = currentQuarter;
@@ -2648,6 +2696,13 @@
 
             const oldValue = gameData[team].timeoutsRemaining;
 
+            // Store action for team-specific undo
+            lastTimeoutAction[team] = {
+                oldValue: oldValue,
+                timestamp: Date.now()
+            };
+
+            // Also store in main undo stack
             recordAction({
                 type: 'timeout',
                 team: team,
@@ -2655,6 +2710,21 @@
             });
 
             gameData[team].timeoutsRemaining--;
+            updateTimeoutDisplay();
+            saveGameData();
+        }
+
+        function undoTimeout(team) {
+            if (!lastTimeoutAction[team]) {
+                return;
+            }
+
+            // Restore the timeout
+            gameData[team].timeoutsRemaining = lastTimeoutAction[team].oldValue;
+
+            // Clear the last action
+            lastTimeoutAction[team] = null;
+
             updateTimeoutDisplay();
             saveGameData();
         }
@@ -2670,6 +2740,11 @@
                 team1Btn.disabled = gameData.team1.timeoutsRemaining <= 0;
             }
 
+            const team1UndoBtn = document.getElementById('team1TimeoutUndoBtn');
+            if (team1UndoBtn) {
+                team1UndoBtn.disabled = !lastTimeoutAction.team1;
+            }
+
             // Team 2
             const team2Icons = '⏸️'.repeat(gameData.team2.timeoutsRemaining);
             document.getElementById('team2TimeoutIcons').textContent = team2Icons || '—';
@@ -2678,6 +2753,11 @@
             const team2Btn = document.querySelector('.team2 .timeout-btn');
             if (team2Btn) {
                 team2Btn.disabled = gameData.team2.timeoutsRemaining <= 0;
+            }
+
+            const team2UndoBtn = document.getElementById('team2TimeoutUndoBtn');
+            if (team2UndoBtn) {
+                team2UndoBtn.disabled = !lastTimeoutAction.team2;
             }
         }
 
@@ -2688,6 +2768,11 @@
                 gameData.team1.timeoutsRemaining = 3;
                 gameData.team2.currentHalf = 2;
                 gameData.team2.timeoutsRemaining = 3;
+
+                // Clear last timeout actions (can't undo across halves)
+                lastTimeoutAction.team1 = null;
+                lastTimeoutAction.team2 = null;
+
                 updateTimeoutDisplay();
                 saveGameData();
 
