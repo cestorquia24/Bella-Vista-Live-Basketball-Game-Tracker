@@ -199,6 +199,83 @@
             color: #718096;
         }
 
+        .center-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-width: 300px;
+        }
+
+        .mvp-section-center {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            padding: 20px 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(243, 156, 18, 0.5);
+            animation: mvp-glow 3s ease-in-out infinite;
+            min-width: 280px;
+        }
+
+        @keyframes mvp-glow {
+            0%, 100% {
+                box-shadow: 0 8px 24px rgba(243, 156, 18, 0.5);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 12px 36px rgba(243, 156, 18, 0.7);
+                transform: scale(1.05);
+            }
+        }
+
+        .mvp-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .mvp-label {
+            font-size: 1em;
+            color: #fef5e7;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mvp-name-center {
+            font-size: 1.8em;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .mvp-stats-center {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .mvp-stat {
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+        }
+
+        .mvp-stat-label {
+            font-size: 0.75em;
+            color: #fef5e7;
+            margin-bottom: 3px;
+        }
+
+        .mvp-stat-value {
+            font-size: 1.5em;
+            font-weight: 900;
+            color: white;
+        }
+
         .team-fouls {
             margin-top: 15px;
             font-size: 1.2em;
@@ -466,6 +543,32 @@
                 font-size: 2em;
             }
 
+            .center-section {
+                min-width: 100%;
+                width: 100%;
+            }
+
+            .mvp-section-center {
+                min-width: 100%;
+                padding: 15px 20px;
+            }
+
+            .mvp-name-center {
+                font-size: 1.4em;
+            }
+
+            .mvp-stats-center {
+                gap: 10px;
+            }
+
+            .mvp-stat {
+                padding: 8px 12px;
+            }
+
+            .mvp-stat-value {
+                font-size: 1.2em;
+            }
+
             .stats-section {
                 grid-template-columns: 1fr;
             }
@@ -543,7 +646,18 @@
                         <div class="team-fouls" id="team1Fouls">Team Fouls: 0</div>
                         <div class="team-timeouts" id="team1Timeouts">Timeouts: ⏸️⏸️ (2)</div>
                     </div>
-                    <div class="vs-text">VS</div>
+
+                    <!-- MVP Section in Center -->
+                    <div class="center-section">
+                        <div class="vs-text" id="vsText">VS</div>
+                        <div class="mvp-section-center" id="mvpSection" style="display: none;">
+                            <div class="mvp-icon">🏆</div>
+                            <div class="mvp-label">Best Player</div>
+                            <div class="mvp-name-center" id="mvpName">-</div>
+                            <div class="mvp-stats-center" id="mvpStats"></div>
+                        </div>
+                    </div>
+
                     <div class="team-score">
                         <img id="team2Logo" class="team-logo-spectator" style="display: none;" alt="Team 2 Logo">
                         <div class="score" id="team2Score">0</div>
@@ -562,12 +676,6 @@
                     <h3 id="team2StatsTitle">Team 2 Stats</h3>
                     <div class="stats-grid" id="team2Stats"></div>
                 </div>
-            </div>
-
-            <div class="mvp-section" id="mvpSection" style="display: none;">
-                <h3>🏆 Best Player of the Game</h3>
-                <div class="mvp-name" id="mvpName">-</div>
-                <div class="mvp-stats" id="mvpStats"></div>
             </div>
         </div>
 
@@ -805,7 +913,9 @@
             if (currentQuarter === 'total' && gameData.mvp && gameData.mvp.name) {
                 showMVP(gameData.mvp, gameData);
             } else {
+                // Hide MVP and show VS text
                 document.getElementById('mvpSection').style.display = 'none';
+                document.getElementById('vsText').style.display = 'block';
             }
         }
 
@@ -888,6 +998,11 @@
             const mvpSection = document.getElementById('mvpSection');
             const mvpName = document.getElementById('mvpName');
             const mvpStats = document.getElementById('mvpStats');
+            const vsText = document.getElementById('vsText');
+
+            // Hide VS text and show MVP section
+            vsText.style.display = 'none';
+            mvpSection.style.display = 'block';
 
             mvpName.textContent = `${mvp.name} (${mvp.team})`;
 
@@ -952,8 +1067,6 @@
                     mvpStats.innerHTML = mvpStatsHTML;
                 }
             }
-
-            mvpSection.style.display = 'block';
         }
 
         function showError(message) {
