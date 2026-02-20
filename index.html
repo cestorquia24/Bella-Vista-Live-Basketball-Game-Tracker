@@ -870,6 +870,26 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+
+        .player-name:hover {
+            color: #667eea;
+        }
+
+        .edit-icon {
+            font-size: 0.85em;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .player-name:hover .edit-icon {
+            opacity: 1;
         }
 
         .stat-control {
@@ -2608,6 +2628,10 @@
                     const p = gameData[action.team].players.find(p => p.id === action.playerId);
                     if (p) p.isStarter = action.oldValue;
                     break;
+                case 'playerName':
+                    const playerToRename = gameData[action.team].players.find(p => p.id === action.playerId);
+                    if (playerToRename) playerToRename.name = action.oldValue;
+                    break;
             }
 
             renderPlayers('team1', gameData.team1.players);
@@ -3098,7 +3122,10 @@
             const swapButtonText = player.isStarter ? '↓ Bench' : '↑ Start';
 
             row.innerHTML = `
-                <div class="player-name">${player.name}</div>
+                <div class="player-name" onclick="editPlayerName('${team}', ${player.id})" title="Click to edit player name">
+                    ${player.name}
+                    <span class="edit-icon">✏️</span>
+                </div>
                 <button class="swap-btn" onclick="quickSwap('${team}', ${player.id})">${swapButtonText}</button>
                 ${renderQuickScoreButtons(player.id, team)}
                 ${renderStatControl('points', stats.points, player.id, team)}
@@ -3150,6 +3177,52 @@
                 updateTotals();
                 saveGameData();
             }
+        }
+
+        function editPlayerName(team, playerId) {
+            const player = gameData[team].players.find(p => p.id === playerId);
+
+            if (!player) return;
+
+            const currentName = player.name;
+            const newName = prompt('Edit player name/number:', currentName);
+
+            // If user cancelled or entered empty string, do nothing
+            if (newName === null || newName.trim() === '') {
+                return;
+            }
+
+            const trimmedName = newName.trim();
+
+            // If name didn't change, do nothing
+            if (trimmedName === currentName) {
+                return;
+            }
+
+            // Record action for undo
+            recordAction({
+                type: 'playerName',
+                team: team,
+                playerId: playerId,
+                oldValue: currentName
+            });
+
+            // Update player name
+            player.name = trimmedName;
+
+            // Re-render players for this team
+            renderPlayers(team, gameData[team].players);
+
+            // Update totals view if we're on it
+            if (currentQuarter === 'total') {
+                updateTotals();
+            }
+
+            // Save and sync
+            saveGameData();
+
+            // Show success feedback
+            console.log(`✅ Player name updated: "${currentName}" → "${trimmedName}"`);
         }
 
         function setupDragAndDrop(team) {
