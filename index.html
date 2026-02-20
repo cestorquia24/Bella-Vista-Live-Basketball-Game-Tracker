@@ -4738,116 +4738,19 @@
             const btn = document.getElementById('liveUpdatesBtn');
             if (btn) {
                 if (liveUpdatesEnabled) {
-                    btn.textContent = '📡 Syncing...';
-                    btn.style.background = '#f6ad55';
-
-                    // FIRST: Fetch current Firebase data and sync if newer
-                    try {
-                        const snapshot = await database.ref('liveGame').once('value');
-                        const remoteData = snapshot.val();
-
-                        if (remoteData && remoteData.isLive) {
-                            console.log('📥 Found active game in Firebase, syncing...');
-
-                            // Check if remote data is newer
-                            const ourLastUpdate = gameData.lastUpdated || 0;
-                            const theirLastUpdate = remoteData.lastUpdated || 0;
-
-                            if (theirLastUpdate > ourLastUpdate) {
-                                console.log('⬇️ Remote data is newer, loading from Firebase');
-
-                                // Load remote data into local game
-                                isUpdatingFromFirebase = true;
-
-                                // SMART MERGE: Don't replace, merge intelligently
-                                if (remoteData.team1 && remoteData.team1.players) {
-                                    remoteData.team1.players.forEach((remotePlayer, index) => {
-                                        const localPlayer = gameData.team1.players[index];
-                                        if (localPlayer && remotePlayer) {
-                                            // Merge each quarter's stats - take the MAXIMUM value
-                                            Object.keys(localPlayer.quarterStats).forEach(quarter => {
-                                                const localStats = localPlayer.quarterStats[quarter];
-                                                const remoteStats = remotePlayer.quarterStats[quarter];
-                                                if (remoteStats) {
-                                                    localStats.points = Math.max(localStats.points || 0, remoteStats.points || 0);
-                                                    localStats.rebounds = Math.max(localStats.rebounds || 0, remoteStats.rebounds || 0);
-                                                    localStats.assists = Math.max(localStats.assists || 0, remoteStats.assists || 0);
-                                                    localStats.steals = Math.max(localStats.steals || 0, remoteStats.steals || 0);
-                                                    localStats.blocks = Math.max(localStats.blocks || 0, remoteStats.blocks || 0);
-                                                    localStats.fouls = Math.max(localStats.fouls || 0, remoteStats.fouls || 0);
-                                                }
-                                            });
-                                            localPlayer.name = remotePlayer.name;
-                                            localPlayer.isStarter = remotePlayer.isStarter;
-                                        }
-                                    });
-                                    gameData.team1.teamFouls = remoteData.team1.teamFouls || {};
-                                    gameData.team1.timeoutsRemaining = remoteData.team1.timeoutsRemaining || 2;
-                                }
-
-                                if (remoteData.team2 && remoteData.team2.players) {
-                                    remoteData.team2.players.forEach((remotePlayer, index) => {
-                                        const localPlayer = gameData.team2.players[index];
-                                        if (localPlayer && remotePlayer) {
-                                            // Merge each quarter's stats - take the MAXIMUM value
-                                            Object.keys(localPlayer.quarterStats).forEach(quarter => {
-                                                const localStats = localPlayer.quarterStats[quarter];
-                                                const remoteStats = remotePlayer.quarterStats[quarter];
-                                                if (remoteStats) {
-                                                    localStats.points = Math.max(localStats.points || 0, remoteStats.points || 0);
-                                                    localStats.rebounds = Math.max(localStats.rebounds || 0, remoteStats.rebounds || 0);
-                                                    localStats.assists = Math.max(localStats.assists || 0, remoteStats.assists || 0);
-                                                    localStats.steals = Math.max(localStats.steals || 0, remoteStats.steals || 0);
-                                                    localStats.blocks = Math.max(localStats.blocks || 0, remoteStats.blocks || 0);
-                                                    localStats.fouls = Math.max(localStats.fouls || 0, remoteStats.fouls || 0);
-                                                }
-                                            });
-                                            localPlayer.name = remotePlayer.name;
-                                            localPlayer.isStarter = remotePlayer.isStarter;
-                                        }
-                                    });
-                                    gameData.team2.teamFouls = remoteData.team2.teamFouls || {};
-                                    gameData.team2.timeoutsRemaining = remoteData.team2.timeoutsRemaining || 2;
-                                }
-
-                                if (remoteData.mvp) gameData.mvp = remoteData.mvp;
-                                if (remoteData.gameTimer) gameData.gameTimer = remoteData.gameTimer;
-                                if (remoteData.shotClock) gameData.shotClock = remoteData.shotClock;
-                                if (remoteData.currentQuarter) {
-                                    currentQuarter = remoteData.currentQuarter;
-                                    window.currentQuarter = currentQuarter;
-                                }
-                                if (remoteData.possession !== undefined) gameData.possession = remoteData.possession;
-
-                                gameData.lastUpdated = theirLastUpdate;
-
-                                // Save and re-render
-                                originalSaveGameData();
-                                renderGame();
-
-                                console.log('✅ Synced with Firebase successfully');
-
-                                setTimeout(() => {
-                                    isUpdatingFromFirebase = false;
-                                }, 200);
-                            } else {
-                                console.log('⬆️ Local data is newer or same, will push to Firebase');
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Failed to fetch initial Firebase data:', error);
-                    }
-
-                    // THEN: Start listening and pushing
                     btn.textContent = '📡 Live: ON';
                     btn.style.background = '#48bb78';
-                    subscribeToFirebaseUpdates(); // Start listening for changes
-                    pushLiveUpdate(); // Push our current state
+
+                    // Simple one-way push - just push our current state
+                    pushLiveUpdate();
+                    console.log('✅ Live updates enabled - pushing to spectators');
                 } else {
                     btn.textContent = '📡 Live: OFF';
                     btn.style.background = '#718096';
-                    pushLiveUpdate(); // Push final update with isLive = false
-                    unsubscribeFromFirebaseUpdates(); // Stop listening
+
+                    // Push final update with isLive = false
+                    pushLiveUpdate();
+                    console.log('🔴 Live updates disabled');
                 }
             }
 
@@ -4865,8 +4768,9 @@
                     btn.textContent = '📡 Live: ON';
                     btn.style.background = '#48bb78';
                 }
-                // Subscribe to Firebase updates
-                subscribeToFirebaseUpdates();
+                // Simple one-way push - just push our state
+                pushLiveUpdate();
+                console.log('✅ Live updates restored from preference');
             }
         }
 
@@ -5055,10 +4959,8 @@
         saveGameData = function() {
             originalSaveGameData();
 
-            // Only push if not currently receiving an update from Firebase
-            // The isUpdatingFromFirebase flag prevents immediate push-after-merge
-            // It gets cleared after 100ms, allowing subsequent local changes to push
-            if (liveUpdatesEnabled && !isUpdatingFromFirebase) {
+            // Simple one-way push - always push when live updates enabled
+            if (liveUpdatesEnabled) {
                 gameData.lastUpdated = Date.now();
                 pushLiveUpdate();
                 console.log('⬆️ Pushing local changes to Firebase');
