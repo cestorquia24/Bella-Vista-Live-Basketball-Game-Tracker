@@ -437,6 +437,26 @@
             opacity: 0.5;
         }
 
+        /* Hide reorder buttons by default, show only in admin mode */
+        .reorder-btn {
+            display: none;
+        }
+
+        body.admin-mode .reorder-btn {
+            display: block;
+        }
+
+        /* Hide date editing by default, show only in admin mode */
+        .game-date {
+            cursor: default !important;
+            text-decoration: none !important;
+        }
+
+        body.admin-mode .game-date {
+            cursor: pointer !important;
+            text-decoration: underline !important;
+        }
+
         /* Table Styles */
         .table-container {
             background: rgba(45, 55, 72, 0.9);
@@ -1405,7 +1425,7 @@
 
                 card.innerHTML = `
                     <div class="game-card-header">
-                        <div class="game-date" onclick="editGameDate(${game.id})" style="cursor: pointer; text-decoration: underline;" title="Click to edit date">
+                        <div class="game-date" onclick="editGameDate(${game.id})">
                             📅 ${game.gameDate}
                         </div>
                         <div class="${winnerBadgeClass}">${winnerText}</div>
@@ -1816,6 +1836,11 @@
         }
 
         function moveGameUp(gameId) {
+            // Check if admin mode is active
+            if (!isAdminMode) {
+                return; // Silently ignore if not in admin mode
+            }
+
             // Find the index of the game
             const index = gameHistory.findIndex(g => g.id === gameId);
 
@@ -1840,6 +1865,11 @@
         }
 
         function moveGameDown(gameId) {
+            // Check if admin mode is active
+            if (!isAdminMode) {
+                return; // Silently ignore if not in admin mode
+            }
+
             // Find the index of the game
             const index = gameHistory.findIndex(g => g.id === gameId);
 
@@ -1864,6 +1894,11 @@
         }
 
         function editGameDate(gameId) {
+            // Check if admin mode is active
+            if (!isAdminMode) {
+                return; // Silently ignore if not in admin mode
+            }
+
             // Find the game
             const game = gameHistory.find(g => g.id === gameId);
             if (!game) {
