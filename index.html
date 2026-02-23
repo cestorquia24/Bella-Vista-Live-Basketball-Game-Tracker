@@ -3506,6 +3506,9 @@
                 ? calculateTotalStats(player)
                 : player.quarterStats[currentQuarter];
 
+            // FOULS: Always show cumulative total (fouls don't reset per quarter)
+            const cumulativeFouls = calculateCumulativeFouls(player, currentQuarter);
+
             const swapButtonText = player.isStarter ? '↓ Bench' : '↑ Start';
 
             row.innerHTML = `
@@ -3520,10 +3523,23 @@
                 ${renderStatControl('assists', stats.assists, player.id, team)}
                 ${renderStatControl('steals', stats.steals, player.id, team)}
                 ${renderStatControl('blocks', stats.blocks, player.id, team)}
-                ${renderStatControl('fouls', stats.fouls, player.id, team)}
+                ${renderStatControl('fouls', cumulativeFouls, player.id, team)}
             `;
 
             return row;
+        }
+
+        // Calculate cumulative fouls up to current quarter
+        function calculateCumulativeFouls(player, upToQuarter) {
+            if (upToQuarter === 'total') {
+                return calculateTotalStats(player).fouls;
+            }
+
+            let totalFouls = 0;
+            for (let q = 1; q <= upToQuarter; q++) {
+                totalFouls += player.quarterStats[q].fouls || 0;
+            }
+            return totalFouls;
         }
 
         function renderQuickScoreButtons(playerId, team) {
@@ -4581,6 +4597,9 @@
 
                 const stats = player.quarterStats[currentQuarter];
 
+                // FOULS: Show cumulative total (fouls accumulate across game)
+                const cumulativeFouls = calculateCumulativeFouls(player, currentQuarter);
+
                 playerCard.innerHTML = `
                     <div class="quick-stats-player-name">${player.name}</div>
                     <div class="quick-stats-section-title">Points</div>
@@ -4615,7 +4634,7 @@
                         </button>
                         <button class="quick-stat-btn foul" onclick="quickStatUpdate('${team}', ${player.id}, 'fouls', 1)">
                             <span class="quick-stat-icon">⚠️</span>
-                            <span class="quick-stat-label">FOUL: ${stats.fouls}</span>
+                            <span class="quick-stat-label">FOUL: ${cumulativeFouls}</span>
                         </button>
                     </div>
                 `;
