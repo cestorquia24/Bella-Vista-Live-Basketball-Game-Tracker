@@ -948,53 +948,63 @@
             document.getElementById(`${teamId}StatsTitle`).textContent =
                 `${team.name} - Game Stats`;
 
-            // Build player stats table - ALWAYS show game totals
-            let playersHTML = '';
-
-            team.players.forEach(player => {
-                if (player.quarterStats) {
-                    let stats = {
-                        points: 0,
-                        rebounds: 0,
-                        assists: 0,
-                        steals: 0,
-                        blocks: 0,
-                        fouls: 0
-                    };
-
-                    // Always calculate totals across all quarters
-                    Object.values(player.quarterStats).forEach(qStats => {
-                        stats.points += qStats.points || 0;
-                        stats.rebounds += qStats.rebounds || 0;
-                        stats.assists += qStats.assists || 0;
-                        stats.steals += qStats.steals || 0;
-                        stats.blocks += qStats.blocks || 0;
-                        stats.fouls += qStats.fouls || 0;
-                    });
-
-                    // Only show players with stats
-                    if (stats.points > 0 || stats.rebounds > 0 || stats.assists > 0 ||
-                        stats.steals > 0 || stats.blocks > 0 || stats.fouls > 0) {
-
-                        let statsHTML = '';
-                        if (stats.points > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.points}</strong> PTS</span>`;
-                        if (stats.rebounds > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.rebounds}</strong> REB</span>`;
-                        if (stats.assists > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.assists}</strong> AST</span>`;
-                        if (stats.steals > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.steals}</strong> STL</span>`;
-                        if (stats.blocks > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.blocks}</strong> BLK</span>`;
-                        if (stats.fouls > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.fouls}</strong> F</span>`;
-
-                        playersHTML += `
-                            <div class="player-stat-row">
-                                <div class="player-stat-name">${player.name}</div>
-                                <div class="player-stat-values">
-                                    ${statsHTML}
-                                </div>
-                            </div>
-                        `;
-                    }
+            // Calculate stats for all players and create sortable array
+            const playersWithStats = team.players.map(player => {
+                if (!player.quarterStats) {
+                    return null;
                 }
-            });
+
+                let stats = {
+                    points: 0,
+                    rebounds: 0,
+                    assists: 0,
+                    steals: 0,
+                    blocks: 0,
+                    fouls: 0
+                };
+
+                // Always calculate totals across all quarters
+                Object.values(player.quarterStats).forEach(qStats => {
+                    stats.points += qStats.points || 0;
+                    stats.rebounds += qStats.rebounds || 0;
+                    stats.assists += qStats.assists || 0;
+                    stats.steals += qStats.steals || 0;
+                    stats.blocks += qStats.blocks || 0;
+                    stats.fouls += qStats.fouls || 0;
+                });
+
+                return {
+                    player,
+                    stats,
+                    // Calculate performance score for sorting
+                    score: stats.points + (stats.rebounds * 0.5) + (stats.assists * 0.7) + (stats.steals * 0.8) + (stats.blocks * 0.8)
+                };
+            }).filter(p => p !== null);
+
+            // Filter players with stats and sort by performance (best first)
+            let playersHTML = '';
+            playersWithStats
+                .filter(p => p.stats.points > 0 || p.stats.rebounds > 0 || p.stats.assists > 0 ||
+                           p.stats.steals > 0 || p.stats.blocks > 0 || p.stats.fouls > 0)
+                .sort((a, b) => b.score - a.score) // Sort descending by performance score
+                .forEach(({player, stats}) => {
+                    let statsHTML = '';
+                    if (stats.points > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.points}</strong> PTS</span>`;
+                    if (stats.rebounds > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.rebounds}</strong> REB</span>`;
+                    if (stats.assists > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.assists}</strong> AST</span>`;
+                    if (stats.steals > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.steals}</strong> STL</span>`;
+                    if (stats.blocks > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.blocks}</strong> BLK</span>`;
+                    if (stats.fouls > 0) statsHTML += `<span class="player-stat-item"><strong>${stats.fouls}</strong> F</span>`;
+
+                    playersHTML += `
+                        <div class="player-stat-row">
+                            <div class="player-stat-name">${player.name}</div>
+                            <div class="player-stat-values">
+                                ${statsHTML}
+                            </div>
+                        </div>
+                    `;
+                });
 
             if (playersHTML === '') {
                 playersHTML = '<div style="text-align: center; color: #a0aec0; padding: 20px;">No stats yet</div>';
