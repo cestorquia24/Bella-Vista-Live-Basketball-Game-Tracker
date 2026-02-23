@@ -146,6 +146,15 @@
             display: block;
         }
 
+        /* Hide edit MVP buttons by default, show only in admin mode */
+        .edit-mvp-btn {
+            display: none;
+        }
+
+        body.admin-mode .edit-mvp-btn {
+            display: inline-block;
+        }
+
         /* Password Modal Styles */
         .password-modal {
             display: none;
@@ -1660,7 +1669,13 @@
                         ${game.finalScore.team1} - ${game.finalScore.team2}
                     </div>
                     ${game.winner !== 'TIE' ? `<div style="font-size: 1.3em; color: #48bb78;">🏆 Winner: ${game.winner}</div>` : '<div style="font-size: 1.3em; color: #718096;">TIE GAME</div>'}
-                    ${game.mvp ? `<div style="margin-top: 15px; font-size: 1.1em; color: #f39c12;">⭐ MVP: ${game.mvp.name}</div>` : ''}
+                    ${game.mvp ? `<div style="margin-top: 15px; font-size: 1.1em; color: #f39c12;">
+                        ⭐ MVP: ${game.mvp.name}
+                        <button class="edit-mvp-btn" onclick="editGameMVP(${game.id})" style="margin-left: 10px; padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">✏️ Edit MVP</button>
+                    </div>` : `<div style="margin-top: 15px; font-size: 1.1em; color: #a0aec0;">
+                        No MVP selected
+                        <button class="edit-mvp-btn" onclick="editGameMVP(${game.id})" style="margin-left: 10px; padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">✏️ Select MVP</button>
+                    </div>`}
                 </div>
                 <div class="modal-teams">
             `;
@@ -1866,6 +1881,87 @@
             // Re-render
             renderCurrentTab();
             alert('Game date updated successfully!');
+        }
+
+        function editGameMVP(gameId) {
+            // Find the game
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game) {
+                return;
+            }
+
+            // Build player list from both teams
+            const playerOptions = [];
+
+            // Add Team 1 players
+            game.team1.players.forEach(player => {
+                playerOptions.push({
+                    name: player.name,
+                    team: game.team1.name,
+                    teamKey: 'team1',
+                    playerId: player.id
+                });
+            });
+
+            // Add Team 2 players
+            game.team2.players.forEach(player => {
+                playerOptions.push({
+                    name: player.name,
+                    team: game.team2.name,
+                    teamKey: 'team2',
+                    playerId: player.id
+                });
+            });
+
+            // Build prompt message with numbered list
+            let promptMessage = 'Select the Best Player of the Game:\n\n';
+            playerOptions.forEach((player, index) => {
+                promptMessage += `${index + 1}. ${player.name} (${player.team})\n`;
+            });
+            promptMessage += '\nEnter the number (or 0 to remove MVP):';
+
+            // Show prompt
+            const selection = prompt(promptMessage, game.mvp ? '' : '');
+
+            // Validate and update
+            if (selection === null || selection.trim() === '') {
+                return; // User cancelled
+            }
+
+            const selectedIndex = parseInt(selection) - 1;
+
+            // Handle "0" to remove MVP
+            if (selection === '0') {
+                game.mvp = null;
+                alert('MVP removed from game.');
+            }
+            // Validate selection is within range
+            else if (selectedIndex >= 0 && selectedIndex < playerOptions.length) {
+                const selectedPlayer = playerOptions[selectedIndex];
+                game.mvp = {
+                    name: selectedPlayer.name,
+                    team: selectedPlayer.team,
+                    teamKey: selectedPlayer.teamKey,
+                    playerId: selectedPlayer.playerId
+                };
+                alert(`MVP updated to: ${selectedPlayer.name} (${selectedPlayer.team})`);
+            } else {
+                alert('Invalid selection. Please enter a valid number.');
+                return;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+
+            // Sync to Firebase
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                console.log('✅ Game MVP updated and synced to Firebase');
+            }
+
+            // Close and re-open modal to refresh display
+            closeModal();
+            setTimeout(() => viewGameDetails(gameId), 100);
         }
 
         function recalculateStandings() {

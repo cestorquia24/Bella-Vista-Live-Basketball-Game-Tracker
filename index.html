@@ -3046,6 +3046,9 @@
             gameData.quarters = parseInt(formData.quarters) || 4;
             gameData.minutesPerQuarter = parseInt(formData.minutesPerQuarter) || 10;
 
+            // Clear MVP from previous game
+            gameData.mvp = null;
+
             // Initialize timer based on minutes per quarter
             gameData.gameTimer.totalSeconds = gameData.minutesPerQuarter * 60;
             gameData.gameTimer.currentSeconds = gameData.minutesPerQuarter * 60;
