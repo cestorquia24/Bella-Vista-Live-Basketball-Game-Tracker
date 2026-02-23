@@ -4554,9 +4554,13 @@
                 return;
             }
 
-            // Update team names in selector
-            document.getElementById('quickStatsTeam1Name').textContent = gameData.team1.name || 'Team 1';
-            document.getElementById('quickStatsTeam2Name').textContent = gameData.team2.name || 'Team 2';
+            // Count players on court for each team
+            const team1OnCourt = gameData.team1.players.filter(p => p.isStarter).length;
+            const team2OnCourt = gameData.team2.players.filter(p => p.isStarter).length;
+
+            // Update team names in selector with on-court count
+            document.getElementById('quickStatsTeam1Name').textContent = `${gameData.team1.name || 'Team 1'} (${team1OnCourt} on court)`;
+            document.getElementById('quickStatsTeam2Name').textContent = `${gameData.team2.name || 'Team 2'} (${team2OnCourt} on court)`;
 
             // Show modal
             document.getElementById('quickStatsModal').classList.add('active');
@@ -4592,9 +4596,10 @@
             const container = document.getElementById('quickStatsPlayers');
             container.innerHTML = '';
 
-            const players = gameData[team].players;
+            // Filter to show only players currently on court (isStarter === true)
+            const onCourtPlayers = gameData[team].players.filter(player => player.isStarter);
 
-            players.forEach(player => {
+            onCourtPlayers.forEach(player => {
                 const playerCard = document.createElement('div');
                 playerCard.className = 'quick-stats-player';
 
@@ -4644,6 +4649,11 @@
 
                 container.appendChild(playerCard);
             });
+
+            // Show message if no players on court
+            if (onCourtPlayers.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0aec0;">No players on court. Drag players from bench to starting lineup.</div>';
+            }
         }
 
         function quickStatUpdate(team, playerId, statName, value = 1) {
