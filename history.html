@@ -1680,13 +1680,14 @@
                 <div class="modal-teams">
             `;
 
-            // Team 1 Players
+            // Team 1 Players - Calculate stats and sort by performance
             modalHTML += `
                 <div class="modal-team">
                     <h3>${game.team1.name}</h3>
             `;
 
-            game.team1.players.forEach(player => {
+            // Calculate stats for all players
+            const team1PlayersWithStats = game.team1.players.map(player => {
                 let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
                 Object.values(player.quarterStats).forEach(qStats => {
                     totalPoints += qStats.points || 0;
@@ -1695,8 +1696,23 @@
                     totalSteals += qStats.steals || 0;
                     totalBlocks += qStats.blocks || 0;
                 });
+                return {
+                    player,
+                    totalPoints,
+                    totalRebounds,
+                    totalAssists,
+                    totalSteals,
+                    totalBlocks,
+                    // Calculate performance score for sorting
+                    score: totalPoints + (totalRebounds * 0.5) + (totalAssists * 0.7) + (totalSteals * 0.8) + (totalBlocks * 0.8)
+                };
+            });
 
-                if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0 || totalSteals > 0 || totalBlocks > 0) {
+            // Filter players with stats and sort by performance (best first)
+            team1PlayersWithStats
+                .filter(p => p.totalPoints > 0 || p.totalRebounds > 0 || p.totalAssists > 0 || p.totalSteals > 0 || p.totalBlocks > 0)
+                .sort((a, b) => b.score - a.score) // Sort descending by performance score
+                .forEach(({player, totalPoints, totalRebounds, totalAssists, totalSteals, totalBlocks}) => {
                     let statsHTML = '';
                     if (totalPoints > 0) statsHTML += `<span><strong>${totalPoints}</strong> PTS</span>`;
                     if (totalRebounds > 0) statsHTML += `<span><strong>${totalRebounds}</strong> REB</span>`;
@@ -1712,18 +1728,18 @@
                             </div>
                         </div>
                     `;
-                }
-            });
+                });
 
             modalHTML += `</div>`;
 
-            // Team 2 Players
+            // Team 2 Players - Calculate stats and sort by performance
             modalHTML += `
                 <div class="modal-team">
                     <h3>${game.team2.name}</h3>
             `;
 
-            game.team2.players.forEach(player => {
+            // Calculate stats for all players
+            const team2PlayersWithStats = game.team2.players.map(player => {
                 let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
                 Object.values(player.quarterStats).forEach(qStats => {
                     totalPoints += qStats.points || 0;
@@ -1732,8 +1748,23 @@
                     totalSteals += qStats.steals || 0;
                     totalBlocks += qStats.blocks || 0;
                 });
+                return {
+                    player,
+                    totalPoints,
+                    totalRebounds,
+                    totalAssists,
+                    totalSteals,
+                    totalBlocks,
+                    // Calculate performance score for sorting
+                    score: totalPoints + (totalRebounds * 0.5) + (totalAssists * 0.7) + (totalSteals * 0.8) + (totalBlocks * 0.8)
+                };
+            });
 
-                if (totalPoints > 0 || totalRebounds > 0 || totalAssists > 0 || totalSteals > 0 || totalBlocks > 0) {
+            // Filter players with stats and sort by performance (best first)
+            team2PlayersWithStats
+                .filter(p => p.totalPoints > 0 || p.totalRebounds > 0 || p.totalAssists > 0 || p.totalSteals > 0 || p.totalBlocks > 0)
+                .sort((a, b) => b.score - a.score) // Sort descending by performance score
+                .forEach(({player, totalPoints, totalRebounds, totalAssists, totalSteals, totalBlocks}) => {
                     let statsHTML = '';
                     if (totalPoints > 0) statsHTML += `<span><strong>${totalPoints}</strong> PTS</span>`;
                     if (totalRebounds > 0) statsHTML += `<span><strong>${totalRebounds}</strong> REB</span>`;
@@ -1749,8 +1780,7 @@
                             </div>
                         </div>
                     `;
-                }
-            });
+                });
 
             modalHTML += `</div></div>`;
 
