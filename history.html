@@ -412,6 +412,22 @@
             background: #e53e3e;
         }
 
+        .reorder-btn {
+            background: #9f7aea;
+            color: white;
+        }
+
+        .reorder-btn:hover {
+            background: #805ad5;
+        }
+
+        .reorder-btn:disabled {
+            background: #cbd5e0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
         /* Table Styles */
         .table-container {
             background: rgba(45, 55, 72, 0.9);
@@ -1367,16 +1383,22 @@
             empty.style.display = 'none';
             grid.innerHTML = '';
 
-            gameHistory.forEach(game => {
+            gameHistory.forEach((game, index) => {
                 const card = document.createElement('div');
                 card.className = 'game-card';
 
                 const winnerBadgeClass = game.winner === 'TIE' ? 'winner-badge tie' : 'winner-badge';
                 const winnerText = game.winner === 'TIE' ? 'TIE GAME' : `🏆 ${game.winner}`;
 
+                // Check if can move up or down
+                const canMoveUp = index > 0;
+                const canMoveDown = index < gameHistory.length - 1;
+
                 card.innerHTML = `
                     <div class="game-card-header">
-                        <div class="game-date">${game.gameDate}</div>
+                        <div class="game-date" onclick="editGameDate(${game.id})" style="cursor: pointer; text-decoration: underline;" title="Click to edit date">
+                            📅 ${game.gameDate}
+                        </div>
                         <div class="${winnerBadgeClass}">${winnerText}</div>
                     </div>
                     <div class="game-matchup">
@@ -1389,6 +1411,8 @@
                         <div class="game-name">${game.gameName}</div>
                     </div>
                     <div class="game-actions">
+                        <button class="game-btn reorder-btn" onclick="moveGameUp(${game.id})" ${!canMoveUp ? 'disabled' : ''} title="Move game up in list">⬆️ Up</button>
+                        <button class="game-btn reorder-btn" onclick="moveGameDown(${game.id})" ${!canMoveDown ? 'disabled' : ''} title="Move game down in list">⬇️ Down</button>
                         <button class="game-btn view-btn" onclick="viewGameDetails(${game.id})">👁️ View Details</button>
                         <button class="game-btn delete-btn" onclick="deleteGame(${game.id})">🗑️ Delete</button>
                     </div>
@@ -1744,6 +1768,104 @@
             // Re-render
             renderCurrentTab();
             alert('Game deleted successfully!');
+        }
+
+        function moveGameUp(gameId) {
+            // Find the index of the game
+            const index = gameHistory.findIndex(g => g.id === gameId);
+
+            if (index <= 0) {
+                return; // Already at top or not found
+            }
+
+            // Swap with the previous game
+            [gameHistory[index - 1], gameHistory[index]] = [gameHistory[index], gameHistory[index - 1]];
+
+            // Save to localStorage
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+
+            // Sync to Firebase
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                console.log('✅ Game order synced to Firebase');
+            }
+
+            // Re-render
+            renderCurrentTab();
+        }
+
+        function moveGameDown(gameId) {
+            // Find the index of the game
+            const index = gameHistory.findIndex(g => g.id === gameId);
+
+            if (index === -1 || index >= gameHistory.length - 1) {
+                return; // Already at bottom or not found
+            }
+
+            // Swap with the next game
+            [gameHistory[index], gameHistory[index + 1]] = [gameHistory[index + 1], gameHistory[index]];
+
+            // Save to localStorage
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+
+            // Sync to Firebase
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                console.log('✅ Game order synced to Firebase');
+            }
+
+            // Re-render
+            renderCurrentTab();
+        }
+
+        function editGameDate(gameId) {
+            // Find the game
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game) {
+                return;
+            }
+
+            // Prompt for new date
+            const currentDate = game.gameDate;
+            const newDate = prompt('Edit game date (YYYY-MM-DD format):', currentDate);
+
+            // Validate and update
+            if (newDate === null || newDate.trim() === '') {
+                return; // User cancelled or empty
+            }
+
+            // Basic date validation
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+            if (!datePattern.test(newDate)) {
+                alert('Invalid date format. Please use YYYY-MM-DD format (e.g., 2026-02-20)');
+                return;
+            }
+
+            // Update the date
+            game.gameDate = newDate;
+
+            // Update lastPlayed for both teams in standings
+            if (seasonStandings.teams[game.team1.name]) {
+                seasonStandings.teams[game.team1.name].lastPlayed = newDate;
+            }
+            if (seasonStandings.teams[game.team2.name]) {
+                seasonStandings.teams[game.team2.name].lastPlayed = newDate;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
+
+            // Sync to Firebase
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                database.ref('seasonStandings').set(seasonStandings);
+                console.log('✅ Game date updated and synced to Firebase');
+            }
+
+            // Re-render
+            renderCurrentTab();
+            alert('Game date updated successfully!');
         }
 
         function recalculateStandings() {
