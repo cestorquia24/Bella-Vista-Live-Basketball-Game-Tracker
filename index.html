@@ -1781,82 +1781,89 @@
         }
 
         .quick-stats-team-selector {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .quick-stats-team-btn {
-            flex: 1;
-            padding: 12px 20px;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
-            background: var(--secondary-bg);
-            color: var(--text-primary);
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .quick-stats-team-btn:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-        }
-
-        .quick-stats-team-btn.active {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            display: none; /* Hide team selector - showing both teams now */
         }
 
         .quick-stats-players {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .quick-stats-team-column {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
+        }
+
+        .quick-stats-team-column.team1 {
+            background: rgba(102, 126, 234, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .quick-stats-team-column.team2 {
+            background: rgba(245, 101, 101, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border-left: 4px solid #f56565;
+        }
+
+        .quick-stats-team-header {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
         }
 
         .quick-stats-player {
             background: var(--secondary-bg);
-            border-radius: 10px;
-            padding: 12px 15px;
-            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 10px;
+            border: 1px solid var(--border-color);
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .quick-stats-player:hover {
             border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
         }
 
         .quick-stats-player-name {
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 10px;
-            font-size: 1.05em;
+            font-size: 0.9em;
+            min-width: 100px;
+            flex-shrink: 0;
         }
 
         .quick-stats-buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
         }
 
         .quick-stat-btn {
-            padding: 10px;
+            padding: 6px 10px;
             border: none;
             border-radius: 6px;
-            font-size: 0.9em;
+            font-size: 0.8em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s;
             color: white;
-            display: flex;
-            flex-direction: column;
+            display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 3px;
+            min-width: 40px;
         }
 
         .quick-stat-btn:active {
@@ -1967,18 +1974,12 @@
         }
 
         .quick-stats-section-title {
-            font-size: 0.9em;
-            font-weight: 700;
-            color: var(--text-secondary);
-            margin: 15px 0 8px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            display: none; /* Hide section titles in compact layout */
         }
 
         .quick-stats-buttons.points-row {
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 10px;
+            display: flex;
+            gap: 4px;
         }
 
         .quick-stat-btn.pt1 {
@@ -2026,8 +2027,32 @@
                 max-height: 90vh;
             }
 
-            .quick-stats-buttons {
-                grid-template-columns: repeat(2, 1fr);
+            .quick-stats-players {
+                grid-template-columns: 1fr; /* Stack teams vertically on mobile portrait */
+                gap: 15px;
+            }
+
+            .quick-stats-player-name {
+                min-width: 80px;
+                font-size: 0.85em;
+            }
+
+            .quick-stat-btn {
+                padding: 5px 8px;
+                font-size: 0.75em;
+                min-width: 35px;
+            }
+        }
+
+        /* Landscape mode - show both teams side by side even on mobile */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .quick-stats-players {
+                grid-template-columns: 1fr 1fr; /* Side by side in landscape */
+            }
+
+            .quick-stats-player-name {
+                min-width: 70px;
+                font-size: 0.8em;
             }
         }
     </style>
@@ -4553,19 +4578,11 @@
                 return;
             }
 
-            // Count players on court for each team
-            const team1OnCourt = gameData.team1.players.filter(p => p.isStarter).length;
-            const team2OnCourt = gameData.team2.players.filter(p => p.isStarter).length;
-
-            // Update team names in selector with on-court count
-            document.getElementById('quickStatsTeam1Name').textContent = `${gameData.team1.name || 'Team 1'} (${team1OnCourt} on court)`;
-            document.getElementById('quickStatsTeam2Name').textContent = `${gameData.team2.name || 'Team 2'} (${team2OnCourt} on court)`;
-
             // Show modal
             document.getElementById('quickStatsModal').classList.add('active');
 
-            // Render players for current team
-            renderQuickStatsPlayers(currentQuickStatsTeam);
+            // Render both teams at once
+            renderQuickStatsPlayers();
         }
 
         function closeQuickStats() {
@@ -4591,76 +4608,112 @@
             renderQuickStatsPlayers(team);
         }
 
-        function renderQuickStatsPlayers(team) {
+        function renderQuickStatsPlayers() {
             const container = document.getElementById('quickStatsPlayers');
             container.innerHTML = '';
 
-            // Filter to show only players currently on court (isStarter === true)
-            const onCourtPlayers = gameData[team].players.filter(player => player.isStarter);
+            // Create two columns - one for each team
+            const team1Column = document.createElement('div');
+            team1Column.className = 'quick-stats-team-column team1';
 
-            onCourtPlayers.forEach(player => {
-                const playerCard = document.createElement('div');
-                playerCard.className = 'quick-stats-player';
+            const team2Column = document.createElement('div');
+            team2Column.className = 'quick-stats-team-column team2';
 
-                const stats = player.quarterStats[currentQuarter];
+            // Team 1 Header
+            const team1OnCourt = gameData.team1.players.filter(p => p.isStarter).length;
+            const team1Header = document.createElement('div');
+            team1Header.className = 'quick-stats-team-header';
+            team1Header.textContent = `${gameData.team1.name || 'Team 1'} (${team1OnCourt} on court)`;
+            team1Column.appendChild(team1Header);
 
-                // FOULS: Show cumulative total (fouls accumulate across game)
-                const cumulativeFouls = calculateCumulativeFouls(player, currentQuarter);
+            // Team 2 Header
+            const team2OnCourt = gameData.team2.players.filter(p => p.isStarter).length;
+            const team2Header = document.createElement('div');
+            team2Header.className = 'quick-stats-team-header';
+            team2Header.textContent = `${gameData.team2.name || 'Team 2'} (${team2OnCourt} on court)`;
+            team2Column.appendChild(team2Header);
 
-                playerCard.innerHTML = `
-                    <div class="quick-stats-player-name">${player.name}</div>
-                    <div class="quick-stats-section-title">Points</div>
-                    <div class="quick-stats-buttons points-row">
-                        <button class="quick-stat-btn pt1" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 1)">
-                            <span class="quick-stat-label">+1: ${stats.points}</span>
-                        </button>
-                        <button class="quick-stat-btn pt2" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 2)">
-                            <span class="quick-stat-label">+2: ${stats.points}</span>
-                        </button>
-                        <button class="quick-stat-btn pt3" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 3)">
-                            <span class="quick-stat-label">+3: ${stats.points}</span>
-                        </button>
-                    </div>
-                    <div class="quick-stats-section-title">Other Stats</div>
-                    <div class="quick-stats-buttons">
-                        <button class="quick-stat-btn reb" onclick="quickStatUpdate('${team}', ${player.id}, 'rebounds', 1)">
-                            <span class="quick-stat-icon">🏀</span>
-                            <span class="quick-stat-label">REB: ${stats.rebounds}</span>
-                        </button>
-                        <button class="quick-stat-btn ast" onclick="quickStatUpdate('${team}', ${player.id}, 'assists', 1)">
-                            <span class="quick-stat-icon">🤝</span>
-                            <span class="quick-stat-label">AST: ${stats.assists}</span>
-                        </button>
-                        <button class="quick-stat-btn stl" onclick="quickStatUpdate('${team}', ${player.id}, 'steals', 1)">
-                            <span class="quick-stat-icon">🖐️</span>
-                            <span class="quick-stat-label">STL: ${stats.steals}</span>
-                        </button>
-                        <button class="quick-stat-btn blk" onclick="quickStatUpdate('${team}', ${player.id}, 'blocks', 1)">
-                            <span class="quick-stat-icon">🚫</span>
-                            <span class="quick-stat-label">BLK: ${stats.blocks}</span>
-                        </button>
-                        <button class="quick-stat-btn foul" onclick="quickStatUpdate('${team}', ${player.id}, 'fouls', 1)">
-                            <span class="quick-stat-icon">⚠️</span>
-                            <span class="quick-stat-label">FOUL: ${cumulativeFouls}</span>
-                        </button>
-                    </div>
-                `;
-
-                container.appendChild(playerCard);
+            // Render Team 1 players
+            const team1OnCourtPlayers = gameData.team1.players.filter(player => player.isStarter);
+            team1OnCourtPlayers.forEach(player => {
+                const playerCard = createPlayerStatCard(player, 'team1');
+                team1Column.appendChild(playerCard);
             });
 
-            // Show message if no players on court
-            if (onCourtPlayers.length === 0) {
-                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #a0aec0;">No players on court. Drag players from bench to starting lineup.</div>';
+            // Show message if no Team 1 players on court
+            if (team1OnCourtPlayers.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.style.cssText = 'text-align: center; padding: 20px; color: #a0aec0; font-size: 0.9em;';
+                emptyMsg.textContent = 'No players on court';
+                team1Column.appendChild(emptyMsg);
             }
+
+            // Render Team 2 players
+            const team2OnCourtPlayers = gameData.team2.players.filter(player => player.isStarter);
+            team2OnCourtPlayers.forEach(player => {
+                const playerCard = createPlayerStatCard(player, 'team2');
+                team2Column.appendChild(playerCard);
+            });
+
+            // Show message if no Team 2 players on court
+            if (team2OnCourtPlayers.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.style.cssText = 'text-align: center; padding: 20px; color: #a0aec0; font-size: 0.9em;';
+                emptyMsg.textContent = 'No players on court';
+                team2Column.appendChild(emptyMsg);
+            }
+
+            // Add both columns to container
+            container.appendChild(team1Column);
+            container.appendChild(team2Column);
+        }
+
+        function createPlayerStatCard(player, team) {
+            const playerCard = document.createElement('div');
+            playerCard.className = 'quick-stats-player';
+
+            const stats = player.quarterStats[currentQuarter];
+            const cumulativeFouls = calculateCumulativeFouls(player, currentQuarter);
+
+            playerCard.innerHTML = `
+                <div class="quick-stats-player-name">${player.name}</div>
+                <div class="quick-stats-buttons">
+                    <button class="quick-stat-btn pt1" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 1)" title="+1 Point">
+                        +1 <span style="opacity: 0.7;">(${stats.points})</span>
+                    </button>
+                    <button class="quick-stat-btn pt2" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 2)" title="+2 Points">
+                        +2 <span style="opacity: 0.7;">(${stats.points})</span>
+                    </button>
+                    <button class="quick-stat-btn pt3" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 3)" title="+3 Points">
+                        +3 <span style="opacity: 0.7;">(${stats.points})</span>
+                    </button>
+                    <button class="quick-stat-btn reb" onclick="quickStatUpdate('${team}', ${player.id}, 'rebounds', 1)" title="Rebound">
+                        R <span style="opacity: 0.7;">${stats.rebounds}</span>
+                    </button>
+                    <button class="quick-stat-btn ast" onclick="quickStatUpdate('${team}', ${player.id}, 'assists', 1)" title="Assist">
+                        A <span style="opacity: 0.7;">${stats.assists}</span>
+                    </button>
+                    <button class="quick-stat-btn stl" onclick="quickStatUpdate('${team}', ${player.id}, 'steals', 1)" title="Steal">
+                        S <span style="opacity: 0.7;">${stats.steals}</span>
+                    </button>
+                    <button class="quick-stat-btn blk" onclick="quickStatUpdate('${team}', ${player.id}, 'blocks', 1)" title="Block">
+                        B <span style="opacity: 0.7;">${stats.blocks}</span>
+                    </button>
+                    <button class="quick-stat-btn foul" onclick="quickStatUpdate('${team}', ${player.id}, 'fouls', 1)" title="Foul">
+                        F <span style="opacity: 0.7;">${cumulativeFouls}</span>
+                    </button>
+                </div>
+            `;
+
+            return playerCard;
         }
 
         function quickStatUpdate(team, playerId, statName, value = 1) {
             // Update the stat (increment by value)
             updateStat(team, playerId, statName, value);
 
-            // Re-render the current team's players to show updated stats
-            renderQuickStatsPlayers(team);
+            // Re-render both teams to show updated stats
+            renderQuickStatsPlayers();
         }
 
         // Close modal when clicking outside
@@ -4959,7 +5012,7 @@
                     // If Quick Stats Panel is open, refresh it
                     const quickStatsModal = document.getElementById('quickStatsModal');
                     if (quickStatsModal && quickStatsModal.classList.contains('active')) {
-                        renderQuickStatsPlayers(currentQuickStatsTeam);
+                        renderQuickStatsPlayers();
                     }
 
                     console.log('✅ UI updated with remote changes');
