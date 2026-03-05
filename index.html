@@ -2940,6 +2940,98 @@
         // Load dark mode preference on page load
         loadDarkMode();
 
+        // Migration function to fix logo paths after file extension changes
+        function migrateLogoPaths() {
+            console.log('🔄 Checking for logo path migration...');
+
+            // Map old paths to new paths
+            const logoMigration = {
+                'logos/Gray Wolves.jpeg': 'logos/Gray Wolves.jpg?v=2',
+                'logos/Bella Vista Blue.png': 'logos/Bella Vista Blue.jpg?v=2',
+                'logos/Yellow Slashers.png': 'logos/Yellow Slashers.jpg?v=2',
+                'logos/Porpol Ravens.jpeg': 'logos/Porpol Ravens.jpg?v=2',
+                // Also handle already partially updated paths (without v=2)
+                'logos/Gray Wolves.jpg': 'logos/Gray Wolves.jpg?v=2',
+                'logos/Bella Vista Blue.jpg': 'logos/Bella Vista Blue.jpg?v=2',
+                'logos/Yellow Slashers.jpg': 'logos/Yellow Slashers.jpg?v=2',
+                'logos/Porpol Ravens.jpg': 'logos/Porpol Ravens.jpg?v=2',
+                'logos/Orange Inferno.jpg': 'logos/Orange Inferno.jpg?v=2',
+                'logos/Green Bulls.jpg': 'logos/Green Bulls.jpg?v=2',
+                'logos/Black Hoopers.jpg': 'logos/Black Hoopers.jpg?v=2',
+                'logos/Red Blood Cells.jpg': 'logos/Red Blood Cells.jpg?v=2'
+            };
+
+            let migrationNeeded = false;
+
+            // 1. Migrate current game data
+            if (gameData.team1 && gameData.team1.logo && logoMigration[gameData.team1.logo]) {
+                console.log(`Migrating Team 1 logo: ${gameData.team1.logo} → ${logoMigration[gameData.team1.logo]}`);
+                gameData.team1.logo = logoMigration[gameData.team1.logo];
+                migrationNeeded = true;
+            }
+
+            if (gameData.team2 && gameData.team2.logo && logoMigration[gameData.team2.logo]) {
+                console.log(`Migrating Team 2 logo: ${gameData.team2.logo} → ${logoMigration[gameData.team2.logo]}`);
+                gameData.team2.logo = logoMigration[gameData.team2.logo];
+                migrationNeeded = true;
+            }
+
+            // 2. Migrate game history
+            try {
+                const historyJson = localStorage.getItem('basketballGameHistory');
+                if (historyJson) {
+                    const history = JSON.parse(historyJson);
+                    let historyUpdated = false;
+
+                    history.forEach(game => {
+                        if (game.team1 && game.team1.logo && logoMigration[game.team1.logo]) {
+                            game.team1.logo = logoMigration[game.team1.logo];
+                            historyUpdated = true;
+                        }
+                        if (game.team2 && game.team2.logo && logoMigration[game.team2.logo]) {
+                            game.team2.logo = logoMigration[game.team2.logo];
+                            historyUpdated = true;
+                        }
+                    });
+
+                    if (historyUpdated) {
+                        localStorage.setItem('basketballGameHistory', JSON.stringify(history));
+                        console.log('✅ Game history logos migrated');
+
+                        // Also update Firebase history
+                        if (database) {
+                            database.ref('gameHistory').set(history);
+                            console.log('✅ Firebase history logos migrated');
+                        }
+                        migrationNeeded = true;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to migrate history:', e);
+            }
+
+            // 3. Save migrated current game
+            if (migrationNeeded) {
+                saveGameData();
+                console.log('✅ Logo migration complete - game data updated');
+
+                // Re-render to show updated logos
+                if (gameData.team1.name) {
+                    renderGame();
+                }
+
+                return true;
+            }
+
+            console.log('ℹ️ No logo migration needed');
+            return false;
+        }
+
+        // Run migration on page load
+        setTimeout(() => {
+            migrateLogoPaths();
+        }, 500);
+
         // Auto-save functionality
         function saveGameData() {
             try {
