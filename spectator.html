@@ -722,6 +722,9 @@
                     console.log('  - isLive flag:', gameData.isLive);
                     console.log('  - lastUpdated:', gameData.lastUpdated ? new Date(gameData.lastUpdated).toLocaleTimeString() : 'missing');
                     console.log('  - isGameLive() result:', isGameLive(gameData));
+
+                    // Migrate logo paths before using the data
+                    migrateGameDataLogos(gameData);
                 }
 
                 if (gameData && isGameLive(gameData)) {
@@ -750,6 +753,42 @@
         } catch (error) {
             showError('Firebase initialization failed. Please configure Firebase settings.');
             console.error(error);
+        }
+
+        // Migration function to fix logo paths after file extension changes
+        function migrateGameDataLogos(gameData) {
+            if (!gameData) return gameData;
+
+            // Map old paths to new paths
+            const logoMigration = {
+                'logos/Gray Wolves.jpeg': 'logos/Gray Wolves.jpg?v=2',
+                'logos/Bella Vista Blue.png': 'logos/Bella Vista Blue.jpg?v=2',
+                'logos/Yellow Slashers.png': 'logos/Yellow Slashers.jpg?v=2',
+                'logos/Porpol Ravens.jpeg': 'logos/Porpol Ravens.jpg?v=2',
+                // Also handle already partially updated paths (without v=2)
+                'logos/Gray Wolves.jpg': 'logos/Gray Wolves.jpg?v=2',
+                'logos/Bella Vista Blue.jpg': 'logos/Bella Vista Blue.jpg?v=2',
+                'logos/Yellow Slashers.jpg': 'logos/Yellow Slashers.jpg?v=2',
+                'logos/Porpol Ravens.jpg': 'logos/Porpol Ravens.jpg?v=2',
+                'logos/Orange Inferno.jpg': 'logos/Orange Inferno.jpg?v=2',
+                'logos/Green Bulls.jpg': 'logos/Green Bulls.jpg?v=2',
+                'logos/Black Hoopers.jpg': 'logos/Black Hoopers.jpg?v=2',
+                'logos/Red Blood Cells.jpg': 'logos/Red Blood Cells.jpg?v=2'
+            };
+
+            // Migrate team1 logo
+            if (gameData.team1 && gameData.team1.logo && logoMigration[gameData.team1.logo]) {
+                console.log(`[Spectator] Migrating Team 1 logo: ${gameData.team1.logo} → ${logoMigration[gameData.team1.logo]}`);
+                gameData.team1.logo = logoMigration[gameData.team1.logo];
+            }
+
+            // Migrate team2 logo
+            if (gameData.team2 && gameData.team2.logo && logoMigration[gameData.team2.logo]) {
+                console.log(`[Spectator] Migrating Team 2 logo: ${gameData.team2.logo} → ${logoMigration[gameData.team2.logo]}`);
+                gameData.team2.logo = logoMigration[gameData.team2.logo];
+            }
+
+            return gameData;
         }
 
         function isGameLive(gameData) {
@@ -803,6 +842,33 @@
         }
 
         function displayPastGame(gameRecord) {
+            // Migrate logo paths before displaying
+            if (gameRecord.team1) {
+                const migration = {
+                    'logos/Gray Wolves.jpeg': 'logos/Gray Wolves.jpg?v=2',
+                    'logos/Bella Vista Blue.png': 'logos/Bella Vista Blue.jpg?v=2',
+                    'logos/Yellow Slashers.png': 'logos/Yellow Slashers.jpg?v=2',
+                    'logos/Porpol Ravens.jpeg': 'logos/Porpol Ravens.jpg?v=2',
+                    'logos/Gray Wolves.jpg': 'logos/Gray Wolves.jpg?v=2',
+                    'logos/Bella Vista Blue.jpg': 'logos/Bella Vista Blue.jpg?v=2',
+                    'logos/Yellow Slashers.jpg': 'logos/Yellow Slashers.jpg?v=2',
+                    'logos/Porpol Ravens.jpg': 'logos/Porpol Ravens.jpg?v=2',
+                    'logos/Orange Inferno.jpg': 'logos/Orange Inferno.jpg?v=2',
+                    'logos/Green Bulls.jpg': 'logos/Green Bulls.jpg?v=2',
+                    'logos/Black Hoopers.jpg': 'logos/Black Hoopers.jpg?v=2',
+                    'logos/Red Blood Cells.jpg': 'logos/Red Blood Cells.jpg?v=2'
+                };
+
+                if (gameRecord.team1.logo && migration[gameRecord.team1.logo]) {
+                    console.log(`[Past Game] Migrating Team 1 logo: ${gameRecord.team1.logo} → ${migration[gameRecord.team1.logo]}`);
+                    gameRecord.team1.logo = migration[gameRecord.team1.logo];
+                }
+                if (gameRecord.team2 && gameRecord.team2.logo && migration[gameRecord.team2.logo]) {
+                    console.log(`[Past Game] Migrating Team 2 logo: ${gameRecord.team2.logo} → ${migration[gameRecord.team2.logo]}`);
+                    gameRecord.team2.logo = migration[gameRecord.team2.logo];
+                }
+            }
+
             // Convert game record to the format expected by updateDisplay
             const gameData = {
                 gameName: gameRecord.gameName,
