@@ -122,6 +122,49 @@
         .btn-reset14 { background: #805ad5; color: white; }
         .btn-adjust  { background: #2d3748; color: #e2e8f0; border: 2px solid #4a5568; font-size: 1.1rem; }
 
+        .score-teams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .score-team-box {
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .score-team-name {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .score-team-value {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #f6e05e;
+            line-height: 1;
+            margin-bottom: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .score-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn-score-add  { background: #276749; color: white; font-size: 1.1rem; padding: 14px 8px; }
+        .btn-score-undo { background: #744210; color: white; font-size: 1rem;   padding: 14px 8px; }
+
         .section-note {
             font-size: 0.7rem;
             font-weight: 400;
@@ -187,6 +230,32 @@
         </div>
     </div>
 
+    <div class="control-section">
+        <div class="section-title">🏆 Scoreboard</div>
+        <div class="score-teams">
+            <div class="score-team-box">
+                <div class="score-team-name" id="team1Name">Team 1</div>
+                <div class="score-team-value" id="team1ScoreDisplay">0</div>
+                <div class="score-btn-grid">
+                    <button class="ctrl-btn btn-score-add" onclick="addScore('team1', 3)">+3</button>
+                    <button class="ctrl-btn btn-score-add" onclick="addScore('team1', 2)">+2</button>
+                    <button class="ctrl-btn btn-score-add" onclick="addScore('team1', 1)">+1</button>
+                    <button class="ctrl-btn btn-score-undo" onclick="addScore('team1', -1)">−1</button>
+                </div>
+            </div>
+            <div class="score-team-box">
+                <div class="score-team-name" id="team2Name">Team 2</div>
+                <div class="score-team-value" id="team2ScoreDisplay">0</div>
+                <div class="score-btn-grid">
+                    <button class="ctrl-btn btn-score-add" onclick="addScore('team2', 3)">+3</button>
+                    <button class="ctrl-btn btn-score-add" onclick="addScore('team2', 2)">+2</button>
+                    <button class="ctrl-btn btn-score-add" onclick="addScore('team2', 1)">+1</button>
+                    <button class="ctrl-btn btn-score-undo" onclick="addScore('team2', -1)">−1</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="sent-flash" id="sentFlash"></div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -213,6 +282,10 @@
         const sentFlash        = document.getElementById('sentFlash');
         const gameTimerToggle  = document.getElementById('gameTimerToggleBtn');
         const shotClockToggle  = document.getElementById('shotClockToggleBtn');
+        const team1NameEl      = document.getElementById('team1Name');
+        const team2NameEl      = document.getElementById('team2Name');
+        const team1ScoreEl     = document.getElementById('team1ScoreDisplay');
+        const team2ScoreEl     = document.getElementById('team2ScoreDisplay');
 
         let gameTimerRunning = false;
         let shotClockRunning = false;
@@ -236,6 +309,12 @@
                 shotClockVal.textContent = '--';
                 return;
             }
+
+            // Team names & scores
+            if (data.team1) team1NameEl.textContent = data.team1.name || 'Team 1';
+            if (data.team2) team2NameEl.textContent = data.team2.name || 'Team 2';
+            team1ScoreEl.textContent = data.team1Score ?? (data.team1 ? 0 : '--');
+            team2ScoreEl.textContent = data.team2Score ?? (data.team2 ? 0 : '--');
 
             if (data.gameTimer) {
                 const secs = data.gameTimer.currentSeconds || 0;
@@ -273,6 +352,23 @@
 
         function toggleShotClock() {
             sendCommand('shotClock', shotClockRunning ? 'pause' : 'start');
+        }
+
+        function addScore(team, amount) {
+            database.ref('timerCommands').set({
+                target: team,
+                command: 'scoreAdd',
+                amount,
+                timestamp: Date.now()
+            }).then(() => {
+                const teamName = team === 'team1'
+                    ? (team1NameEl.textContent || 'Team 1')
+                    : (team2NameEl.textContent || 'Team 2');
+                const sign = amount > 0 ? '+' : '';
+                showFlash(`✓ ${sign}${amount} — ${teamName}`);
+            }).catch(() => {
+                showFlash('✗ Failed to send score');
+            });
         }
 
         function sendAdjust(target, amount) {
