@@ -3413,12 +3413,18 @@
                     total += qStats.points;
                 });
             });
-            total += gameData[team].scoreAdjustment || 0;
             return total;
         }
 
-        // Make this function globally accessible for cast mode
+        // Official score shown on cast/spectator — controlled by remote only
+        function getOfficialScore(team) {
+            const adj = gameData[team].scoreAdjustment;
+            return typeof adj === 'number' ? adj : 0;
+        }
+
+        // Make both globally accessible for cast mode
         window.calculateTeamTotalPoints = calculateTeamTotalPoints;
+        window.getOfficialScore = getOfficialScore;
 
         function updateTeamFoulsDisplay() {
             const q = currentQuarter === 'total' ? 1 : currentQuarter;
@@ -4263,8 +4269,8 @@
 
         // Cast Mode - Open scoreboard in new window
         function openCastMode() {
-            const team1Score = calculateTeamTotalPoints('team1');
-            const team2Score = calculateTeamTotalPoints('team2');
+            const team1Score = getOfficialScore('team1');
+            const team2Score = getOfficialScore('team2');
             const quarterText = currentQuarter === 'total' ? 'FINAL' : 'QUARTER ' + currentQuarter;
             const q = currentQuarter === 'total' ? 1 : currentQuarter;
             const team1Fouls = gameData.team1.teamFouls[q] || 0;
@@ -4525,9 +4531,9 @@
                     const openerGameData = window.opener.gameData;
                     const openerCurrentQuarter = window.opener.currentQuarter;
 
-                    if (openerGameData && window.opener.calculateTeamTotalPoints) {
-                        const team1Score = window.opener.calculateTeamTotalPoints('team1');
-                        const team2Score = window.opener.calculateTeamTotalPoints('team2');
+                    if (openerGameData && window.opener.getOfficialScore) {
+                        const team1Score = window.opener.getOfficialScore('team1');
+                        const team2Score = window.opener.getOfficialScore('team2');
 
                         document.getElementById('team1Score').textContent = team1Score;
                         document.getElementById('team2Score').textContent = team2Score;
@@ -4930,6 +4936,8 @@
         let firebaseInitialized = false;
         let database = null;
         let liveUpdatesEnabled = false;
+        // Unique ID for this page session — used to skip our own Firebase pushes
+        const sessionId = Math.random().toString(36).substr(2, 9);
 
         function initializeFirebase() {
             try {
@@ -4980,8 +4988,8 @@
                     else if (cmd.command === 'adjust')  adjustShotClock(cmd.amount);
                 } else if (cmd.target === 'team1' || cmd.target === 'team2') {
                     if (cmd.command === 'scoreAdd') {
-                        if (gameData[cmd.target].scoreAdjustment === undefined) gameData[cmd.target].scoreAdjustment = 0;
-                        gameData[cmd.target].scoreAdjustment += cmd.amount;
+                        if (gameData[cmd.target].scoreAdjustment == null) gameData[cmd.target].scoreAdjustment = 0;
+                        gameData[cmd.target].scoreAdjustment = Math.max(0, gameData[cmd.target].scoreAdjustment + cmd.amount);
                         updateLiveScoreboard();
                         saveGameData();
                         if (liveUpdatesEnabled) pushLiveUpdate();
@@ -5004,14 +5012,15 @@
                     currentQuarter: currentQuarter,
                     team1: gameData.team1,
                     team2: gameData.team2,
-                    team1Score: calculateTeamTotalPoints('team1'),
-                    team2Score: calculateTeamTotalPoints('team2'),
+                    team1Score: getOfficialScore('team1'),
+                    team2Score: getOfficialScore('team2'),
                     mvp: gameData.mvp,
                     gameTimer: gameData.gameTimer,
                     shotClock: gameData.shotClock,
                     isLive: liveUpdatesEnabled,
                     lastUpdated: Date.now(),
-                    possession: gameData.possession
+                    possession: gameData.possession,
+                    pushedBy: sessionId
                 };
 
                 console.log('📤 Pushing to Firebase:', {
@@ -5100,6 +5109,11 @@
                     // Ignore if no data
                     if (!remoteData) {
                         console.log('⚠️ No remote data in Firebase');
+                        return;
+                    }
+
+                    // Ignore our own pushes — prevents self-feedback loop
+                    if (remoteData.pushedBy === sessionId) {
                         return;
                     }
 
