@@ -213,6 +213,10 @@
             <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', -60)">− 1 min</button>
             <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', +60)">+ 1 min</button>
         </div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', -1)">− 1s</button>
+            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', +1)">+ 1s</button>
+        </div>
     </div>
 
     <div class="control-section">
@@ -380,7 +384,7 @@
             }).then(() => {
                 const sign  = amount > 0 ? '+' : '';
                 const label = target === 'gameTimer'
-                    ? `Game Timer ${sign}${amount / 60}min`
+                    ? (Math.abs(amount) >= 60 ? `Game Timer ${sign}${amount / 60}min` : `Game Timer ${sign}${amount}s`)
                     : `Shot Clock ${sign}${amount}s`;
                 showFlash(`✓ ${label}`);
             }).catch(() => {
