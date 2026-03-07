@@ -4309,9 +4309,10 @@
             background: linear-gradient(135deg, rgba(26, 32, 44, 0.75) 0%, rgba(45, 55, 72, 0.85) 100%),
                         url('bellaLogo.jpg?v=2') center center / cover no-repeat fixed;
             height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-evenly;
             align-items: center;
             color: white;
             position: relative;
@@ -4327,10 +4328,10 @@
             pointer-events: none;
         }
         .cast-logo-display {
-            width: 90px;
-            height: 90px;
+            width: 7vh;
+            height: 7vh;
             object-fit: contain;
-            margin-bottom: 10px;
+            margin-bottom: 0;
             filter: drop-shadow(0 8px 24px rgba(0,0,0,0.8))
                     drop-shadow(0 0 35px rgba(102, 126, 234, 0.6))
                     drop-shadow(0 0 70px rgba(102, 126, 234, 0.4));
@@ -4352,45 +4353,44 @@
         }
         .scoreboard {
             text-align: center;
-            padding: 20px 60px;
             width: 100%;
         }
         .game-title {
-            font-size: 2em;
+            font-size: 2.5vh;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 0.5vh;
             color: #cbd5e0;
         }
         .quarter-display {
-            font-size: 2em;
+            font-size: 4.5vh;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 1vh;
             color: #a0aec0;
         }
         .timer-row {
             display: flex;
             justify-content: center;
-            gap: 80px;
-            margin-bottom: 20px;
+            gap: 10vw;
+            margin-bottom: 1vh;
         }
         .timer-box-cast {
             text-align: center;
             background: rgba(45, 55, 72, 0.6);
-            padding: 12px 35px;
+            padding: 1.5vh 4vw;
             border-radius: 16px;
             border: 3px solid rgba(72, 187, 120, 0.3);
             box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
         .timer-label-cast {
-            font-size: 1.6em;
+            font-size: 2.2vh;
             color: #cbd5e0;
-            margin-bottom: 6px;
+            margin-bottom: 0.5vh;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
         .timer-value-cast {
-            font-size: 5em;
+            font-size: 10vh;
             font-weight: 900;
             color: #48bb78;
             font-family: 'Courier New', monospace;
@@ -4401,15 +4401,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 100px;
+            gap: 8vw;
         }
         .team-box {
             text-align: center;
             position: relative;
         }
         .team-logo-cast {
-            width: 160px;
-            height: 160px;
+            width: 18vh;
+            height: 18vh;
             object-fit: contain;
             margin: 0 auto;
             display: block;
@@ -4436,7 +4436,7 @@
             }
         }
         .possession-indicator {
-            font-size: 3em;
+            font-size: 5vh;
             animation: bounce-possession 1.5s ease-in-out infinite;
             filter: drop-shadow(0 4px 16px rgba(249, 115, 22, 0.8));
             display: block;
@@ -4450,8 +4450,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
-            margin-bottom: 5px;
+            gap: 1vw;
+            margin-bottom: 1vh;
         }
         @keyframes bounce-possession {
             0%, 100% {
@@ -4469,21 +4469,21 @@
             letter-spacing: 3px;
         }
         .team-score {
-            font-size: 14em;
+            font-size: 30vh;
             font-weight: 900;
             color: #48bb78;
             text-shadow: 0 8px 16px rgba(0,0,0,0.5);
-            margin-top: 5px;
+            margin-top: 0;
             line-height: 1;
         }
         .team-fouls {
-            font-size: 1.1em;
+            font-size: 1.8vh;
             font-weight: 600;
-            margin-top: 6px;
+            margin-top: 0.5vh;
             color: #fc8181;
         }
         .vs-text {
-            font-size: 4em;
+            font-size: 6vh;
             font-weight: 700;
             color: #718096;
         }
