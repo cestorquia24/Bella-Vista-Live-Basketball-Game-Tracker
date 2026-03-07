@@ -157,18 +157,37 @@
         }
 
         .team-logo-spectator {
-            width: 180px;
-            height: 180px;
+            width: 120px;
+            height: 120px;
             object-fit: contain;
-            margin: 0 auto 20px auto;
+            margin: 0 auto;
             display: block;
             border-radius: 12px;
-            padding: 15px;
+            padding: 10px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
             filter: drop-shadow(0 0 20px rgba(72, 187, 120, 0.6))
                     drop-shadow(0 0 40px rgba(72, 187, 120, 0.4))
                     drop-shadow(0 0 60px rgba(72, 187, 120, 0.2));
             animation: logo-glow-pulse 3s ease-in-out infinite;
+        }
+
+        .logo-possession-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .possession-ball {
+            font-size: 2.8em;
+            animation: bounce-possession 0.7s ease-in-out infinite;
+            line-height: 1;
+        }
+
+        @keyframes bounce-possession {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-12px); }
         }
 
         @keyframes logo-glow-pulse {
@@ -943,9 +962,9 @@
                 team2Logo.style.display = 'none';
             }
 
-            // Calculate and update scores
-            const team1Score = calculateTeamScore(gameData.team1);
-            const team2Score = calculateTeamScore(gameData.team2);
+            // Use official score from Firebase — set only by the remote, not recalculated from player stats
+            const team1Score = gameData.team1Score ?? 0;
+            const team2Score = gameData.team2Score ?? 0;
             document.getElementById('team1Score').textContent = team1Score;
             document.getElementById('team2Score').textContent = team2Score;
 
