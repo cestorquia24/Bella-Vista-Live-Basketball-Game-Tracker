@@ -4971,12 +4971,15 @@
                         pauseShotClock();
                     } else if (cmd.command === 'reset') {
                         resetGameTimer();
+                    } else if (cmd.command === 'adjust') {
+                        adjustGameTimer(cmd.amount);
                     }
                 } else if (cmd.target === 'shotClock') {
                     if (cmd.command === 'start')        startShotClock();
                     else if (cmd.command === 'pause')   pauseShotClock();
                     else if (cmd.command === 'reset24') resetShotClock();
                     else if (cmd.command === 'reset14') resetShotClockFIBA();
+                    else if (cmd.command === 'adjust')  adjustShotClock(cmd.amount);
                 }
             });
         }

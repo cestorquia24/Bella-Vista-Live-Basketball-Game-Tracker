@@ -120,6 +120,7 @@
         .btn-pause   { background: #d69e2e; color: white; }
         .btn-reset   { background: #3182ce; color: white; }
         .btn-reset14 { background: #805ad5; color: white; }
+        .btn-adjust  { background: #2d3748; color: #e2e8f0; border: 2px solid #4a5568; font-size: 1.1rem; }
 
         .section-note {
             font-size: 0.7rem;
@@ -165,6 +166,10 @@
             <button class="ctrl-btn btn-start" id="gameTimerToggleBtn" onclick="toggleGameTimer()">▶ Start</button>
             <button class="ctrl-btn btn-reset" onclick="sendCommand('gameTimer', 'reset')">↺ Reset</button>
         </div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', -60)">− 1 min</button>
+            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', +60)">+ 1 min</button>
+        </div>
     </div>
 
     <div class="control-section">
@@ -175,6 +180,10 @@
         <div class="btn-row">
             <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ Reset 24s</button>
             <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ Reset 14s</button>
+        </div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('shotClock', -1)">− 1s</button>
+            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('shotClock', +1)">+ 1s</button>
         </div>
     </div>
 
@@ -264,6 +273,23 @@
 
         function toggleShotClock() {
             sendCommand('shotClock', shotClockRunning ? 'pause' : 'start');
+        }
+
+        function sendAdjust(target, amount) {
+            database.ref('timerCommands').set({
+                target,
+                command: 'adjust',
+                amount,
+                timestamp: Date.now()
+            }).then(() => {
+                const sign  = amount > 0 ? '+' : '';
+                const label = target === 'gameTimer'
+                    ? `Game Timer ${sign}${amount / 60}min`
+                    : `Shot Clock ${sign}${amount}s`;
+                showFlash(`✓ ${label}`);
+            }).catch(() => {
+                showFlash('✗ Failed to send command');
+            });
         }
 
         function sendCommand(target, command) {
