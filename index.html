@@ -2764,6 +2764,21 @@
         let timeoutBuzzerGain = null;
         let timeoutBuzzerContext = null;
 
+        // Shared AudioContext — created + unlocked on first user gesture so it works
+        // even when triggered remotely via Firebase (no direct user gesture on this page)
+        let sharedAudioCtx = null;
+        function getSharedAudioCtx() {
+            if (!window.AudioContext && !window.webkitAudioContext) return null;
+            if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+                sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (sharedAudioCtx.state === 'suspended') sharedAudioCtx.resume();
+            return sharedAudioCtx;
+        }
+        // Unlock audio context on any user interaction so remote-triggered sounds work
+        document.addEventListener('click',      () => getSharedAudioCtx(), { passive: true });
+        document.addEventListener('touchstart', () => getSharedAudioCtx(), { passive: true });
+
         function playBuzzerSound(type) {
             if (!window.AudioContext && !window.webkitAudioContext) return;
 
@@ -2857,41 +2872,43 @@
         function startTimeoutBuzzer() {
             if (timeoutBuzzerOscillator) return; // Already playing
 
-            if (!window.AudioContext && !window.webkitAudioContext) return;
+            const ctx = getSharedAudioCtx();
+            if (!ctx) return;
 
-            timeoutBuzzerContext = new (window.AudioContext || window.webkitAudioContext)();
-            timeoutBuzzerGain = timeoutBuzzerContext.createGain();
-            timeoutBuzzerGain.connect(timeoutBuzzerContext.destination);
+            // Ensure context is running (needed when triggered from Firebase, not user gesture)
+            ctx.resume().then(() => {
+                timeoutBuzzerContext = ctx;
+                timeoutBuzzerGain = ctx.createGain();
+                timeoutBuzzerGain.connect(ctx.destination);
 
-            // Multi-harmonic horn sound
-            const frequencies = [
-                330,  // Low fundamental
-                440,  // Second tone
-                550,  // Third harmonic
-                660   // Fourth harmonic
-            ];
+                // Multi-harmonic horn sound
+                const frequencies = [
+                    330,  // Low fundamental
+                    440,  // Second tone
+                    550,  // Third harmonic
+                    660   // Fourth harmonic
+                ];
 
-            const oscillators = frequencies.map((freq, index) => {
-                const osc = timeoutBuzzerContext.createOscillator();
-                const oscGain = timeoutBuzzerContext.createGain();
+                const oscillators = frequencies.map((freq, index) => {
+                    const osc = ctx.createOscillator();
+                    const oscGain = ctx.createGain();
 
-                osc.type = 'sawtooth';
-                osc.frequency.value = freq;
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = freq;
 
-                const volume = 0.3 / (index + 1);
-                oscGain.gain.value = volume;
+                    const volume = 0.3 / (index + 1);
+                    oscGain.gain.value = volume;
 
-                osc.connect(oscGain);
-                oscGain.connect(timeoutBuzzerGain);
+                    osc.connect(oscGain);
+                    oscGain.connect(timeoutBuzzerGain);
 
-                osc.start();
-                return osc;
+                    osc.start();
+                    return osc;
+                });
+
+                timeoutBuzzerGain.gain.setValueAtTime(0.8, ctx.currentTime); // Very loud
+                timeoutBuzzerOscillator = oscillators;
             });
-
-            timeoutBuzzerGain.gain.setValueAtTime(0.8, timeoutBuzzerContext.currentTime); // Very loud
-
-            // Store all oscillators
-            timeoutBuzzerOscillator = oscillators;
         }
 
         // Stop continuous timeout buzzer (release button)
@@ -2907,6 +2924,7 @@
                         timeoutBuzzerOscillator = null;
                         timeoutBuzzerGain = null;
                         timeoutBuzzerContext = null;
+                        // Note: sharedAudioCtx is kept alive for reuse
                     }
                 }, 100);
             } catch(e) {
