@@ -5043,6 +5043,9 @@
                         saveGameData();
                         if (liveUpdatesEnabled) pushLiveUpdate();
                     }
+                } else if (cmd.target === 'buzzer') {
+                    if (cmd.command === 'start') startTimeoutBuzzer();
+                    else if (cmd.command === 'stop') stopTimeoutBuzzer();
                 }
             });
         }

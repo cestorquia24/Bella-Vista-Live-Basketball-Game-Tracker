@@ -164,6 +164,7 @@
 
         .btn-score-add  { background: #276749; color: white; font-size: 1.1rem; padding: 14px 8px; }
         .btn-score-undo { background: #744210; color: white; font-size: 1rem;   padding: 14px 8px; }
+        .btn-buzzer     { background: #e53e3e; color: white; font-size: 1.2rem; padding: 28px 8px; user-select: none; }
 
         .section-note {
             font-size: 0.7rem;
@@ -257,6 +258,18 @@
                     <button class="ctrl-btn btn-score-undo" onclick="addScore('team2', -1)">−1</button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <div class="control-section">
+        <div class="section-title">📢 Buzzer</div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-buzzer"
+                onmousedown="buzzerStart()" onmouseup="buzzerStop()"
+                onmouseleave="buzzerStop()" ontouchstart="buzzerStart()"
+                ontouchend="buzzerStop()">
+                📢 HOLD FOR BUZZER
+            </button>
         </div>
     </div>
 
@@ -411,6 +424,27 @@
             sentFlash.style.opacity = '1';
             clearTimeout(flashTimer);
             flashTimer = setTimeout(() => { sentFlash.style.opacity = '0'; }, 1800);
+        }
+
+        let buzzerActive = false;
+        function buzzerStart() {
+            if (buzzerActive) return;
+            buzzerActive = true;
+            database.ref('timerCommands').set({
+                target: 'buzzer',
+                command: 'start',
+                timestamp: Date.now()
+            });
+        }
+
+        function buzzerStop() {
+            if (!buzzerActive) return;
+            buzzerActive = false;
+            database.ref('timerCommands').set({
+                target: 'buzzer',
+                command: 'stop',
+                timestamp: Date.now()
+            });
         }
     </script>
 </body>
