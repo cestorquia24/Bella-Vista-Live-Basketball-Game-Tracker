@@ -4436,16 +4436,22 @@
             }
         }
         .possession-indicator {
-            font-size: 5em;
-            margin: 20px 0;
+            font-size: 3em;
             animation: bounce-possession 1.5s ease-in-out infinite;
             filter: drop-shadow(0 4px 16px rgba(249, 115, 22, 0.8));
             display: block;
-            min-height: 100px;
+            visibility: visible;
         }
         .possession-indicator.hidden {
-            opacity: 0;
+            visibility: hidden;
             animation: none;
+        }
+        .logo-possession-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
         }
         @keyframes bounce-possession {
             0%, 100% {
@@ -4638,15 +4644,19 @@
         </div>
         <div class="score-container">
             <div class="team-box">
-                ` + (gameData.team1.logo ? `<img src="${gameData.team1.logo}" class="team-logo-cast" alt="${gameData.team1.name}">` : '') + `
-                <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
+                <div class="logo-possession-row">
+                    ` + (gameData.team1.logo ? `<img src="${gameData.team1.logo}" class="team-logo-cast" alt="${gameData.team1.name}">` : '') + `
+                    <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
+                </div>
                 <div class="team-score" id="team1Score">` + team1Score + `</div>
                 <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
             </div>
             <div class="vs-text">VS</div>
             <div class="team-box">
-                ` + (gameData.team2.logo ? `<img src="${gameData.team2.logo}" class="team-logo-cast" alt="${gameData.team2.name}">` : '') + `
-                <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
+                <div class="logo-possession-row">
+                    ` + (gameData.team2.logo ? `<img src="${gameData.team2.logo}" class="team-logo-cast" alt="${gameData.team2.name}">` : '') + `
+                    <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
+                </div>
                 <div class="team-score" id="team2Score">` + team2Score + `</div>
                 <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
             </div>
