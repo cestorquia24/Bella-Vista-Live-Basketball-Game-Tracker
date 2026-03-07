@@ -591,14 +591,53 @@
             z-index: 9;
         }
 
-        .lineup-title.starting {
-            background: #c6f6d5;
-            color: #22543d;
+        .lineup-title.players-title {
+            background: #ebf8ff;
+            color: #2c5282;
+            justify-content: space-between;
         }
 
-        .lineup-title.bench {
-            background: #feebc8;
-            color: #7c2d12;
+        .add-player-btn {
+            padding: 4px 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.82em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .add-player-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .move-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .move-btn {
+            padding: 1px 6px;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            font-size: 0.7em;
+            cursor: pointer;
+            line-height: 1.4;
+            transition: all 0.15s;
+        }
+
+        .move-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
         }
 
         .player-row {
@@ -2346,14 +2385,11 @@
                 </div>
 
                 <div class="lineup-section">
-                    <div class="lineup-title starting">🏀 On Court LineUp (5 Players)</div>
-                    <div id="team1Starting" class="players-list">
+                    <div class="lineup-title players-title">
+                        👥 Players
+                        <button class="add-player-btn" onclick="addPlayer('team1')">+ Add Player</button>
                     </div>
-                </div>
-
-                <div class="lineup-section">
-                    <div class="lineup-title bench">🪑 Bench Players</div>
-                    <div id="team1Bench" class="players-list">
+                    <div id="team1Players" class="players-list">
                     </div>
                 </div>
             </div>
@@ -2384,14 +2420,11 @@
                 </div>
 
                 <div class="lineup-section">
-                    <div class="lineup-title starting">🏀 On Court LineUp (5 Players)</div>
-                    <div id="team2Starting" class="players-list">
+                    <div class="lineup-title players-title">
+                        👥 Players
+                        <button class="add-player-btn" onclick="addPlayer('team2')">+ Add Player</button>
                     </div>
-                </div>
-
-                <div class="lineup-section">
-                    <div class="lineup-title bench">🪑 Bench Players</div>
-                    <div id="team2Bench" class="players-list">
+                    <div id="team2Players" class="players-list">
                     </div>
                 </div>
             </div>
@@ -3586,33 +3619,17 @@
         }
 
         function renderPlayers(team, players) {
-            const startingContainer = document.getElementById(`${team}Starting`);
-            const benchContainer = document.getElementById(`${team}Bench`);
-            startingContainer.innerHTML = '';
-            benchContainer.innerHTML = '';
+            const container = document.getElementById(`${team}Players`);
+            if (!container) return;
+            container.innerHTML = '';
 
-            const starters = players.filter(p => p.isStarter);
-            const bench = players.filter(p => !p.isStarter);
+            container.appendChild(createHeaderRow());
 
-            // Add header to starting lineup
-            startingContainer.appendChild(createHeaderRow());
-
-            // Render starting lineup
-            starters.forEach(player => {
+            players.forEach(player => {
                 const row = createPlayerRow(player, team);
-                startingContainer.appendChild(row);
+                container.appendChild(row);
             });
 
-            // Add header to bench
-            benchContainer.appendChild(createHeaderRow());
-
-            // Render bench players
-            bench.forEach(player => {
-                const row = createPlayerRow(player, team);
-                benchContainer.appendChild(row);
-            });
-
-            // Setup drag and drop
             setupDragAndDrop(team);
         }
 
@@ -3637,7 +3654,10 @@
                     ${player.name}
                     <span class="edit-icon">✏️</span>
                 </div>
-                <button class="swap-btn" onclick="quickSwap('${team}', ${player.id})">${swapButtonText}</button>
+                <div class="move-btns">
+                    <button class="move-btn" onclick="movePlayerUp('${team}', ${player.id})" title="Move Up">▲</button>
+                    <button class="move-btn" onclick="movePlayerDown('${team}', ${player.id})" title="Move Down">▼</button>
+                </div>
                 ${renderQuickScoreButtons(player.id, team)}
                 ${renderStatControl('points', stats.points, player.id, team)}
                 ${renderStatControl('rebounds', stats.rebounds, player.id, team)}
@@ -3681,26 +3701,38 @@
             updateStat(team, playerId, 'points', points);
         }
 
-        function quickSwap(team, playerId) {
-            const player = gameData[team].players.find(p => p.id === playerId);
-
-            if (player) {
-                // Record action for undo
-                recordAction({
-                    type: 'starter',
-                    team: team,
-                    playerId: playerId,
-                    oldValue: player.isStarter
-                });
-
-                // Toggle starter status
-                player.isStarter = !player.isStarter;
-
-                // Re-render players for this team
-                renderPlayers(team, gameData[team].players);
+        function movePlayerUp(team, playerId) {
+            const players = gameData[team].players;
+            const idx = players.findIndex(p => p.id === playerId);
+            if (idx > 0) {
+                [players[idx - 1], players[idx]] = [players[idx], players[idx - 1]];
+                renderPlayers(team, players);
                 updateTotals();
                 saveGameData();
             }
+        }
+
+        function movePlayerDown(team, playerId) {
+            const players = gameData[team].players;
+            const idx = players.findIndex(p => p.id === playerId);
+            if (idx < players.length - 1) {
+                [players[idx], players[idx + 1]] = [players[idx + 1], players[idx]];
+                renderPlayers(team, players);
+                updateTotals();
+                saveGameData();
+            }
+        }
+
+        function addPlayer(team) {
+            const name = prompt('Enter player name and number (e.g. Smith #10):');
+            if (!name || !name.trim()) return;
+            const players = gameData[team].players;
+            const maxId = players.length > 0 ? Math.max(...players.map(p => p.id)) : 0;
+            const newPlayer = createPlayer(name.trim(), maxId + 1, gameData.quarters, false);
+            players.push(newPlayer);
+            renderPlayers(team, players);
+            updateTotals();
+            saveGameData();
         }
 
         function editPlayerName(team, playerId) {
@@ -3750,20 +3782,76 @@
         }
 
         function setupDragAndDrop(team) {
-            const startingContainer = document.getElementById(`${team}Starting`);
-            const benchContainer = document.getElementById(`${team}Bench`);
+            const container = document.getElementById(`${team}Players`);
+            if (!container) return;
 
-            [startingContainer, benchContainer].forEach(container => {
-                container.addEventListener('dragover', handleDragOver);
-                container.addEventListener('drop', handleDrop);
-                container.addEventListener('dragleave', handleDragLeave);
-
-                const playerRows = container.querySelectorAll('.player-row');
-                playerRows.forEach(row => {
-                    row.addEventListener('dragstart', handleDragStart);
-                    row.addEventListener('dragend', handleDragEnd);
-                });
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(container, e.clientY);
+                container.querySelectorAll('.player-row:not(.player-header)').forEach(r => r.classList.remove('drag-over'));
+                if (afterElement) {
+                    afterElement.classList.add('drag-over');
+                }
             });
+
+            container.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+                if (!draggedElement) return;
+
+                const playerId = parseInt(draggedElement.dataset.playerId);
+                const dragTeam = draggedElement.dataset.team;
+                if (dragTeam !== team) return;
+
+                const players = gameData[team].players;
+                const draggedIdx = players.findIndex(p => p.id === playerId);
+                if (draggedIdx === -1) return;
+
+                const draggedPlayer = players[draggedIdx];
+                players.splice(draggedIdx, 1);
+
+                const afterElement = getDragAfterElement(container, e.clientY);
+                if (afterElement && afterElement.dataset.playerId) {
+                    const afterId = parseInt(afterElement.dataset.playerId);
+                    const afterIdx = players.findIndex(p => p.id === afterId);
+                    if (afterIdx !== -1) {
+                        players.splice(afterIdx, 0, draggedPlayer);
+                    } else {
+                        players.push(draggedPlayer);
+                    }
+                } else {
+                    players.push(draggedPlayer);
+                }
+
+                renderPlayers(team, players);
+                updateTotals();
+                saveGameData();
+            });
+
+            container.addEventListener('dragleave', function(e) {
+                if (!container.contains(e.relatedTarget)) {
+                    container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+                }
+            });
+
+            container.querySelectorAll('.player-row:not(.player-header)').forEach(row => {
+                row.addEventListener('dragstart', handleDragStart);
+                row.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const rows = [...container.querySelectorAll('.player-row:not(.player-header):not(.dragging)')];
+            return rows.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: child };
+                }
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
         let draggedElement = null;
@@ -4714,48 +4802,28 @@
             team2Column.className = 'quick-stats-team-column team2';
 
             // Team 1 Header
-            const team1OnCourt = gameData.team1.players.filter(p => p.isStarter).length;
             const team1Header = document.createElement('div');
             team1Header.className = 'quick-stats-team-header';
-            team1Header.textContent = `${gameData.team1.name || 'Team 1'} (${team1OnCourt} on court)`;
+            team1Header.textContent = `${gameData.team1.name || 'Team 1'} (${gameData.team1.players.length} players)`;
             team1Column.appendChild(team1Header);
 
             // Team 2 Header
-            const team2OnCourt = gameData.team2.players.filter(p => p.isStarter).length;
             const team2Header = document.createElement('div');
             team2Header.className = 'quick-stats-team-header';
-            team2Header.textContent = `${gameData.team2.name || 'Team 2'} (${team2OnCourt} on court)`;
+            team2Header.textContent = `${gameData.team2.name || 'Team 2'} (${gameData.team2.players.length} players)`;
             team2Column.appendChild(team2Header);
 
             // Render Team 1 players
-            const team1OnCourtPlayers = gameData.team1.players.filter(player => player.isStarter);
-            team1OnCourtPlayers.forEach(player => {
+            gameData.team1.players.forEach(player => {
                 const playerCard = createPlayerStatCard(player, 'team1');
                 team1Column.appendChild(playerCard);
             });
 
-            // Show message if no Team 1 players on court
-            if (team1OnCourtPlayers.length === 0) {
-                const emptyMsg = document.createElement('div');
-                emptyMsg.style.cssText = 'text-align: center; padding: 20px; color: #a0aec0; font-size: 0.9em;';
-                emptyMsg.textContent = 'No players on court';
-                team1Column.appendChild(emptyMsg);
-            }
-
             // Render Team 2 players
-            const team2OnCourtPlayers = gameData.team2.players.filter(player => player.isStarter);
-            team2OnCourtPlayers.forEach(player => {
+            gameData.team2.players.forEach(player => {
                 const playerCard = createPlayerStatCard(player, 'team2');
                 team2Column.appendChild(playerCard);
             });
-
-            // Show message if no Team 2 players on court
-            if (team2OnCourtPlayers.length === 0) {
-                const emptyMsg = document.createElement('div');
-                emptyMsg.style.cssText = 'text-align: center; padding: 20px; color: #a0aec0; font-size: 0.9em;';
-                emptyMsg.textContent = 'No players on court';
-                team2Column.appendChild(emptyMsg);
-            }
 
             // Add both columns to container
             container.appendChild(team1Column);
