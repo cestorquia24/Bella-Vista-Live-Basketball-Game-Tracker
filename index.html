@@ -4940,11 +4940,39 @@
                     database = firebase.database();
                     firebaseInitialized = true;
                     console.log('Firebase initialized successfully');
+                    startTimerCommandListener();
                 }
             } catch (error) {
                 console.error('Firebase initialization failed:', error);
                 // Continue without live updates
             }
+        }
+
+        // Remote control: listen for timer commands sent from remote.html
+        let lastProcessedCommandTimestamp = 0;
+
+        function startTimerCommandListener() {
+            if (!database) return;
+            database.ref('timerCommands').on('value', (snapshot) => {
+                const cmd = snapshot.val();
+                if (!cmd || !cmd.timestamp) return;
+                // Ignore commands already processed or older than page load
+                if (cmd.timestamp <= lastProcessedCommandTimestamp) return;
+                lastProcessedCommandTimestamp = cmd.timestamp;
+
+                console.log('📡 Remote command received:', cmd.target, cmd.command);
+
+                if (cmd.target === 'gameTimer') {
+                    if (cmd.command === 'start')      startGameTimer();
+                    else if (cmd.command === 'pause') pauseGameTimer();
+                    else if (cmd.command === 'reset') resetGameTimer();
+                } else if (cmd.target === 'shotClock') {
+                    if (cmd.command === 'start')        startShotClock();
+                    else if (cmd.command === 'pause')   pauseShotClock();
+                    else if (cmd.command === 'reset24') resetShotClock();
+                    else if (cmd.command === 'reset14') resetShotClockFIBA();
+                }
+            });
         }
 
         // Push live updates to Firebase

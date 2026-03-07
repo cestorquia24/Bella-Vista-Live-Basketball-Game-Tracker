@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Remote Timer Control</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0f1419;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 16px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 14px;
+            background: #1a202c;
+            border-radius: 12px;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #63b3ed;
+        }
+
+        .status {
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+        .status.connected    { color: #68d391; }
+        .status.disconnected { color: #fc8181; }
+        .status.connecting   { color: #f6ad55; }
+
+        .timers-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .timer-display-box {
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            border: 2px solid #2d3748;
+            transition: border-color 0.3s;
+        }
+        .timer-display-box.running { border-color: #68d391; }
+        .timer-display-box.warning { border-color: #f6ad55; }
+        .timer-display-box.danger  { border-color: #fc8181; }
+
+        .timer-display-label {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .timer-display-value {
+            font-size: 3rem;
+            font-weight: 800;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+        .timer-display-value.running { color: #68d391; }
+        .timer-display-value.warning { color: #f6ad55; }
+        .timer-display-value.danger  { color: #fc8181; }
+        .timer-display-value.stopped { color: #e2e8f0; }
+
+        .control-section {
+            background: #1a202c;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .btn-row:last-child { margin-bottom: 0; }
+
+        .ctrl-btn {
+            flex: 1;
+            padding: 20px 8px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.1s, transform 0.1s;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ctrl-btn:active {
+            opacity: 0.7;
+            transform: scale(0.96);
+        }
+
+        .btn-start   { background: #38a169; color: white; }
+        .btn-pause   { background: #d69e2e; color: white; }
+        .btn-reset   { background: #3182ce; color: white; }
+        .btn-reset14 { background: #805ad5; color: white; }
+
+        .sent-flash {
+            text-align: center;
+            font-size: 0.9rem;
+            height: 24px;
+            color: #68d391;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>⏱ Remote Timer Control</h1>
+        <div class="status connecting" id="statusMsg">Connecting...</div>
+    </div>
+
+    <div class="timers-display">
+        <div class="timer-display-box" id="gameTimerBox">
+            <div class="timer-display-label">Game Time</div>
+            <div class="timer-display-value stopped" id="gameTimerVal">--:--</div>
+        </div>
+        <div class="timer-display-box" id="shotClockBox">
+            <div class="timer-display-label">Shot Clock</div>
+            <div class="timer-display-value stopped" id="shotClockVal">--</div>
+        </div>
+    </div>
+
+    <div class="control-section">
+        <div class="section-title">🕐 Game Timer</div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-start" onclick="sendCommand('gameTimer', 'start')">▶ Start</button>
+            <button class="ctrl-btn btn-pause" onclick="sendCommand('gameTimer', 'pause')">⏸ Pause</button>
+            <button class="ctrl-btn btn-reset" onclick="sendCommand('gameTimer', 'reset')">↺ Reset</button>
+        </div>
+    </div>
+
+    <div class="control-section">
+        <div class="section-title">🏀 Shot Clock</div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-start" onclick="sendCommand('shotClock', 'start')">▶ Start</button>
+            <button class="ctrl-btn btn-pause" onclick="sendCommand('shotClock', 'pause')">⏸ Pause</button>
+        </div>
+        <div class="btn-row">
+            <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ Reset 24s</button>
+            <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ Reset 14s</button>
+        </div>
+    </div>
+
+    <div class="sent-flash" id="sentFlash"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRjX0GdMHSNeykGuxclCgSc3XpY04-oEE",
+            authDomain: "bella-vista-league-live-score.firebaseapp.com",
+            databaseURL: "https://bella-vista-league-live-score-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "bella-vista-league-live-score",
+            storageBucket: "bella-vista-league-live-score.firebasestorage.app",
+            messagingSenderId: "563016772281",
+            appId: "1:563016772281:web:e2c3b5d3a08c2bc9308968"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const statusEl    = document.getElementById('statusMsg');
+        const gameTimerVal = document.getElementById('gameTimerVal');
+        const gameTimerBox = document.getElementById('gameTimerBox');
+        const shotClockVal = document.getElementById('shotClockVal');
+        const shotClockBox = document.getElementById('shotClockBox');
+        const sentFlash    = document.getElementById('sentFlash');
+
+        // Connection status
+        database.ref('.info/connected').on('value', (snap) => {
+            if (snap.val()) {
+                statusEl.textContent = '● Connected';
+                statusEl.className = 'status connected';
+            } else {
+                statusEl.textContent = '● Disconnected — retrying...';
+                statusEl.className = 'status disconnected';
+            }
+        });
+
+        // Live timer display (reads from liveGame pushed by main tracker)
+        database.ref('liveGame').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) {
+                gameTimerVal.textContent = '--:--';
+                shotClockVal.textContent = '--';
+                return;
+            }
+
+            if (data.gameTimer) {
+                const secs = data.gameTimer.currentSeconds || 0;
+                const mins = Math.floor(secs / 60);
+                const s    = secs % 60;
+                gameTimerVal.textContent = `${mins}:${s.toString().padStart(2, '0')}`;
+                const running = data.gameTimer.isRunning;
+                gameTimerVal.className = 'timer-display-value ' + (running ? 'running' : 'stopped');
+                gameTimerBox.className = 'timer-display-box'    + (running ? ' running' : '');
+            }
+
+            if (data.shotClock) {
+                const sc      = data.shotClock.seconds;
+                const running = data.shotClock.isRunning;
+                shotClockVal.textContent = sc;
+                let colorClass = 'stopped';
+                let boxClass   = '';
+                if (running) {
+                    if (sc <= 5)       { colorClass = 'danger';  boxClass = 'danger'; }
+                    else if (sc <= 10) { colorClass = 'warning'; boxClass = 'warning'; }
+                    else               { colorClass = 'running'; boxClass = 'running'; }
+                }
+                shotClockVal.className = 'timer-display-value ' + colorClass;
+                shotClockBox.className = 'timer-display-box'    + (boxClass ? ' ' + boxClass : '');
+            }
+        });
+
+        function sendCommand(target, command) {
+            database.ref('timerCommands').set({
+                target,
+                command,
+                timestamp: Date.now()
+            }).then(() => {
+                const label = target === 'gameTimer' ? 'Game Timer' : 'Shot Clock';
+                showFlash(`✓ ${command.replace('24', ' 24s').replace('14', ' 14s')} — ${label}`);
+            }).catch(() => {
+                showFlash('✗ Failed to send command');
+            });
+        }
+
+        let flashTimer = null;
+        function showFlash(msg) {
+            sentFlash.textContent = msg;
+            sentFlash.style.opacity = '1';
+            clearTimeout(flashTimer);
+            flashTimer = setTimeout(() => { sentFlash.style.opacity = '0'; }, 1800);
+        }
+    </script>
+</body>
+</html>
