@@ -1139,15 +1139,49 @@
     <script>
         // Team Logos Mapping
         const TEAM_LOGOS = {
-            'Orange Inferno': 'logos/Orange Inferno.jpg',
-            'Gray Wolves': 'logos/Gray Wolves.jpeg',
-            'Green Bulls': 'logos/Green Bulls.jpg',
-            'Bella Vista Blue': 'logos/Bella Vista Blue.png',
-            'Black Hoopers': 'logos/Black Hoopers.jpg',
-            'Yellow Slashers': 'logos/Yellow Slashers.png',
-            'Red Blood Cells': 'logos/Red Blood Cells.jpg',
-            'Porpol Ravens': 'logos/Porpol Ravens.jpeg'
+            'Orange Inferno': 'logos/Orange Inferno.jpg?v=2',
+            'Gray Wolves': 'logos/Gray Wolves.jpg?v=2',
+            'Green Bulls': 'logos/Green Bulls.jpg?v=2',
+            'Bella Vista Blue': 'logos/Bella Vista Blue.jpg?v=2',
+            'Black Hoopers': 'logos/Black Hoopers.jpg?v=2',
+            'Yellow Slashers': 'logos/Yellow Slashers.jpg?v=2',
+            'Red Blood Cells': 'logos/Red Blood Cells.jpg?v=2',
+            'Porpol Ravens': 'logos/Porpol Ravens.jpg?v=2'
         };
+
+        // Migrate old/wrong logo paths in stored game records
+        const LOGO_MIGRATION = {
+            'logos/Gray Wolves.jpeg': 'logos/Gray Wolves.jpg?v=2',
+            'logos/Bella Vista Blue.png': 'logos/Bella Vista Blue.jpg?v=2',
+            'logos/Yellow Slashers.png': 'logos/Yellow Slashers.jpg?v=2',
+            'logos/Porpol Ravens.jpeg': 'logos/Porpol Ravens.jpg?v=2',
+            'logos/Gray Wolves.jpg': 'logos/Gray Wolves.jpg?v=2',
+            'logos/Bella Vista Blue.jpg': 'logos/Bella Vista Blue.jpg?v=2',
+            'logos/Yellow Slashers.jpg': 'logos/Yellow Slashers.jpg?v=2',
+            'logos/Porpol Ravens.jpg': 'logos/Porpol Ravens.jpg?v=2',
+            'logos/Orange Inferno.jpg': 'logos/Orange Inferno.jpg?v=2',
+            'logos/Green Bulls.jpg': 'logos/Green Bulls.jpg?v=2',
+            'logos/Black Hoopers.jpg': 'logos/Black Hoopers.jpg?v=2',
+            'logos/Red Blood Cells.jpg': 'logos/Red Blood Cells.jpg?v=2'
+        };
+
+        function migrateHistoryLogos() {
+            let changed = false;
+            gameHistory.forEach(game => {
+                if (game.team1 && LOGO_MIGRATION[game.team1.logo]) {
+                    game.team1.logo = LOGO_MIGRATION[game.team1.logo];
+                    changed = true;
+                }
+                if (game.team2 && LOGO_MIGRATION[game.team2.logo]) {
+                    game.team2.logo = LOGO_MIGRATION[game.team2.logo];
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+                if (database) database.ref('gameHistory').set(gameHistory);
+            }
+        }
 
         let currentTab = 'history';
         let gameHistory = [];
@@ -1295,6 +1329,7 @@
             } else {
                 // Fallback to localStorage only
                 loadFromLocalStorage();
+                migrateHistoryLogos();
                 renderCurrentTab();
             }
         }
@@ -1346,7 +1381,8 @@
                     }
                 })
             ]).then(() => {
-                // Both data loaded - now render
+                // Both data loaded — fix any old logo paths before rendering
+                migrateHistoryLogos();
                 renderCurrentTab();
             });
         }

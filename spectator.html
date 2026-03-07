@@ -962,9 +962,9 @@
                 team2Logo.style.display = 'none';
             }
 
-            // Use official score from Firebase — set only by the remote, not recalculated from player stats
-            const team1Score = gameData.team1Score ?? 0;
-            const team2Score = gameData.team2Score ?? 0;
+            // Calculate scores from player stats — follows the game tracker live
+            const team1Score = calculateTeamScore(gameData.team1);
+            const team2Score = calculateTeamScore(gameData.team2);
             document.getElementById('team1Score').textContent = team1Score;
             document.getElementById('team2Score').textContent = team2Score;
 
