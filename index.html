@@ -1875,6 +1875,31 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
         }
 
+        .qs-drag-handle {
+            cursor: grab;
+            font-size: 1.1em;
+            opacity: 0.35;
+            user-select: none;
+            padding-right: 6px;
+            flex-shrink: 0;
+            transition: opacity 0.2s;
+            color: var(--text-secondary);
+        }
+
+        .qs-drag-handle:hover {
+            opacity: 1;
+        }
+
+        .quick-stats-player.qs-dragging {
+            opacity: 0.35;
+            border: 2px dashed #667eea;
+        }
+
+        .quick-stats-player.qs-drag-over {
+            border-top: 3px solid #667eea;
+            background: rgba(102, 126, 234, 0.08);
+        }
+
         .quick-stats-player-header {
             display: flex;
             justify-content: space-between;
@@ -1937,12 +1962,16 @@
             font-size: 1.2em;
             font-weight: 900;
             line-height: 1;
+            color: inherit;
         }
 
         .quick-stat-btn .stat-label {
-            font-size: 0.72em;
-            opacity: 0.9;
+            font-size: 0.78em;
+            font-weight: 700;
+            opacity: 0.95;
             line-height: 1;
+            color: inherit;
+        }
         }
 
         .quick-stat-btn.reb {
@@ -4729,6 +4758,7 @@
 
         // Quick Stats Panel Functions
         let currentQuickStatsTeam = 'team1';
+        let qsDragSrc = null; // { team, playerId }
 
         function openQuickStats() {
             if (currentQuarter === 'total') {
@@ -4809,6 +4839,9 @@
         function createPlayerStatCard(player, team) {
             const playerCard = document.createElement('div');
             playerCard.className = 'quick-stats-player';
+            playerCard.draggable = true;
+            playerCard.dataset.playerId = player.id;
+            playerCard.dataset.team = team;
 
             const stats = currentQuarter === 'total'
                 ? calculateTotalStats(player)
@@ -4816,6 +4849,7 @@
 
             playerCard.innerHTML = `
                 <div class="quick-stats-player-header">
+                    <span class="qs-drag-handle" title="Drag to reorder">⣿</span>
                     <span class="quick-stats-player-name">${player.name}</span>
                     <span class="quick-stats-pts-badge">PTS ${stats.points}</span>
                 </div>
@@ -4853,6 +4887,49 @@
                     </button>
                 </div>
             `;
+
+            // Drag-and-drop reordering within the same team column
+            playerCard.addEventListener('dragstart', (e) => {
+                qsDragSrc = { team, playerId: player.id };
+                playerCard.classList.add('qs-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            playerCard.addEventListener('dragend', () => {
+                playerCard.classList.remove('qs-dragging');
+                document.querySelectorAll('.quick-stats-player.qs-drag-over')
+                    .forEach(el => el.classList.remove('qs-drag-over'));
+                qsDragSrc = null;
+            });
+
+            playerCard.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (qsDragSrc && qsDragSrc.team === team && qsDragSrc.playerId !== player.id) {
+                    e.dataTransfer.dropEffect = 'move';
+                    playerCard.classList.add('qs-drag-over');
+                }
+            });
+
+            playerCard.addEventListener('dragleave', () => {
+                playerCard.classList.remove('qs-drag-over');
+            });
+
+            playerCard.addEventListener('drop', (e) => {
+                e.preventDefault();
+                playerCard.classList.remove('qs-drag-over');
+                if (!qsDragSrc || qsDragSrc.team !== team || qsDragSrc.playerId === player.id) return;
+
+                const players = gameData[team].players;
+                const fromIdx = players.findIndex(p => p.id === qsDragSrc.playerId);
+                const toIdx   = players.findIndex(p => p.id === player.id);
+                if (fromIdx === -1 || toIdx === -1) return;
+
+                const [moved] = players.splice(fromIdx, 1);
+                players.splice(toIdx, 0, moved);
+
+                saveGameData();
+                renderQuickStatsPlayers();
+            });
 
             return playerCard;
         }
