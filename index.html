@@ -1770,9 +1770,9 @@
             background: var(--card-bg);
             border-radius: 16px;
             padding: 25px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 85vh;
+            max-width: 1100px;
+            width: 96%;
+            max-height: 88vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             animation: slideUpFade 0.3s ease-out;
@@ -1861,12 +1861,12 @@
 
         .quick-stats-player {
             background: var(--secondary-bg);
-            border-radius: 8px;
-            padding: 8px 10px;
+            border-radius: 10px;
+            padding: 12px;
             border: 1px solid var(--border-color);
             transition: all 0.2s;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 8px;
         }
 
@@ -1875,38 +1875,74 @@
             box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
         }
 
+        .quick-stats-player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
         .quick-stats-player-name {
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-primary);
-            font-size: 0.9em;
-            min-width: 100px;
-            flex-shrink: 0;
+            font-size: 1em;
+        }
+
+        .quick-stats-pts-badge {
+            font-size: 0.95em;
+            font-weight: 900;
+            color: #2f855a;
+            background: rgba(72, 187, 120, 0.15);
+            padding: 2px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
         }
 
         .quick-stats-buttons {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
+            display: grid;
+            gap: 6px;
+        }
+
+        .quick-stats-buttons.points-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .quick-stats-buttons.other-row {
+            grid-template-columns: repeat(5, 1fr);
         }
 
         .quick-stat-btn {
-            padding: 6px 10px;
+            padding: 10px 6px;
             border: none;
-            border-radius: 6px;
-            font-size: 0.8em;
-            font-weight: 600;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.15s;
             color: white;
-            display: inline-flex;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 3px;
-            min-width: 40px;
+            gap: 2px;
+            min-height: 52px;
         }
 
         .quick-stat-btn:active {
             transform: scale(0.95);
+        }
+
+        .quick-stat-btn .stat-count {
+            font-size: 1.2em;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .quick-stat-btn .stat-label {
+            font-size: 0.72em;
+            opacity: 0.9;
+            line-height: 1;
         }
 
         .quick-stat-btn.reb {
@@ -1955,70 +1991,8 @@
             box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
         }
 
-        .quick-stat-label {
-            font-size: 0.75em;
-            opacity: 0.9;
-        }
-
-        .quick-stat-icon {
-            font-size: 1.2em;
-        }
-
-        .quick-stats-team-fouls {
-            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 12px;
-            border: 2px solid #fc8181;
-        }
-
-        .quick-stats-fouls-label {
-            text-align: center;
-            font-weight: 700;
-            color: #c53030;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-        }
-
-        .quick-stats-fouls-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .quick-stats-fouls-value {
-            font-size: 2em;
-            font-weight: 900;
-            color: #c53030;
-            min-width: 50px;
-            text-align: center;
-        }
-
-        .quick-stat-btn.fouls-minus,
-        .quick-stat-btn.fouls-plus {
-            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .quick-stat-btn.fouls-minus:hover,
-        .quick-stat-btn.fouls-plus:hover {
-            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
-            box-shadow: 0 4px 12px rgba(245, 101, 101, 0.5);
-        }
-
         .quick-stats-section-title {
-            display: none; /* Hide section titles in compact layout */
-        }
-
-        .quick-stats-buttons.points-row {
-            display: flex;
-            gap: 4px;
+            display: none;
         }
 
         .quick-stat-btn.pt1 {
@@ -2061,37 +2035,25 @@
             }
 
             .quick-stats-content {
-                width: 95%;
-                padding: 20px;
-                max-height: 90vh;
+                width: 98%;
+                padding: 15px;
+                max-height: 92vh;
             }
 
             .quick-stats-players {
-                grid-template-columns: 1fr; /* Stack teams vertically on mobile portrait */
+                grid-template-columns: 1fr;
                 gap: 15px;
             }
 
-            .quick-stats-player-name {
-                min-width: 80px;
-                font-size: 0.85em;
-            }
-
             .quick-stat-btn {
-                padding: 5px 8px;
-                font-size: 0.75em;
-                min-width: 35px;
+                min-height: 48px;
+                font-size: 0.8em;
             }
         }
 
-        /* Landscape mode - show both teams side by side even on mobile */
         @media (max-width: 768px) and (orientation: landscape) {
             .quick-stats-players {
-                grid-template-columns: 1fr 1fr; /* Side by side in landscape */
-            }
-
-            .quick-stats-player-name {
-                min-width: 70px;
-                font-size: 0.8em;
+                grid-template-columns: 1fr 1fr;
             }
         }
     </style>
@@ -4853,31 +4815,41 @@
                 : calculateCumulativeStats(player, currentQuarter);
 
             playerCard.innerHTML = `
-                <div class="quick-stats-player-name">${player.name}</div>
-                <div class="quick-stats-buttons">
+                <div class="quick-stats-player-header">
+                    <span class="quick-stats-player-name">${player.name}</span>
+                    <span class="quick-stats-pts-badge">PTS ${stats.points}</span>
+                </div>
+                <div class="quick-stats-buttons points-row">
                     <button class="quick-stat-btn pt1" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 1)" title="+1 Point">
-                        +1 <span style="opacity: 0.7;">(${stats.points})</span>
+                        <span class="stat-label">+1 PT</span>
                     </button>
                     <button class="quick-stat-btn pt2" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 2)" title="+2 Points">
-                        +2 <span style="opacity: 0.7;">(${stats.points})</span>
+                        <span class="stat-label">+2 PT</span>
                     </button>
                     <button class="quick-stat-btn pt3" onclick="quickStatUpdate('${team}', ${player.id}, 'points', 3)" title="+3 Points">
-                        +3 <span style="opacity: 0.7;">(${stats.points})</span>
+                        <span class="stat-label">+3 PT</span>
                     </button>
+                </div>
+                <div class="quick-stats-buttons other-row">
                     <button class="quick-stat-btn reb" onclick="quickStatUpdate('${team}', ${player.id}, 'rebounds', 1)" title="Rebound">
-                        R <span style="opacity: 0.7;">${stats.rebounds}</span>
+                        <span class="stat-count">${stats.rebounds}</span>
+                        <span class="stat-label">REB</span>
                     </button>
                     <button class="quick-stat-btn ast" onclick="quickStatUpdate('${team}', ${player.id}, 'assists', 1)" title="Assist">
-                        A <span style="opacity: 0.7;">${stats.assists}</span>
+                        <span class="stat-count">${stats.assists}</span>
+                        <span class="stat-label">AST</span>
                     </button>
                     <button class="quick-stat-btn stl" onclick="quickStatUpdate('${team}', ${player.id}, 'steals', 1)" title="Steal">
-                        S <span style="opacity: 0.7;">${stats.steals}</span>
+                        <span class="stat-count">${stats.steals}</span>
+                        <span class="stat-label">STL</span>
                     </button>
                     <button class="quick-stat-btn blk" onclick="quickStatUpdate('${team}', ${player.id}, 'blocks', 1)" title="Block">
-                        B <span style="opacity: 0.7;">${stats.blocks}</span>
+                        <span class="stat-count">${stats.blocks}</span>
+                        <span class="stat-label">BLK</span>
                     </button>
                     <button class="quick-stat-btn foul" onclick="quickStatUpdate('${team}', ${player.id}, 'fouls', 1)" title="Foul">
-                        F <span style="opacity: 0.7;">${stats.fouls}</span>
+                        <span class="stat-count">${stats.fouls}</span>
+                        <span class="stat-label">FOUL</span>
                     </button>
                 </div>
             `;
