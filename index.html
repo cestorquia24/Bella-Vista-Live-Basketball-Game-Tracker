@@ -3642,10 +3642,9 @@
 
             const stats = currentQuarter === 'total'
                 ? calculateTotalStats(player)
-                : player.quarterStats[currentQuarter];
+                : calculateCumulativeStats(player, currentQuarter);
 
-            // FOULS: Always show cumulative total (fouls don't reset per quarter)
-            const cumulativeFouls = calculateCumulativeFouls(player, currentQuarter);
+            // FOULS: included in cumulative stats above
 
             const swapButtonText = player.isStarter ? '↓ Bench' : '↑ Start';
 
@@ -3664,7 +3663,7 @@
                 ${renderStatControl('assists', stats.assists, player.id, team)}
                 ${renderStatControl('steals', stats.steals, player.id, team)}
                 ${renderStatControl('blocks', stats.blocks, player.id, team)}
-                ${renderStatControl('fouls', cumulativeFouls, player.id, team)}
+                ${renderStatControl('fouls', stats.fouls, player.id, team)}
             `;
 
             return row;
@@ -3681,6 +3680,23 @@
                 totalFouls += player.quarterStats[q].fouls || 0;
             }
             return totalFouls;
+        }
+
+        // Calculate cumulative stats up to and including the current quarter
+        function calculateCumulativeStats(player, upToQuarter) {
+            const total = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, fouls: 0 };
+            for (let q = 1; q <= upToQuarter; q++) {
+                const qs = player.quarterStats[q];
+                if (qs) {
+                    total.points   += qs.points   || 0;
+                    total.rebounds += qs.rebounds || 0;
+                    total.assists  += qs.assists  || 0;
+                    total.steals   += qs.steals   || 0;
+                    total.blocks   += qs.blocks   || 0;
+                    total.fouls    += qs.fouls    || 0;
+                }
+            }
+            return total;
         }
 
         function renderQuickScoreButtons(playerId, team) {
@@ -4003,7 +4019,7 @@
             players.forEach(player => {
                 const stats = currentQuarter === 'total'
                     ? calculateTotalStats(player)
-                    : player.quarterStats[currentQuarter];
+                    : calculateCumulativeStats(player, currentQuarter);
 
                 totals.points += stats.points;
                 totals.rebounds += stats.rebounds;
@@ -4834,8 +4850,9 @@
             const playerCard = document.createElement('div');
             playerCard.className = 'quick-stats-player';
 
-            const stats = player.quarterStats[currentQuarter];
-            const cumulativeFouls = calculateCumulativeFouls(player, currentQuarter);
+            const stats = currentQuarter === 'total'
+                ? calculateTotalStats(player)
+                : calculateCumulativeStats(player, currentQuarter);
 
             playerCard.innerHTML = `
                 <div class="quick-stats-player-name">${player.name}</div>
@@ -4862,7 +4879,7 @@
                         B <span style="opacity: 0.7;">${stats.blocks}</span>
                     </button>
                     <button class="quick-stat-btn foul" onclick="quickStatUpdate('${team}', ${player.id}, 'fouls', 1)" title="Foul">
-                        F <span style="opacity: 0.7;">${cumulativeFouls}</span>
+                        F <span style="opacity: 0.7;">${stats.fouls}</span>
                     </button>
                 </div>
             `;
