@@ -4161,11 +4161,6 @@
             let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
             history.unshift(gameRecord);  // Add to beginning
 
-            // Limit to 100 games for performance
-            if (history.length > 100) {
-                history = history.slice(0, 100);
-            }
-
             localStorage.setItem('basketballGameHistory', JSON.stringify(history));
 
             // Update season standings

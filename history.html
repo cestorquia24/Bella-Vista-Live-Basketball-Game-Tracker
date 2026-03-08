@@ -1340,17 +1340,28 @@
                 // Load game history from Firebase
                 database.ref('gameHistory').once('value').then((snapshot) => {
                     const firebaseHistory = snapshot.val();
-                    if (firebaseHistory && Array.isArray(firebaseHistory)) {
-                        gameHistory = firebaseHistory;
-                        // Also save to localStorage as cache
-                        localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
-                    } else {
-                        // If Firebase is empty, try localStorage
-                        const saved = localStorage.getItem('basketballGameHistory');
-                        if (saved) {
-                            gameHistory = JSON.parse(saved);
+                    const localSaved = localStorage.getItem('basketballGameHistory');
+                    const localHistory = localSaved ? JSON.parse(localSaved) : [];
+
+                    if (firebaseHistory && Array.isArray(firebaseHistory) && firebaseHistory.length > 0) {
+                        // Merge: keep all Firebase games + any local-only games not in Firebase
+                        const firebaseIds = new Set(firebaseHistory.map(g => g.id));
+                        const localOnly = localHistory.filter(g => !firebaseIds.has(g.id));
+                        gameHistory = [...firebaseHistory, ...localOnly];
+
+                        if (localOnly.length > 0) {
+                            // Push merged data back to Firebase so nothing is lost
+                            database.ref('gameHistory').set(gameHistory);
+                            console.log(`✅ Recovered ${localOnly.length} local-only game(s) back to Firebase`);
                         }
+                    } else if (localHistory.length > 0) {
+                        // Firebase is empty but localStorage has data — use local and push to Firebase
+                        gameHistory = localHistory;
+                        database.ref('gameHistory').set(gameHistory);
+                        console.log('✅ Restored history from localStorage to Firebase');
                     }
+
+                    localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
                 }).catch((error) => {
                     console.error('Error loading history from Firebase:', error);
                     const saved = localStorage.getItem('basketballGameHistory');
