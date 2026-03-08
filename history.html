@@ -325,31 +325,43 @@
             margin-top: 8px;
         }
 
-        /* Date filter chips */
+        /* Date filter */
         .date-filter-bar {
             display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            padding: 4px 0 14px;
-            scrollbar-width: none;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 0 16px;
         }
-        .date-filter-bar::-webkit-scrollbar { display: none; }
 
-        .date-chip {
-            white-space: nowrap;
-            padding: 7px 18px;
-            border-radius: 20px;
-            border: none;
+        .date-filter-select {
             background: #2d3748;
+            color: #e2e8f0;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            padding: 9px 14px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            flex: 1;
+            max-width: 280px;
+        }
+        .date-filter-select:focus { border-color: #667eea; }
+
+        .date-filter-clear {
+            background: transparent;
+            border: 1px solid #4a5568;
             color: #a0aec0;
+            border-radius: 8px;
+            padding: 9px 14px;
             font-size: 0.82rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
+            white-space: nowrap;
+            display: none;
         }
-        .date-chip:hover { background: #4a5568; color: #e2e8f0; }
-        .date-chip.active { background: #667eea; color: white; }
+        .date-filter-clear.visible { display: block; }
+        .date-filter-clear:hover { border-color: #a0aec0; color: #e2e8f0; }
 
         /* Date group headers */
         .date-group { margin-bottom: 28px; }
@@ -1128,7 +1140,12 @@
 
         <!-- Game History Tab -->
         <div id="historyTab" class="tab-content active">
-            <div class="date-filter-bar" id="dateFilterBar"></div>
+            <div class="date-filter-bar">
+                <select class="date-filter-select" id="dateFilterSelect" onchange="filterByDate(this.value)">
+                    <option value="">All Dates</option>
+                </select>
+                <button class="date-filter-clear" id="dateFilterClear" onclick="clearDateFilter()">✕ Clear</button>
+            </div>
             <div id="gamesGrid" class="games-grid"></div>
             <div id="emptyHistory" class="empty-state" style="display: none;">
                 <div class="empty-state-icon">🏀</div>
@@ -1595,29 +1612,45 @@
         }
 
         function filterByDate(date) {
-            selectedDate = date;
+            selectedDate = date || null;
+            const clearBtn = document.getElementById('dateFilterClear');
+            if (clearBtn) clearBtn.classList.toggle('visible', !!selectedDate);
+            renderGameHistory();
+        }
+
+        function clearDateFilter() {
+            selectedDate = null;
+            const select = document.getElementById('dateFilterSelect');
+            if (select) select.value = '';
+            document.getElementById('dateFilterClear').classList.remove('visible');
             renderGameHistory();
         }
 
         function renderGameHistory() {
-            const grid        = document.getElementById('gamesGrid');
-            const empty       = document.getElementById('emptyHistory');
-            const filterBar   = document.getElementById('dateFilterBar');
+            const grid   = document.getElementById('gamesGrid');
+            const empty  = document.getElementById('emptyHistory');
+            const select = document.getElementById('dateFilterSelect');
 
             if (gameHistory.length === 0) {
                 grid.innerHTML = '';
-                filterBar.innerHTML = '';
+                if (select) select.innerHTML = '<option value="">All Dates</option>';
                 empty.style.display = 'block';
                 return;
             }
             empty.style.display = 'none';
 
-            // Build date chips from unique dates in order
-            const uniqueDates = [...new Set(gameHistory.map(g => g.gameDate))];
-            filterBar.innerHTML = `<button class="date-chip ${selectedDate === null ? 'active' : ''}" onclick="filterByDate(null)">All</button>`;
-            uniqueDates.forEach(date => {
-                filterBar.innerHTML += `<button class="date-chip ${selectedDate === date ? 'active' : ''}" onclick="filterByDate(${JSON.stringify(date)})">${date}</button>`;
-            });
+            // Rebuild dropdown with unique dates
+            if (select) {
+                const uniqueDates = [...new Set(gameHistory.map(g => g.gameDate))];
+                select.innerHTML = '<option value="">All Dates</option>';
+                uniqueDates.forEach(date => {
+                    const opt = document.createElement('option');
+                    opt.value = date;
+                    opt.textContent = date;
+                    if (date === selectedDate) opt.selected = true;
+                    select.appendChild(opt);
+                });
+            }
 
             // Filter and group by date
             const filtered = selectedDate
