@@ -4161,16 +4161,20 @@
             let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
             history.unshift(gameRecord);  // Add to beginning
 
-            localStorage.setItem('basketballGameHistory', JSON.stringify(history));
-
             // Update season standings
             updateSeasonStandings(gameRecord);
 
-            // Push to Firebase for cross-device sync
-            pushHistoryToFirebase(history);
-
-            // Success message - game data stays in tracker
-            alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nGame data is still in the tracker. Use "Clear & Start New Game" when ready for a new game.');
+            // Firebase first: save to cloud, then confirm to localStorage
+            pushHistoryToFirebase(history)
+                .then(() => {
+                    localStorage.setItem('basketballGameHistory', JSON.stringify(history));
+                    alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nGame data is still in the tracker. Use "Clear & Start New Game" when ready for a new game.');
+                })
+                .catch((err) => {
+                    console.error('Firebase save failed, saving locally:', err);
+                    localStorage.setItem('basketballGameHistory', JSON.stringify(history));
+                    alert('✅ Game saved locally!\n📄 CSV file downloaded\n📊 History & standings updated\n⚠️ Cloud sync failed — history will sync automatically next time you open the app online.\n\nGame data is still in the tracker.');
+                });
         }
 
         function calculateQuarterScores() {
@@ -5351,16 +5355,9 @@
         // Push game history to Firebase for cross-device sync
         function pushHistoryToFirebase(history) {
             if (!database) {
-                console.log('Firebase not initialized, skipping history sync');
-                return;
+                return Promise.resolve(); // Firebase not available; caller handles localStorage
             }
-
-            try {
-                database.ref('gameHistory').set(history);
-                console.log('✅ Game history synced to Firebase');
-            } catch (error) {
-                console.error('Failed to push history to Firebase:', error);
-            }
+            return database.ref('gameHistory').set(history);
         }
 
         // Push season standings to Firebase for cross-device sync

@@ -137,6 +137,26 @@
             background: #e53e3e;
         }
 
+        .backup-btn {
+            position: fixed;
+            top: 20px;
+            right: 168px;
+            background: #2b6cb0;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+        .backup-btn:hover {
+            background: #2c5282;
+            transform: translateY(-2px);
+        }
+
         /* Hide delete buttons by default, show only in admin mode */
         .delete-btn {
             display: none;
@@ -986,6 +1006,7 @@
             </div>
         </div>
 
+        <button class="backup-btn" onclick="downloadBackup()">⬇️ Backup</button>
         <button class="admin-toggle" id="adminToggle" onclick="toggleAdminMode()">🔓 Admin Mode</button>
 
         <div class="tabs">
@@ -1190,6 +1211,21 @@
         let isAdminMode = false;
         let firebaseInitialized = false;
         let database = null;
+
+        function downloadBackup() {
+            const backup = {
+                exportDate: new Date().toISOString(),
+                gameHistory: gameHistory,
+                seasonStandings: seasonStandings
+            };
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bella-vista-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
 
         // Admin Mode Functions
         function toggleAdminMode() {
