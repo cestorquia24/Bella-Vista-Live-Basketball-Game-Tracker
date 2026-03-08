@@ -322,22 +322,63 @@
 
         /* Game History Styles */
         .games-grid {
+            margin-top: 8px;
+        }
+
+        /* Date filter chips */
+        .date-filter-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 0 14px;
+            scrollbar-width: none;
+        }
+        .date-filter-bar::-webkit-scrollbar { display: none; }
+
+        .date-chip {
+            white-space: nowrap;
+            padding: 7px 18px;
+            border-radius: 20px;
+            border: none;
+            background: #2d3748;
+            color: #a0aec0;
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .date-chip:hover { background: #4a5568; color: #e2e8f0; }
+        .date-chip.active { background: #667eea; color: white; }
+
+        /* Date group headers */
+        .date-group { margin-bottom: 28px; }
+        .date-group-header {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2d3748;
+            margin-bottom: 16px;
+        }
+        .date-group-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
         }
 
         .game-card {
             background: rgba(45, 55, 72, 0.9);
             border-radius: 12px;
-            padding: 20px;
+            padding: 18px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
             transition: all 0.3s;
         }
 
         .game-card:hover {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
 
@@ -345,71 +386,138 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            gap: 15px;
+            margin-bottom: 14px;
+            gap: 10px;
+        }
+
+        .game-card-name {
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #718096;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .game-date {
-            font-size: 0.9em;
-            color: #cbd5e0;
+            font-size: 0.82rem;
+            color: #718096;
         }
 
         .winner-badge {
             padding: 5px 12px;
             border-radius: 20px;
-            font-size: 0.8em;
+            font-size: 0.78em;
             font-weight: 700;
             background: #48bb78;
             color: white;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .winner-badge.tie {
             background: #718096;
         }
 
-        .game-matchup {
-            text-align: center;
-            margin: 20px 0;
+        .matchup-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 4px 0 14px;
         }
 
-        .team-logos-row {
+        .matchup-team {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            gap: 20px;
-            margin-bottom: 15px;
+            gap: 5px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .matchup-team-name {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #a0aec0;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
         }
 
         .team-logo-small {
-            width: 60px;
-            height: 60px;
+            width: 54px;
+            height: 54px;
             object-fit: contain;
             border-radius: 8px;
-            padding: 5px;
+            padding: 4px;
         }
+
+        .matchup-score-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .matchup-score {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 1.75rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+        }
+
+        .score-num { color: #e2e8f0; }
+        .score-num.winner { color: #48bb78; }
+        .score-dash { color: #4a5568; font-weight: 400; font-size: 1.3rem; }
 
         .vs-small {
-            font-size: 1.2em;
+            font-size: 0.68rem;
+            color: #4a5568;
             font-weight: 700;
-            color: #cbd5e0;
+            margin-top: 3px;
         }
 
-        .game-score {
-            font-size: 2em;
-            font-weight: 900;
-            color: #48bb78;
-            margin-bottom: 10px;
+        /* MVP strip on card */
+        .card-mvp {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            background: rgba(243, 156, 18, 0.08);
+            border-radius: 8px;
+            border-left: 3px solid #f39c12;
         }
-
-        .game-name {
-            font-size: 0.9em;
+        .card-mvp-label {
+            font-size: 0.68rem;
+            color: #f39c12;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            flex-shrink: 0;
+        }
+        .card-mvp-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #f6e05e;
+        }
+        .card-mvp-team {
+            font-size: 0.73rem;
             color: #a0aec0;
+            margin-left: auto;
+            flex-shrink: 0;
         }
 
         .game-actions {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 4px;
         }
 
         .game-btn {
@@ -466,16 +574,14 @@
             display: block;
         }
 
-        /* Hide date editing by default, show only in admin mode */
-        .game-date {
-            cursor: default !important;
-            text-decoration: none !important;
+        .edit-date-btn {
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            display: none;
         }
-
-        body.admin-mode .game-date {
-            cursor: pointer !important;
-            text-decoration: underline !important;
-        }
+        .edit-date-btn:hover { background: #4a5568; color: #e2e8f0; }
+        body.admin-mode .edit-date-btn { display: block; }
 
         /* Table Styles */
         .table-container {
@@ -815,6 +921,10 @@
                 grid-template-columns: 1fr;
             }
 
+            .date-group-cards {
+                grid-template-columns: 1fr;
+            }
+
             .modal-teams {
                 grid-template-columns: 1fr;
             }
@@ -1018,6 +1128,7 @@
 
         <!-- Game History Tab -->
         <div id="historyTab" class="tab-content active">
+            <div class="date-filter-bar" id="dateFilterBar"></div>
             <div id="gamesGrid" class="games-grid"></div>
             <div id="emptyHistory" class="empty-state" style="display: none;">
                 <div class="empty-state-icon">🏀</div>
@@ -1206,6 +1317,7 @@
 
         let currentTab = 'history';
         let gameHistory = [];
+        let selectedDate = null;
         let seasonStandings = { teams: {}, players: {} };
         let currentSort = { column: null, order: 'asc' };
         let isAdminMode = false;
@@ -1482,55 +1594,108 @@
             }
         }
 
+        function filterByDate(date) {
+            selectedDate = date;
+            renderGameHistory();
+        }
+
         function renderGameHistory() {
-            const grid = document.getElementById('gamesGrid');
-            const empty = document.getElementById('emptyHistory');
+            const grid        = document.getElementById('gamesGrid');
+            const empty       = document.getElementById('emptyHistory');
+            const filterBar   = document.getElementById('dateFilterBar');
 
             if (gameHistory.length === 0) {
                 grid.innerHTML = '';
+                filterBar.innerHTML = '';
                 empty.style.display = 'block';
                 return;
             }
-
             empty.style.display = 'none';
+
+            // Build date chips from unique dates in order
+            const uniqueDates = [...new Set(gameHistory.map(g => g.gameDate))];
+            filterBar.innerHTML = `<button class="date-chip ${selectedDate === null ? 'active' : ''}" onclick="filterByDate(null)">All</button>`;
+            uniqueDates.forEach(date => {
+                filterBar.innerHTML += `<button class="date-chip ${selectedDate === date ? 'active' : ''}" onclick="filterByDate(${JSON.stringify(date)})">${date}</button>`;
+            });
+
+            // Filter and group by date
+            const filtered = selectedDate
+                ? gameHistory.filter(g => g.gameDate === selectedDate)
+                : gameHistory;
+
+            const groups = {};
+            filtered.forEach(game => {
+                if (!groups[game.gameDate]) groups[game.gameDate] = [];
+                groups[game.gameDate].push(game);
+            });
+
             grid.innerHTML = '';
+            Object.keys(groups).forEach(date => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'date-group';
 
-            gameHistory.forEach((game, index) => {
-                const card = document.createElement('div');
-                card.className = 'game-card';
+                const header = document.createElement('div');
+                header.className = 'date-group-header';
+                header.textContent = date;
+                groupDiv.appendChild(header);
 
-                const winnerBadgeClass = game.winner === 'TIE' ? 'winner-badge tie' : 'winner-badge';
-                const winnerText = game.winner === 'TIE' ? 'TIE GAME' : `🏆 ${game.winner}`;
+                const cardsDiv = document.createElement('div');
+                cardsDiv.className = 'date-group-cards';
 
-                // Check if can move up or down
-                const canMoveUp = index > 0;
-                const canMoveDown = index < gameHistory.length - 1;
+                groups[date].forEach(game => {
+                    const originalIndex = gameHistory.indexOf(game);
+                    const canMoveUp   = originalIndex > 0;
+                    const canMoveDown = originalIndex < gameHistory.length - 1;
+                    const winnerBadgeClass = game.winner === 'TIE' ? 'winner-badge tie' : 'winner-badge';
+                    const winnerText       = game.winner === 'TIE' ? 'TIE GAME' : `🏆 ${game.winner}`;
+                    const team1Wins = game.finalScore.team1 > game.finalScore.team2;
+                    const team2Wins = game.finalScore.team2 > game.finalScore.team1;
 
-                card.innerHTML = `
-                    <div class="game-card-header">
-                        <div class="game-date" onclick="editGameDate(${game.id})">
-                            📅 ${game.gameDate}
+                    const card = document.createElement('div');
+                    card.className = 'game-card';
+                    card.innerHTML = `
+                        <div class="game-card-header">
+                            <span class="game-card-name">${game.gameName}</span>
+                            <div class="${winnerBadgeClass}">${winnerText}</div>
                         </div>
-                        <div class="${winnerBadgeClass}">${winnerText}</div>
-                    </div>
-                    <div class="game-matchup">
-                        <div class="team-logos-row">
-                            ${game.team1.logo ? `<img src="${game.team1.logo}" class="team-logo-small" alt="${game.team1.name}">` : ''}
-                            <div class="vs-small">VS</div>
-                            ${game.team2.logo ? `<img src="${game.team2.logo}" class="team-logo-small" alt="${game.team2.name}">` : ''}
+                        <div class="matchup-row">
+                            <div class="matchup-team">
+                                ${game.team1.logo ? `<img src="${game.team1.logo}" class="team-logo-small" alt="${game.team1.name}">` : ''}
+                                <span class="matchup-team-name">${game.team1.name}</span>
+                            </div>
+                            <div class="matchup-score-block">
+                                <div class="matchup-score">
+                                    <span class="score-num ${team1Wins ? 'winner' : ''}">${game.finalScore.team1}</span>
+                                    <span class="score-dash">-</span>
+                                    <span class="score-num ${team2Wins ? 'winner' : ''}">${game.finalScore.team2}</span>
+                                </div>
+                                <span class="vs-small">FINAL</span>
+                            </div>
+                            <div class="matchup-team">
+                                ${game.team2.logo ? `<img src="${game.team2.logo}" class="team-logo-small" alt="${game.team2.name}">` : ''}
+                                <span class="matchup-team-name">${game.team2.name}</span>
+                            </div>
                         </div>
-                        <div class="game-score">${game.finalScore.team1} - ${game.finalScore.team2}</div>
-                        <div class="game-name">${game.gameName}</div>
-                    </div>
-                    <div class="game-actions">
-                        <button class="game-btn reorder-btn" onclick="moveGameUp(${game.id})" ${!canMoveUp ? 'disabled' : ''} title="Move game up in list">⬆️ Up</button>
-                        <button class="game-btn reorder-btn" onclick="moveGameDown(${game.id})" ${!canMoveDown ? 'disabled' : ''} title="Move game down in list">⬇️ Down</button>
-                        <button class="game-btn view-btn" onclick="viewGameDetails(${game.id})">👁️ View Details</button>
-                        <button class="game-btn delete-btn" onclick="deleteGame(${game.id})">🗑️ Delete</button>
-                    </div>
-                `;
+                        ${game.mvp ? `
+                        <div class="card-mvp">
+                            <span class="card-mvp-label">⭐ Best Player</span>
+                            <span class="card-mvp-name">${game.mvp.name}</span>
+                            <span class="card-mvp-team">${game.mvp.team}</span>
+                        </div>` : ''}
+                        <div class="game-actions">
+                            <button class="game-btn reorder-btn" onclick="moveGameUp(${game.id})" ${!canMoveUp ? 'disabled' : ''}>⬆️ Up</button>
+                            <button class="game-btn reorder-btn" onclick="moveGameDown(${game.id})" ${!canMoveDown ? 'disabled' : ''}>⬇️ Down</button>
+                            <button class="game-btn edit-date-btn" onclick="editGameDate(${game.id})">📅 Date</button>
+                            <button class="game-btn view-btn" onclick="viewGameDetails(${game.id})">👁️ View</button>
+                            <button class="game-btn delete-btn" onclick="deleteGame(${game.id})">🗑️ Delete</button>
+                        </div>
+                    `;
+                    cardsDiv.appendChild(card);
+                });
 
-                grid.appendChild(card);
+                groupDiv.appendChild(cardsDiv);
+                grid.appendChild(groupDiv);
             });
         }
 
