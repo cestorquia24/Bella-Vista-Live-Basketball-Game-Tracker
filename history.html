@@ -595,6 +595,128 @@
         .edit-date-btn:hover { background: #4a5568; color: #e2e8f0; }
         body.admin-mode .edit-date-btn { display: block; }
 
+        /* Trash tab — admin only */
+        .trash-tab-btn { display: none; }
+        body.admin-mode .trash-tab-btn { display: block; }
+
+        .trash-card {
+            background: rgba(45, 55, 72, 0.85);
+            border-radius: 12px;
+            padding: 14px 16px;
+            border-left: 4px solid #fc8181;
+            opacity: 0.9;
+        }
+
+        .trash-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .trash-card-header .game-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .trash-card-header .game-date-badge {
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+
+        .trash-score-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .trash-team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            gap: 4px;
+        }
+
+        .trash-team-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+
+        .trash-team-name {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #cbd5e0;
+            text-align: center;
+        }
+
+        .trash-score-mid {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .trash-score {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #f6e05e;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .trash-winner {
+            font-size: 0.72rem;
+            color: #fbd38d;
+            font-weight: 600;
+        }
+
+        .trash-meta {
+            font-size: 0.72rem;
+            color: #718096;
+            margin-bottom: 10px;
+            text-align: right;
+        }
+
+        .trash-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .trash-actions .ctrl-btn {
+            flex: 1;
+            padding: 10px 6px;
+            font-size: 0.88rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .restore-btn  { background: #276749; color: white; }
+        .restore-btn:hover  { background: #2f855a; }
+
+        .perm-delete-btn  { background: #742a2a; color: white; }
+        .perm-delete-btn:hover  { background: #9b2c2c; }
+
+        .trash-header {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #fc8181;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .trash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
         /* Table Styles */
         .table-container {
             background: rgba(45, 55, 72, 0.9);
@@ -1136,6 +1258,7 @@
             <button class="tab-btn" onclick="switchTab('teams')">🏆 Team Standings</button>
             <button class="tab-btn" onclick="switchTab('players')">⭐ Player Stats</button>
             <button class="tab-btn" onclick="switchTab('leaders')">👑 League Leaders</button>
+            <button class="tab-btn trash-tab-btn" onclick="switchTab('trash')">🗑️ Trash</button>
         </div>
 
         <!-- Game History Tab -->
@@ -1249,6 +1372,16 @@
         </div>
     </div>
 
+    <!-- Trash Tab -->
+    <div id="trashTab" class="tab-content">
+        <div class="trash-header">🗑️ Deleted Games — Restore or permanently remove</div>
+        <div id="trashGrid" class="trash-grid"></div>
+        <div id="emptyTrash" class="empty-state" style="display:none;">
+            <div class="empty-state-icon">🗑️</div>
+            <div class="empty-state-text">Trash is empty</div>
+        </div>
+    </div>
+
     <!-- Game Details Modal -->
     <div id="gameModal" class="modal">
         <div class="modal-content">
@@ -1340,6 +1473,10 @@
         let isAdminMode = false;
         let firebaseInitialized = false;
         let database = null;
+
+        let trashedHistory = [];
+        // IDs permanently deleted (so stale Firebase/local data can't restore them)
+        let permDeletedIds = new Set(JSON.parse(localStorage.getItem('permDeletedIds') || '[]'));
 
         function downloadBackup() {
             const backup = {
@@ -1500,64 +1637,60 @@
         }
 
         function loadFromFirebase() {
-            // Load both game history and season standings, then render
-            Promise.all([
-                // Load game history from Firebase
-                database.ref('gameHistory').once('value').then((snapshot) => {
-                    const firebaseHistory = snapshot.val();
-                    const localSaved = localStorage.getItem('basketballGameHistory');
-                    const localHistory = localSaved ? JSON.parse(localSaved) : [];
+            // Load sequentially: trash first (needed to filter history), then history, then standings
+            database.ref('trashedGames').once('value').then((snap) => {
+                const fbTrashed = snap.val();
+                const localTrashed = JSON.parse(localStorage.getItem('basketballTrashedGames') || '[]');
 
-                    if (firebaseHistory && Array.isArray(firebaseHistory) && firebaseHistory.length > 0) {
-                        // Merge: keep all Firebase games + any local-only games not in Firebase
-                        const firebaseIds = new Set(firebaseHistory.map(g => g.id));
-                        const localOnly = localHistory.filter(g => !firebaseIds.has(g.id));
-                        gameHistory = [...firebaseHistory, ...localOnly];
+                if (fbTrashed && Array.isArray(fbTrashed) && fbTrashed.length > 0) {
+                    const fbIds = new Set(fbTrashed.map(g => g.id));
+                    const localOnly = localTrashed.filter(g => !fbIds.has(g.id) && !permDeletedIds.has(g.id));
+                    trashedHistory = [...fbTrashed.filter(g => !permDeletedIds.has(g.id)), ...localOnly];
+                } else if (localTrashed.length > 0) {
+                    trashedHistory = localTrashed.filter(g => !permDeletedIds.has(g.id));
+                    database.ref('trashedGames').set(trashedHistory);
+                }
+                localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
 
-                        if (localOnly.length > 0) {
-                            // Push merged data back to Firebase so nothing is lost
-                            database.ref('gameHistory').set(gameHistory);
-                            console.log(`✅ Recovered ${localOnly.length} local-only game(s) back to Firebase`);
-                        }
-                    } else if (localHistory.length > 0) {
-                        // Firebase is empty but localStorage has data — use local and push to Firebase
-                        gameHistory = localHistory;
+                return database.ref('gameHistory').once('value');
+
+            }).then((snap) => {
+                const firebaseHistory = snap.val();
+                const localSaved = localStorage.getItem('basketballGameHistory');
+                const localHistory = localSaved ? JSON.parse(localSaved) : [];
+                const trashedIds = new Set(trashedHistory.map(g => g.id));
+
+                if (firebaseHistory && Array.isArray(firebaseHistory) && firebaseHistory.length > 0) {
+                    const filteredFb = firebaseHistory.filter(g => !trashedIds.has(g.id) && !permDeletedIds.has(g.id));
+                    const fbIds = new Set(filteredFb.map(g => g.id));
+                    const localOnly = localHistory.filter(g => !fbIds.has(g.id) && !trashedIds.has(g.id) && !permDeletedIds.has(g.id));
+                    gameHistory = [...filteredFb, ...localOnly];
+                    if (localOnly.length > 0 || filteredFb.length < firebaseHistory.length) {
                         database.ref('gameHistory').set(gameHistory);
-                        console.log('✅ Restored history from localStorage to Firebase');
                     }
+                } else if (localHistory.length > 0) {
+                    gameHistory = localHistory.filter(g => !trashedIds.has(g.id));
+                    database.ref('gameHistory').set(gameHistory);
+                }
+                localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
 
-                    localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
-                }).catch((error) => {
-                    console.error('Error loading history from Firebase:', error);
-                    const saved = localStorage.getItem('basketballGameHistory');
-                    if (saved) {
-                        gameHistory = JSON.parse(saved);
-                    }
-                }),
+                return database.ref('seasonStandings').once('value');
 
-                // Load season standings from Firebase
-                database.ref('seasonStandings').once('value').then((snapshot) => {
-                    const firebaseStandings = snapshot.val();
-                    if (firebaseStandings) {
-                        seasonStandings = firebaseStandings;
-                        // Also save to localStorage as cache
-                        localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
-                    } else {
-                        // If Firebase is empty, try localStorage
-                        const saved = localStorage.getItem('basketballSeasonStandings');
-                        if (saved) {
-                            seasonStandings = JSON.parse(saved);
-                        }
-                    }
-                }).catch((error) => {
-                    console.error('Error loading standings from Firebase:', error);
+            }).then((snap) => {
+                const firebaseStandings = snap.val();
+                if (firebaseStandings) {
+                    seasonStandings = firebaseStandings;
+                    localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
+                } else {
                     const saved = localStorage.getItem('basketballSeasonStandings');
-                    if (saved) {
-                        seasonStandings = JSON.parse(saved);
-                    }
-                })
-            ]).then(() => {
-                // Both data loaded — fix any old logo paths before rendering
+                    if (saved) seasonStandings = JSON.parse(saved);
+                }
+                migrateHistoryLogos();
+                renderCurrentTab();
+
+            }).catch((error) => {
+                console.error('Firebase load error:', error);
+                loadFromLocalStorage();
                 migrateHistoryLogos();
                 renderCurrentTab();
             });
@@ -1566,11 +1699,13 @@
         function loadFromLocalStorage() {
             try {
                 gameHistory = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
+                trashedHistory = JSON.parse(localStorage.getItem('basketballTrashedGames') || '[]');
                 seasonStandings = JSON.parse(localStorage.getItem('basketballSeasonStandings') ||
                     '{"teams": {}, "players": {}}');
             } catch (e) {
                 console.error('Error loading data:', e);
                 gameHistory = [];
+                trashedHistory = [];
                 seasonStandings = { teams: {}, players: {} };
             }
         }
@@ -1593,6 +1728,8 @@
                 document.getElementById('playersTab').classList.add('active');
             } else if (tab === 'leaders') {
                 document.getElementById('leadersTab').classList.add('active');
+            } else if (tab === 'trash') {
+                document.getElementById('trashTab').classList.add('active');
             }
 
             renderCurrentTab();
@@ -1608,6 +1745,8 @@
                 renderPlayerStats();
             } else if (currentTab === 'leaders') {
                 renderLeagueLeaders();
+            } else if (currentTab === 'trash') {
+                renderTrashTab();
             }
         }
 
@@ -2094,26 +2233,97 @@
         }
 
         function deleteGame(gameId) {
-            if (!confirm('Delete this game from history? This will also recalculate season standings.')) {
-                return;
-            }
-
-            // Remove game from history
+            if (!confirm('Move this game to Trash? You can restore it later from the Trash tab in Admin Mode.')) return;
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game) return;
             gameHistory = gameHistory.filter(g => g.id !== gameId);
+            game.trashedAt = Date.now();
+            trashedHistory.unshift(game);
             localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
-
-            // Recalculate standings from scratch
+            localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
             recalculateStandings();
-
-            // Sync to Firebase
             if (database) {
                 database.ref('gameHistory').set(gameHistory);
-                console.log('✅ Deleted game synced to Firebase');
+                database.ref('trashedGames').set(trashedHistory);
             }
-
-            // Re-render
             renderCurrentTab();
-            alert('Game deleted successfully!');
+        }
+
+        function renderTrashTab() {
+            const grid  = document.getElementById('trashGrid');
+            const empty = document.getElementById('emptyTrash');
+            if (!grid) return;
+            if (!trashedHistory.length) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            empty.style.display = 'none';
+            grid.innerHTML = trashedHistory.map(game => {
+                const winner = game.winner === 'team1' ? game.team1.name : game.team2.name;
+                const t1score = game.team1Score ?? game.team1.score ?? 0;
+                const t2score = game.team2Score ?? game.team2.score ?? 0;
+                const trashedDate = game.trashedAt ? new Date(game.trashedAt).toLocaleDateString() : '';
+                const mvp = game.mvp
+                    ? `<div class="card-mvp"><span class="card-mvp-label">⭐ Best Player</span><span class="card-mvp-name">${game.mvp.name}</span><span class="card-mvp-team">${game.mvp.team}</span></div>`
+                    : '';
+                return `
+                <div class="trash-card">
+                    <div class="trash-card-header">
+                        <span class="game-name">${game.gameName || 'Game'}</span>
+                        <span class="game-date-badge">${game.gameDate || ''}</span>
+                    </div>
+                    <div class="trash-score-row">
+                        <div class="trash-team">
+                            ${game.team1.logo ? `<img src="${game.team1.logo}" class="trash-team-logo">` : ''}
+                            <span class="trash-team-name">${game.team1.name}</span>
+                        </div>
+                        <div class="trash-score-mid">
+                            <span class="trash-score">${t1score} – ${t2score}</span>
+                            <span class="trash-winner">🏆 ${winner}</span>
+                        </div>
+                        <div class="trash-team">
+                            ${game.team2.logo ? `<img src="${game.team2.logo}" class="trash-team-logo">` : ''}
+                            <span class="trash-team-name">${game.team2.name}</span>
+                        </div>
+                    </div>
+                    ${mvp}
+                    <div class="trash-meta">Deleted ${trashedDate}</div>
+                    <div class="trash-actions">
+                        <button class="ctrl-btn restore-btn" onclick="restoreGame(${game.id})">↩ Restore</button>
+                        <button class="ctrl-btn perm-delete-btn" onclick="permanentlyDeleteGame(${game.id})">🗑️ Delete Forever</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function restoreGame(gameId) {
+            if (!confirm('Restore this game to history? Season standings will be recalculated.')) return;
+            const game = trashedHistory.find(g => g.id === gameId);
+            if (!game) return;
+            trashedHistory = trashedHistory.filter(g => g.id !== gameId);
+            delete game.trashedAt;
+            gameHistory.unshift(game);
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
+            recalculateStandings();
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                database.ref('trashedGames').set(trashedHistory.length ? trashedHistory : null);
+            }
+            renderCurrentTab();
+        }
+
+        function permanentlyDeleteGame(gameId) {
+            if (!confirm('Permanently delete this game? This CANNOT be undone.')) return;
+            trashedHistory = trashedHistory.filter(g => g.id !== gameId);
+            permDeletedIds.add(gameId);
+            localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
+            localStorage.setItem('permDeletedIds', JSON.stringify([...permDeletedIds]));
+            if (database) {
+                database.ref('trashedGames').set(trashedHistory.length ? trashedHistory : null);
+            }
+            renderTrashTab();
         }
 
         function moveGameUp(gameId) {
