@@ -4388,28 +4388,46 @@
         }
         .timer-box-cast {
             text-align: center;
-            background: rgba(45, 55, 72, 0.6);
-            padding: 1.5vh 2vw;
-            border-radius: 12px;
-            border: 2px solid rgba(72, 187, 120, 0.3);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            background: rgba(26, 32, 44, 0.85);
+            padding: 1.2vh 3vw 1.8vh;
+            border-radius: 18px;
+            border: 3px solid rgba(72, 187, 120, 0.4);
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5);
             flex: 1;
+            transition: border-color 0.3s;
         }
+        .timer-box-cast.warning { border-color: rgba(246, 173, 85, 0.9); }
+        .timer-box-cast.danger  { border-color: rgba(252, 129, 129, 1); }
         .timer-label-cast {
-            font-size: 2vh;
+            font-size: 1.8vh;
             color: #a0aec0;
-            margin-bottom: 0.4vh;
+            margin-bottom: 0.3vh;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
         .timer-value-cast {
-            font-size: 11vh;
+            font-size: 20vh;
             font-weight: 900;
             color: #48bb78;
             font-family: 'Courier New', monospace;
-            text-shadow: 0 4px 12px rgba(0,0,0,0.6), 0 0 30px rgba(72, 187, 120, 0.4);
+            text-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 40px rgba(72, 187, 120, 0.5);
             line-height: 1;
+            transition: color 0.3s;
+        }
+        .timer-value-cast.warning {
+            color: #f6ad55;
+            text-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 40px rgba(246, 173, 85, 0.6);
+        }
+        .timer-value-cast.danger {
+            color: #fc8181;
+            text-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 40px rgba(252, 129, 129, 0.7);
+        }
+        .timers-row {
+            display: flex;
+            gap: 2vw;
+            padding: 0 3vw;
+            margin-bottom: 1vh;
         }
         .score-container {
             display: flex;
@@ -4556,7 +4574,21 @@
                             return mins + ':' + (secs < 10 ? '0' : '') + secs;
                         };
                         document.getElementById('gameTimerCast').textContent = formatTime(openerGameData.gameTimer.currentSeconds);
-                        document.getElementById('shotClockCast').textContent = openerGameData.shotClock.seconds;
+                        const scVal = openerGameData.shotClock.seconds;
+                        document.getElementById('shotClockCast').textContent = scVal;
+                        // Shot clock color warning
+                        const scBox = document.getElementById('shotClockBox');
+                        const scEl  = document.getElementById('shotClockCast');
+                        if (scVal <= 5) {
+                            scBox.className = 'timer-box-cast danger';
+                            scEl.className  = 'timer-value-cast danger';
+                        } else if (scVal <= 10) {
+                            scBox.className = 'timer-box-cast warning';
+                            scEl.className  = 'timer-value-cast warning';
+                        } else {
+                            scBox.className = 'timer-box-cast';
+                            scEl.className  = 'timer-value-cast';
+                        }
 
                         const q = openerCurrentQuarter === 'total' ? 1 : openerCurrentQuarter;
                         const team1Fouls = openerGameData.team1.teamFouls[q] || 0;
@@ -4626,14 +4658,16 @@
 <\/head>
 <body>
     <div class="top-bar">
-        <div class="timer-box-cast">
-            <div class="timer-label-cast">Shot Clock</div>
-            <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
-        </div>
         <div class="header-center">
             <img src="bellaLogo.jpg?v=2" alt="Bella Vista" class="cast-logo-display">
             <div class="game-title">` + gameData.gameName + `</div>
             <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
+        </div>
+    </div>
+    <div class="timers-row">
+        <div class="timer-box-cast" id="shotClockBox">
+            <div class="timer-label-cast">Shot Clock</div>
+            <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
         </div>
         <div class="timer-box-cast">
             <div class="timer-label-cast">Game Time</div>
