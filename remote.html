@@ -11,62 +11,62 @@
             background: #0f1419;
             color: #e2e8f0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            padding: 16px;
-            gap: 16px;
+            padding: 10px;
+            gap: 8px;
         }
 
+        /* ── Header ── */
         .header {
-            text-align: center;
-            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             background: #1a202c;
-            border-radius: 12px;
+            border-radius: 10px;
+            padding: 10px 14px;
+            flex-shrink: 0;
         }
-
         .header h1 {
-            font-size: 1.4rem;
+            font-size: 1rem;
             font-weight: 700;
             color: #63b3ed;
         }
-
-        .status {
-            font-size: 0.85rem;
-            margin-top: 6px;
-        }
+        .status { font-size: 0.78rem; font-weight: 600; }
         .status.connected    { color: #68d391; }
         .status.disconnected { color: #fc8181; }
         .status.connecting   { color: #f6ad55; }
 
+        /* ── Timer display bar ── */
         .timers-display {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 8px;
+            flex-shrink: 0;
         }
-
         .timer-display-box {
             background: #1a202c;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
+            border-radius: 10px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             border: 2px solid #2d3748;
             transition: border-color 0.3s;
         }
         .timer-display-box.running { border-color: #68d391; }
         .timer-display-box.warning { border-color: #f6ad55; }
         .timer-display-box.danger  { border-color: #fc8181; }
-
         .timer-display-label {
-            font-size: 0.75rem;
+            font-size: 0.62rem;
             color: #a0aec0;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 8px;
+            letter-spacing: 0.08em;
         }
-
         .timer-display-value {
-            font-size: 3rem;
+            font-size: 1.9rem;
             font-weight: 800;
             font-variant-numeric: tabular-nums;
             line-height: 1;
@@ -76,201 +76,178 @@
         .timer-display-value.danger  { color: #fc8181; }
         .timer-display-value.stopped { color: #e2e8f0; }
 
-        .control-section {
+        /* ── Score section (gets all remaining space) ── */
+        .score-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            flex: 1;
+            min-height: 0;
+        }
+        .score-team-box {
             background: #1a202c;
             border-radius: 12px;
-            padding: 16px;
+            padding: 10px 8px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            min-height: 0;
         }
-
-        .section-title {
-            font-size: 0.9rem;
+        .score-team-name {
+            font-size: 0.75rem;
             font-weight: 700;
             color: #a0aec0;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 14px;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
             text-align: center;
+            flex-shrink: 0;
         }
-
-        .btn-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
+        .score-team-value {
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #f6e05e;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+            flex-shrink: 0;
         }
-        .btn-row:last-child { margin-bottom: 0; }
-
-        .ctrl-btn {
+        .score-btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            width: 100%;
             flex: 1;
-            padding: 20px 8px;
-            border: none;
+            min-height: 0;
+        }
+        .score-btn-grid .ctrl-btn {
+            height: 100%;
+            font-size: 1.3rem;
             border-radius: 10px;
+        }
+
+        /* ── Timer controls row ── */
+        .timer-controls {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .timer-controls .ctrl-btn {
+            flex: 1;
+            padding: 16px 6px;
+            font-size: 0.92rem;
+            border-radius: 10px;
+        }
+
+        /* ── Buzzer ── */
+        .buzzer-row { flex-shrink: 0; }
+        .buzzer-row .ctrl-btn {
+            width: 100%;
+            padding: 16px;
             font-size: 1.05rem;
+            border-radius: 10px;
+        }
+
+        /* ── Flash feedback ── */
+        .sent-flash {
+            text-align: center;
+            font-size: 0.78rem;
+            height: 16px;
+            color: #68d391;
+            opacity: 0;
+            transition: opacity 0.3s;
+            flex-shrink: 0;
+        }
+
+        /* ── Base button styles ── */
+        .ctrl-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
             font-weight: 700;
             cursor: pointer;
             transition: opacity 0.1s, transform 0.1s;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
         }
-        .ctrl-btn:active {
-            opacity: 0.7;
-            transform: scale(0.96);
-        }
+        .ctrl-btn:active { opacity: 0.7; transform: scale(0.96); }
 
-        .btn-start   { background: #38a169; color: white; }
-        .btn-pause   { background: #d69e2e; color: white; }
-        .btn-reset   { background: #3182ce; color: white; }
-        .btn-reset14 { background: #805ad5; color: white; }
-        .btn-adjust  { background: #2d3748; color: #e2e8f0; border: 2px solid #4a5568; font-size: 1.1rem; }
-
-        .score-teams {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .score-team-box {
-            background: #1a202c;
-            border-radius: 12px;
-            padding: 14px;
-            text-align: center;
-        }
-
-        .score-team-name {
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: #a0aec0;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 6px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .score-team-value {
-            font-size: 3.5rem;
-            font-weight: 900;
-            color: #f6e05e;
-            line-height: 1;
-            margin-bottom: 12px;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .score-btn-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .btn-score-add  { background: #276749; color: white; font-size: 1.1rem; padding: 14px 8px; }
-        .btn-score-undo { background: #744210; color: white; font-size: 1rem;   padding: 14px 8px; }
-        .btn-buzzer     { background: #e53e3e; color: white; font-size: 1.2rem; padding: 28px 8px; user-select: none; }
-
-        .section-note {
-            font-size: 0.7rem;
-            font-weight: 400;
-            color: #68d391;
-            text-transform: none;
-            letter-spacing: 0;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .sent-flash {
-            text-align: center;
-            font-size: 0.9rem;
-            height: 24px;
-            color: #68d391;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
+        .btn-start      { background: #38a169; color: white; }
+        .btn-pause      { background: #d69e2e; color: white; }
+        .btn-reset      { background: #3182ce; color: white; }
+        .btn-reset14    { background: #805ad5; color: white; }
+        .btn-score-add  { background: #276749; color: white; }
+        .btn-score-undo { background: #744210; color: white; }
+        .btn-buzzer     { background: #e53e3e; color: white; user-select: none; }
     </style>
 </head>
 <body>
 
+    <!-- Header -->
     <div class="header">
-        <h1>⏱ Remote Timer Control</h1>
+        <h1>⏱ Remote Control</h1>
         <div class="status connecting" id="statusMsg">Connecting...</div>
     </div>
 
+    <!-- Timer display bar -->
     <div class="timers-display">
         <div class="timer-display-box" id="gameTimerBox">
-            <div class="timer-display-label">Game Time</div>
-            <div class="timer-display-value stopped" id="gameTimerVal">--:--</div>
+            <div>
+                <div class="timer-display-label">Game Time</div>
+                <div class="timer-display-value stopped" id="gameTimerVal">--:--</div>
+            </div>
         </div>
         <div class="timer-display-box" id="shotClockBox">
-            <div class="timer-display-label">Shot Clock</div>
-            <div class="timer-display-value stopped" id="shotClockVal">--</div>
-        </div>
-    </div>
-
-    <div class="control-section">
-        <div class="section-title">🕐 Game Timer <span class="section-note">also controls shot clock</span></div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-start" id="gameTimerToggleBtn" onclick="toggleGameTimer()">▶ Start</button>
-            <button class="ctrl-btn btn-reset" onclick="sendCommand('gameTimer', 'reset')">↺ Reset</button>
-        </div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', -60)">− 1 min</button>
-            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', +60)">+ 1 min</button>
-        </div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', -1)">− 1s</button>
-            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('gameTimer', +1)">+ 1s</button>
-        </div>
-    </div>
-
-    <div class="control-section">
-        <div class="section-title">🏀 Shot Clock</div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-start" id="shotClockToggleBtn" onclick="toggleShotClock()">▶ Start</button>
-        </div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ Reset 24s</button>
-            <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ Reset 14s</button>
-        </div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('shotClock', -1)">− 1s</button>
-            <button class="ctrl-btn btn-adjust" onclick="sendAdjust('shotClock', +1)">+ 1s</button>
-        </div>
-    </div>
-
-    <div class="control-section">
-        <div class="section-title">🏆 Scoreboard</div>
-        <div class="score-teams">
-            <div class="score-team-box">
-                <div class="score-team-name" id="team1Name">Team 1</div>
-                <div class="score-team-value" id="team1ScoreDisplay">0</div>
-                <div class="score-btn-grid">
-                    <button class="ctrl-btn btn-score-add" onclick="addScore('team1', 3)">+3</button>
-                    <button class="ctrl-btn btn-score-add" onclick="addScore('team1', 2)">+2</button>
-                    <button class="ctrl-btn btn-score-add" onclick="addScore('team1', 1)">+1</button>
-                    <button class="ctrl-btn btn-score-undo" onclick="addScore('team1', -1)">−1</button>
-                </div>
-            </div>
-            <div class="score-team-box">
-                <div class="score-team-name" id="team2Name">Team 2</div>
-                <div class="score-team-value" id="team2ScoreDisplay">0</div>
-                <div class="score-btn-grid">
-                    <button class="ctrl-btn btn-score-add" onclick="addScore('team2', 3)">+3</button>
-                    <button class="ctrl-btn btn-score-add" onclick="addScore('team2', 2)">+2</button>
-                    <button class="ctrl-btn btn-score-add" onclick="addScore('team2', 1)">+1</button>
-                    <button class="ctrl-btn btn-score-undo" onclick="addScore('team2', -1)">−1</button>
-                </div>
+            <div>
+                <div class="timer-display-label">Shot Clock</div>
+                <div class="timer-display-value stopped" id="shotClockVal">--</div>
             </div>
         </div>
     </div>
 
-    <div class="control-section">
-        <div class="section-title">📢 Buzzer</div>
-        <div class="btn-row">
-            <button class="ctrl-btn btn-buzzer"
-                onmousedown="buzzerStart()" onmouseup="buzzerStop()"
-                onmouseleave="buzzerStop()" ontouchstart="buzzerStart()"
-                ontouchend="buzzerStop()">
-                📢 HOLD FOR BUZZER
-            </button>
+    <!-- Scores (largest section) -->
+    <div class="score-section">
+        <div class="score-team-box">
+            <div class="score-team-name" id="team1Name">Team 1</div>
+            <div class="score-team-value" id="team1ScoreDisplay">0</div>
+            <div class="score-btn-grid">
+                <button class="ctrl-btn btn-score-add"  onclick="addScore('team1', 3)">+3</button>
+                <button class="ctrl-btn btn-score-add"  onclick="addScore('team1', 2)">+2</button>
+                <button class="ctrl-btn btn-score-add"  onclick="addScore('team1', 1)">+1</button>
+                <button class="ctrl-btn btn-score-undo" onclick="addScore('team1', -1)">−1</button>
+            </div>
         </div>
+        <div class="score-team-box">
+            <div class="score-team-name" id="team2Name">Team 2</div>
+            <div class="score-team-value" id="team2ScoreDisplay">0</div>
+            <div class="score-btn-grid">
+                <button class="ctrl-btn btn-score-add"  onclick="addScore('team2', 3)">+3</button>
+                <button class="ctrl-btn btn-score-add"  onclick="addScore('team2', 2)">+2</button>
+                <button class="ctrl-btn btn-score-add"  onclick="addScore('team2', 1)">+1</button>
+                <button class="ctrl-btn btn-score-undo" onclick="addScore('team2', -1)">−1</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timer controls: Start/Pause + Reset 24s + Reset 14s -->
+    <div class="timer-controls">
+        <button class="ctrl-btn btn-start" id="gameTimerToggleBtn" onclick="toggleGameTimer()">▶ Start</button>
+        <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ 24s</button>
+        <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ 14s</button>
+    </div>
+
+    <!-- Buzzer -->
+    <div class="buzzer-row">
+        <button class="ctrl-btn btn-buzzer"
+            onmousedown="buzzerStart()" onmouseup="buzzerStop()"
+            onmouseleave="buzzerStop()" ontouchstart="buzzerStart()"
+            ontouchend="buzzerStop()">
+            📢 HOLD FOR BUZZER
+        </button>
     </div>
 
     <div class="sent-flash" id="sentFlash"></div>
@@ -291,21 +268,19 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        const statusEl         = document.getElementById('statusMsg');
-        const gameTimerVal     = document.getElementById('gameTimerVal');
-        const gameTimerBox     = document.getElementById('gameTimerBox');
-        const shotClockVal     = document.getElementById('shotClockVal');
-        const shotClockBox     = document.getElementById('shotClockBox');
-        const sentFlash        = document.getElementById('sentFlash');
-        const gameTimerToggle  = document.getElementById('gameTimerToggleBtn');
-        const shotClockToggle  = document.getElementById('shotClockToggleBtn');
-        const team1NameEl      = document.getElementById('team1Name');
-        const team2NameEl      = document.getElementById('team2Name');
-        const team1ScoreEl     = document.getElementById('team1ScoreDisplay');
-        const team2ScoreEl     = document.getElementById('team2ScoreDisplay');
+        const statusEl        = document.getElementById('statusMsg');
+        const gameTimerVal    = document.getElementById('gameTimerVal');
+        const gameTimerBox    = document.getElementById('gameTimerBox');
+        const shotClockVal    = document.getElementById('shotClockVal');
+        const shotClockBox    = document.getElementById('shotClockBox');
+        const sentFlash       = document.getElementById('sentFlash');
+        const gameTimerToggle = document.getElementById('gameTimerToggleBtn');
+        const team1NameEl     = document.getElementById('team1Name');
+        const team2NameEl     = document.getElementById('team2Name');
+        const team1ScoreEl    = document.getElementById('team1ScoreDisplay');
+        const team2ScoreEl    = document.getElementById('team2ScoreDisplay');
 
         let gameTimerRunning = false;
-        let shotClockRunning = false;
 
         // Connection status
         database.ref('.info/connected').on('value', (snap) => {
@@ -318,7 +293,7 @@
             }
         });
 
-        // Live timer display + keep running state in sync
+        // Live sync
         database.ref('liveGame').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
@@ -346,29 +321,22 @@
             }
 
             if (data.shotClock) {
-                const sc  = data.shotClock.seconds;
-                shotClockRunning = data.shotClock.isRunning;
+                const sc = data.shotClock.seconds;
                 shotClockVal.textContent = sc;
                 let colorClass = 'stopped';
                 let boxClass   = '';
-                if (shotClockRunning) {
+                if (data.shotClock.isRunning) {
                     if (sc <= 5)       { colorClass = 'danger';  boxClass = 'danger'; }
                     else if (sc <= 10) { colorClass = 'warning'; boxClass = 'warning'; }
                     else               { colorClass = 'running'; boxClass = 'running'; }
                 }
-                shotClockVal.className  = 'timer-display-value ' + colorClass;
-                shotClockBox.className  = 'timer-display-box'    + (boxClass ? ' ' + boxClass : '');
-                shotClockToggle.textContent = shotClockRunning ? '⏸ Pause' : '▶ Start';
-                shotClockToggle.className   = 'ctrl-btn ' + (shotClockRunning ? 'btn-pause' : 'btn-start');
+                shotClockVal.className = 'timer-display-value ' + colorClass;
+                shotClockBox.className = 'timer-display-box'    + (boxClass ? ' ' + boxClass : '');
             }
         });
 
         function toggleGameTimer() {
             sendCommand('gameTimer', gameTimerRunning ? 'pause' : 'start');
-        }
-
-        function toggleShotClock() {
-            sendCommand('shotClock', shotClockRunning ? 'pause' : 'start');
         }
 
         function addScore(team, amount) {
@@ -383,26 +351,7 @@
                     : (team2NameEl.textContent || 'Team 2');
                 const sign = amount > 0 ? '+' : '';
                 showFlash(`✓ ${sign}${amount} — ${teamName}`);
-            }).catch(() => {
-                showFlash('✗ Failed to send score');
-            });
-        }
-
-        function sendAdjust(target, amount) {
-            database.ref('timerCommands').set({
-                target,
-                command: 'adjust',
-                amount,
-                timestamp: Date.now()
-            }).then(() => {
-                const sign  = amount > 0 ? '+' : '';
-                const label = target === 'gameTimer'
-                    ? (Math.abs(amount) >= 60 ? `Game Timer ${sign}${amount / 60}min` : `Game Timer ${sign}${amount}s`)
-                    : `Shot Clock ${sign}${amount}s`;
-                showFlash(`✓ ${label}`);
-            }).catch(() => {
-                showFlash('✗ Failed to send command');
-            });
+            }).catch(() => showFlash('✗ Failed to send score'));
         }
 
         function sendCommand(target, command) {
@@ -413,9 +362,7 @@
             }).then(() => {
                 const label = target === 'gameTimer' ? 'Game Timer' : 'Shot Clock';
                 showFlash(`✓ ${command.replace('24', ' 24s').replace('14', ' 14s')} — ${label}`);
-            }).catch(() => {
-                showFlash('✗ Failed to send command');
-            });
+            }).catch(() => showFlash('✗ Failed to send command'));
         }
 
         let flashTimer = null;
@@ -430,21 +377,12 @@
         function buzzerStart() {
             if (buzzerActive) return;
             buzzerActive = true;
-            database.ref('timerCommands').set({
-                target: 'buzzer',
-                command: 'start',
-                timestamp: Date.now()
-            });
+            database.ref('timerCommands').set({ target: 'buzzer', command: 'start', timestamp: Date.now() });
         }
-
         function buzzerStop() {
             if (!buzzerActive) return;
             buzzerActive = false;
-            database.ref('timerCommands').set({
-                target: 'buzzer',
-                command: 'stop',
-                timestamp: Date.now()
-            });
+            database.ref('timerCommands').set({ target: 'buzzer', command: 'stop', timestamp: Date.now() });
         }
     </script>
 </body>
