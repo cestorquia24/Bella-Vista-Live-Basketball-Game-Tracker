@@ -4339,12 +4339,11 @@
             background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 100%);
             pointer-events: none;
         }
-        .top-bar {
+        .cast-header-row {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            align-items: stretch;
             width: 100%;
-            padding: 0 3vw;
+            padding: 1.5vh 2vw;
             gap: 2vw;
         }
         .header-center {
@@ -4352,12 +4351,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 0.3vh;
+            justify-content: center;
+            gap: 0.4vh;
             flex: 1;
         }
         .cast-logo-display {
-            width: 6vh;
-            height: 6vh;
+            width: 7vh;
+            height: 7vh;
             object-fit: contain;
             filter: drop-shadow(0 8px 24px rgba(0,0,0,0.8))
                     drop-shadow(0 0 35px rgba(102, 126, 234, 0.6))
@@ -4377,37 +4377,40 @@
             }
         }
         .game-title {
-            font-size: 1.8vh;
+            font-size: 1.6vh;
             font-weight: 700;
             color: #cbd5e0;
         }
         .quarter-display {
-            font-size: 3.5vh;
+            font-size: 3vh;
             font-weight: 700;
             color: #a0aec0;
         }
         .timer-box-cast {
             text-align: center;
             background: rgba(26, 32, 44, 0.85);
-            padding: 1.2vh 3vw 1.8vh;
-            border-radius: 18px;
+            padding: 1vh 2vw 1.5vh;
+            border-radius: 16px;
             border: 3px solid rgba(72, 187, 120, 0.4);
             box-shadow: 0 6px 24px rgba(0,0,0,0.5);
             flex: 1;
             transition: border-color 0.3s;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .timer-box-cast.warning { border-color: rgba(246, 173, 85, 0.9); }
         .timer-box-cast.danger  { border-color: rgba(252, 129, 129, 1); }
         .timer-label-cast {
-            font-size: 1.8vh;
+            font-size: 1.6vh;
             color: #a0aec0;
-            margin-bottom: 0.3vh;
+            margin-bottom: 0.2vh;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
         .timer-value-cast {
-            font-size: 20vh;
+            font-size: 16vh;
             font-weight: 900;
             color: #48bb78;
             font-family: 'Courier New', monospace;
@@ -4423,12 +4426,6 @@
             color: #fc8181;
             text-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 40px rgba(252, 129, 129, 0.7);
         }
-        .timers-row {
-            display: flex;
-            gap: 2vw;
-            padding: 0 3vw;
-            margin-bottom: 1vh;
-        }
         .score-container {
             display: flex;
             justify-content: center;
@@ -4440,8 +4437,8 @@
             position: relative;
         }
         .team-logo-cast {
-            width: 36vh;
-            height: 36vh;
+            width: 16vh;
+            height: 16vh;
             object-fit: contain;
             margin: 0 auto;
             display: block;
@@ -4490,7 +4487,7 @@
             50% { transform: translateY(-15px); }
         }
         .team-score {
-            font-size: 28vh;
+            font-size: 22vh;
             font-weight: 900;
             color: #48bb78;
             text-shadow: 0 8px 16px rgba(0,0,0,0.5);
@@ -4657,17 +4654,15 @@
     <\/script>
 <\/head>
 <body>
-    <div class="top-bar">
+    <div class="cast-header-row">
+        <div class="timer-box-cast" id="shotClockBox">
+            <div class="timer-label-cast">Shot Clock</div>
+            <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
+        </div>
         <div class="header-center">
             <img src="bellaLogo.jpg?v=2" alt="Bella Vista" class="cast-logo-display">
             <div class="game-title">` + gameData.gameName + `</div>
             <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
-        </div>
-    </div>
-    <div class="timers-row">
-        <div class="timer-box-cast" id="shotClockBox">
-            <div class="timer-label-cast">Shot Clock</div>
-            <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
         </div>
         <div class="timer-box-cast">
             <div class="timer-label-cast">Game Time</div>
