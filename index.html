@@ -4340,20 +4340,38 @@
             pointer-events: none;
         }
         .cast-header-row {
-            display: flex;
-            align-items: stretch;
-            width: 100%;
-            padding: 1.5vh 2vw;
-            gap: 2vw;
+            display: none; /* replaced by cast-main */
         }
-        .header-center {
-            text-align: center;
+        .cast-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 100vh;
+            padding: 2vh 2vw;
+            gap: 2vw;
+            overflow: hidden;
+        }
+        .team-side {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+        }
+        .cast-center {
+            flex: 0 0 28vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2vh;
+        }
+        .header-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             gap: 0.4vh;
-            flex: 1;
         }
         .cast-logo-display {
             width: 7vh;
@@ -4380,6 +4398,7 @@
             font-size: 1.6vh;
             font-weight: 700;
             color: #cbd5e0;
+            text-align: center;
         }
         .quarter-display {
             font-size: 3vh;
@@ -4387,22 +4406,19 @@
             color: #a0aec0;
         }
         .timer-box-cast {
+            width: 100%;
             text-align: center;
             background: rgba(26, 32, 44, 0.85);
-            padding: 1vh 2vw 1.5vh;
+            padding: 1vh 1vw 1.5vh;
             border-radius: 16px;
             border: 3px solid rgba(72, 187, 120, 0.4);
             box-shadow: 0 6px 24px rgba(0,0,0,0.5);
-            flex: 1;
             transition: border-color 0.3s;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
         .timer-box-cast.warning { border-color: rgba(246, 173, 85, 0.9); }
         .timer-box-cast.danger  { border-color: rgba(252, 129, 129, 1); }
         .timer-label-cast {
-            font-size: 1.6vh;
+            font-size: 1.4vh;
             color: #a0aec0;
             margin-bottom: 0.2vh;
             font-weight: 700;
@@ -4410,7 +4426,7 @@
             letter-spacing: 2px;
         }
         .timer-value-cast {
-            font-size: 16vh;
+            font-size: 20vh;
             font-weight: 900;
             color: #48bb78;
             font-family: 'Courier New', monospace;
@@ -4426,6 +4442,9 @@
             color: #fc8181;
             text-shadow: 0 4px 16px rgba(0,0,0,0.6), 0 0 40px rgba(252, 129, 129, 0.7);
         }
+        .timer-value-game {
+            font-size: 14vh;
+        }
         .score-container {
             display: flex;
             justify-content: center;
@@ -4437,8 +4456,8 @@
             position: relative;
         }
         .team-logo-cast {
-            width: 16vh;
-            height: 16vh;
+            width: 28vh;
+            height: 28vh;
             object-fit: contain;
             margin: 0 auto;
             display: block;
@@ -4487,7 +4506,7 @@
             50% { transform: translateY(-15px); }
         }
         .team-score {
-            font-size: 22vh;
+            font-size: 28vh;
             font-weight: 900;
             color: #48bb78;
             text-shadow: 0 8px 16px rgba(0,0,0,0.5);
@@ -4654,66 +4673,70 @@
     <\/script>
 <\/head>
 <body>
-    <div class="cast-header-row">
-        <div class="timer-box-cast" id="shotClockBox">
-            <div class="timer-label-cast">Shot Clock</div>
-            <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
+    <div class="cast-main">
+        <!-- Team 1 -->
+        <div class="team-side">
+            <div class="logo-possession-row">
+                ` + (gameData.team1.logo ? `<img src="${gameData.team1.logo}" class="team-logo-cast" alt="${gameData.team1.name}">` : '') + `
+                <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
+            </div>
+            <div class="team-score" id="team1Score">` + team1Score + `</div>
+            <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
         </div>
-        <div class="header-center">
-            <img src="bellaLogo.jpg?v=2" alt="Bella Vista" class="cast-logo-display">
-            <div class="game-title">` + gameData.gameName + `</div>
-            <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
+
+        <!-- Center: timers + info -->
+        <div class="cast-center">
+            <div class="timer-box-cast" id="shotClockBox">
+                <div class="timer-label-cast">Shot Clock</div>
+                <div class="timer-value-cast" id="shotClockCast">` + gameData.shotClock.seconds + `</div>
+            </div>
+            <div class="header-center">
+                <img src="bellaLogo.jpg?v=2" alt="Bella Vista" class="cast-logo-display">
+                <div class="game-title">` + gameData.gameName + `</div>
+                <div class="quarter-display" id="quarterDisplay">` + quarterText + `</div>
+            </div>
+            <div class="timer-box-cast">
+                <div class="timer-label-cast">Game Time</div>
+                <div class="timer-value-cast timer-value-game" id="gameTimerCast">` + formatTime(gameData.gameTimer.currentSeconds) + `</div>
+            </div>
         </div>
-        <div class="timer-box-cast">
-            <div class="timer-label-cast">Game Time</div>
-            <div class="timer-value-cast" id="gameTimerCast">` + formatTime(gameData.gameTimer.currentSeconds) + `</div>
+
+        <!-- Team 2 -->
+        <div class="team-side">
+            <div class="logo-possession-row">
+                ` + (gameData.team2.logo ? `<img src="${gameData.team2.logo}" class="team-logo-cast" alt="${gameData.team2.name}">` : '') + `
+                <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
+            </div>
+            <div class="team-score" id="team2Score">` + team2Score + `</div>
+            <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
         </div>
     </div>
-    <div class="score-container">
-            <div class="team-box">
-                <div class="logo-possession-row">
-                    ` + (gameData.team1.logo ? `<img src="${gameData.team1.logo}" class="team-logo-cast" alt="${gameData.team1.name}">` : '') + `
-                    <div class="possession-indicator` + (gameData.possession !== 'team1' ? ' hidden' : '') + `">🏀</div>
-                </div>
-                <div class="team-score" id="team1Score">` + team1Score + `</div>
-                <div class="team-fouls" id="team1Fouls">Team Fouls: ` + team1Fouls + `</div>
+    <div class="mvp-banner" id="mvpBanner" style="display: ` + mvpDisplay + `;">
+        <div class="mvp-label">🏆 Best Player of the Game</div>
+        <div class="mvp-name" id="mvpName">` + mvpName + `</div>
+        <div class="mvp-stats">
+            <div class="mvp-stat-item">
+                <div class="mvp-stat-label">PTS</div>
+                <div class="mvp-stat-value" id="mvpPoints">` + mvpStats.points + `</div>
             </div>
-            <div class="vs-text">VS</div>
-            <div class="team-box">
-                <div class="logo-possession-row">
-                    ` + (gameData.team2.logo ? `<img src="${gameData.team2.logo}" class="team-logo-cast" alt="${gameData.team2.name}">` : '') + `
-                    <div class="possession-indicator` + (gameData.possession !== 'team2' ? ' hidden' : '') + `">🏀</div>
-                </div>
-                <div class="team-score" id="team2Score">` + team2Score + `</div>
-                <div class="team-fouls" id="team2Fouls">Team Fouls: ` + team2Fouls + `</div>
+            <div class="mvp-stat-item">
+                <div class="mvp-stat-label">REB</div>
+                <div class="mvp-stat-value" id="mvpRebounds">` + mvpStats.rebounds + `</div>
             </div>
-        </div>
-        <div class="mvp-banner" id="mvpBanner" style="display: ` + mvpDisplay + `;">
-            <div class="mvp-label">🏆 Best Player of the Game</div>
-            <div class="mvp-name" id="mvpName">` + mvpName + `</div>
-            <div class="mvp-stats">
-                <div class="mvp-stat-item">
-                    <div class="mvp-stat-label">PTS</div>
-                    <div class="mvp-stat-value" id="mvpPoints">` + mvpStats.points + `</div>
-                </div>
-                <div class="mvp-stat-item">
-                    <div class="mvp-stat-label">REB</div>
-                    <div class="mvp-stat-value" id="mvpRebounds">` + mvpStats.rebounds + `</div>
-                </div>
-                <div class="mvp-stat-item">
-                    <div class="mvp-stat-label">AST</div>
-                    <div class="mvp-stat-value" id="mvpAssists">` + mvpStats.assists + `</div>
-                </div>
-                <div class="mvp-stat-item">
-                    <div class="mvp-stat-label">STL</div>
-                    <div class="mvp-stat-value" id="mvpSteals">` + mvpStats.steals + `</div>
-                </div>
-                <div class="mvp-stat-item">
-                    <div class="mvp-stat-label">BLK</div>
-                    <div class="mvp-stat-value" id="mvpBlocks">` + mvpStats.blocks + `</div>
-                </div>
+            <div class="mvp-stat-item">
+                <div class="mvp-stat-label">AST</div>
+                <div class="mvp-stat-value" id="mvpAssists">` + mvpStats.assists + `</div>
+            </div>
+            <div class="mvp-stat-item">
+                <div class="mvp-stat-label">STL</div>
+                <div class="mvp-stat-value" id="mvpSteals">` + mvpStats.steals + `</div>
+            </div>
+            <div class="mvp-stat-item">
+                <div class="mvp-stat-label">BLK</div>
+                <div class="mvp-stat-value" id="mvpBlocks">` + mvpStats.blocks + `</div>
             </div>
         </div>
+    </div>
 <\/body>
 <\/html>
             `);
