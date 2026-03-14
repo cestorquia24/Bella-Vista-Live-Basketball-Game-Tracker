@@ -2594,8 +2594,15 @@
             seasonStandings.teams[team1Name].pointsAgainst += gameRecord.finalScore.team2;
             seasonStandings.teams[team2Name].pointsFor += gameRecord.finalScore.team2;
             seasonStandings.teams[team2Name].pointsAgainst += gameRecord.finalScore.team1;
-            seasonStandings.teams[team1Name].lastPlayed = gameRecord.gameDate;
-            seasonStandings.teams[team2Name].lastPlayed = gameRecord.gameDate;
+
+            // Only update lastPlayed if this game is more recent
+            const gameDate = new Date(gameRecord.gameDate);
+            if (!seasonStandings.teams[team1Name].lastPlayed || gameDate >= new Date(seasonStandings.teams[team1Name].lastPlayed)) {
+                seasonStandings.teams[team1Name].lastPlayed = gameRecord.gameDate;
+            }
+            if (!seasonStandings.teams[team2Name].lastPlayed || gameDate >= new Date(seasonStandings.teams[team2Name].lastPlayed)) {
+                seasonStandings.teams[team2Name].lastPlayed = gameRecord.gameDate;
+            }
 
             // Update player stats
             updatePlayerStatsFromGame(gameRecord.team1, team1Name);
