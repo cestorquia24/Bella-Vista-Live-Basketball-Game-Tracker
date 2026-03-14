@@ -129,16 +129,21 @@
             border-radius: 10px;
         }
 
-        /* ── Timer controls row ── */
+        /* ── Timer controls (two rows) ── */
         .timer-controls {
             display: flex;
-            gap: 8px;
+            flex-direction: column;
+            gap: 6px;
             flex-shrink: 0;
         }
-        .timer-controls .ctrl-btn {
+        .timer-row {
+            display: flex;
+            gap: 8px;
+        }
+        .timer-row .ctrl-btn {
             flex: 1;
-            padding: 16px 6px;
-            font-size: 0.92rem;
+            padding: 13px 4px;
+            font-size: 0.85rem;
             border-radius: 10px;
         }
 
@@ -190,6 +195,7 @@
         .btn-reset14    { background: #805ad5; color: white; }
         .btn-adjust     { background: #2d3748; color: #e2e8f0; border: 2px solid #4a5568; }
         .btn-buzzer     { background: #c05621; color: white; }
+        .btn-danger     { background: #742a2a; color: #fc8181; border: 2px solid #fc8181; }
         .btn-toggle     { background: #2d3748; color: #a0aec0; border: 2px solid #4a5568; flex: 0 0 44px !important; font-size: 1rem; }
         .btn-toggle.active { color: #f6ad55; border-color: #f6ad55; }
         .btn-score-add  { background: #2b6cb0; color: white; }
@@ -271,12 +277,18 @@
         </div>
     </div>
 
-    <!-- Timer controls: Start/Pause + Reset 24s + Reset 14s -->
+    <!-- Timer controls: row 1 — start/pause toggles + adjust -->
     <div class="timer-controls">
-        <button class="ctrl-btn btn-start" id="gameTimerToggleBtn" onclick="toggleGameTimer()">▶ Start</button>
-        <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ 24s</button>
-        <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ 14s</button>
-        <button class="ctrl-btn btn-toggle" id="adjustToggleBtn" onclick="toggleAdjust()">⚙</button>
+        <div class="timer-row">
+            <button class="ctrl-btn btn-start" id="gameTimerToggleBtn" onclick="toggleGameTimer()">▶ Game</button>
+            <button class="ctrl-btn btn-start" id="shotClockToggleBtn" onclick="toggleShotClock()">▶ Clock</button>
+            <button class="ctrl-btn btn-toggle" id="adjustToggleBtn" onclick="toggleAdjust()">⚙</button>
+        </div>
+        <!-- row 2 — shot clock resets -->
+        <div class="timer-row">
+            <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ 24s</button>
+            <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ 14s</button>
+        </div>
     </div>
 
     <!-- Collapsible adjust panel -->
@@ -292,6 +304,10 @@
         <div class="adjust-row">
             <button class="ctrl-btn btn-adjust" onclick="sendAdjust('shotClock', -1)">− 1s</button>
             <button class="ctrl-btn btn-adjust" onclick="sendAdjust('shotClock', +1)">+ 1s</button>
+        </div>
+        <div class="adjust-label" style="color: #fc8181; margin-top: 4px;">🔄 New Game</div>
+        <div class="adjust-row">
+            <button class="ctrl-btn btn-danger" onclick="resetAll()">Reset Scores + Timers</button>
         </div>
     </div>
 
@@ -341,9 +357,11 @@
         const team2NameEl     = document.getElementById('team2Name');
         const team1ScoreEl    = document.getElementById('team1ScoreDisplay');
         const team2ScoreEl    = document.getElementById('team2ScoreDisplay');
+        const shotClockToggle = document.getElementById('shotClockToggleBtn');
         const buzzerBtn       = document.getElementById('buzzerBtn');
 
         let gameTimerRunning = false;
+        let shotClockRunning = false;
 
         // ── Connection monitoring & auto-reconnect ──────────────────────────
         let disconnectTimer  = null;
@@ -433,6 +451,10 @@
                 }
                 shotClockVal.className = 'timer-display-value ' + colorClass;
                 shotClockBox.className = 'timer-display-box'    + (boxClass ? ' ' + boxClass : '');
+
+                shotClockRunning = data.shotClock.isRunning;
+                shotClockToggle.textContent = shotClockRunning ? '⏸ Clock' : '▶ Clock';
+                shotClockToggle.className   = 'ctrl-btn ' + (shotClockRunning ? 'btn-pause' : 'btn-start');
             }
         });
 
@@ -441,11 +463,29 @@
             sendCommand('gameTimer', gameTimerRunning ? 'pause' : 'start');
         }
 
+        function toggleShotClock() {
+            sendCommand('shotClock', shotClockRunning ? 'pause' : 'start');
+        }
+
         function toggleAdjust() {
             const panel = document.getElementById('adjustPanel');
             const btn   = document.getElementById('adjustToggleBtn');
             const open  = panel.classList.toggle('open');
             btn.classList.toggle('active', open);
+        }
+
+        async function resetAll() {
+            if (!confirm('Reset scores, game timer and shot clock for a new game?')) return;
+            try {
+                const t = Date.now();
+                await database.ref('timerCommands').set({ target: 'team1',    command: 'scoreReset', timestamp: t     });
+                await database.ref('timerCommands').set({ target: 'team2',    command: 'scoreReset', timestamp: t + 1 });
+                await database.ref('timerCommands').set({ target: 'gameTimer', command: 'reset',      timestamp: t + 2 });
+                await database.ref('timerCommands').set({ target: 'shotClock', command: 'reset24',    timestamp: t + 3 });
+                showFlash('✓ Reset — ready for new game');
+            } catch {
+                showFlash('✗ Reset failed — check connection');
+            }
         }
 
         function sendAdjust(target, amount) {

@@ -5113,6 +5113,11 @@
                         updateLiveScoreboard();
                         saveGameData();
                         if (liveUpdatesEnabled) pushLiveUpdate();
+                    } else if (cmd.command === 'scoreReset') {
+                        gameData[cmd.target].scoreAdjustment = 0;
+                        updateLiveScoreboard();
+                        saveGameData();
+                        if (liveUpdatesEnabled) pushLiveUpdate();
                     }
                 }
             });
