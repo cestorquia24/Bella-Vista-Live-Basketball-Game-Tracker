@@ -1473,6 +1473,7 @@
         let isAdminMode = false;
         let firebaseInitialized = false;
         let database = null;
+        let realtimeListenerSetup = false;
 
         let trashedHistory = [];
         // IDs permanently deleted (so stale Firebase/local data can't restore them)
@@ -1688,19 +1689,11 @@
                 }
                 localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
 
-                // Step 3: Load standings
-                return database.ref('seasonStandings').once('value');
-
-            }).then((snap) => {
-                const firebaseStandings = snap.val();
-                if (firebaseStandings) {
-                    seasonStandings = firebaseStandings;
-                    localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
-                } else {
-                    const saved = localStorage.getItem('basketballSeasonStandings');
-                    if (saved) seasonStandings = JSON.parse(saved);
-                }
+                // Always recalculate standings from loaded history (ensures accuracy
+                // regardless of timing between gameHistory and seasonStandings writes)
                 migrateHistoryLogos();
+                recalculateStandings();
+                setupRealtimeListeners();
                 renderCurrentTab();
 
             }).catch((error) => {
@@ -1708,6 +1701,18 @@
                 loadFromLocalStorage();
                 migrateHistoryLogos();
                 renderCurrentTab();
+            });
+        }
+
+        function setupRealtimeListeners() {
+            if (!database || realtimeListenerSetup) return;
+            realtimeListenerSetup = true;
+
+            // Listen for new games saved from the tracker (skip the immediate fire on attach)
+            let skipInitial = true;
+            database.ref('gameHistory').on('value', () => {
+                if (skipInitial) { skipInitial = false; return; }
+                loadData();
             });
         }
 
@@ -2062,10 +2067,10 @@
             renderLeaderCategory(activePlayers, 'assists', 'avgAssists', 'assistsLeaders', 'APG');
 
             // Steals Leaders
-            renderLeaderCategory(activePlayers, 'steals', 'totalSteals', 'stealsLeaders', 'SPG', true);
+            renderLeaderCategory(activePlayers, 'steals', 'avgSteals', 'stealsLeaders', 'SPG');
 
             // Blocks Leaders
-            renderLeaderCategory(activePlayers, 'blocks', 'totalBlocks', 'blocksLeaders', 'BPG', true);
+            renderLeaderCategory(activePlayers, 'blocks', 'avgBlocks', 'blocksLeaders', 'BPG');
         }
 
         function renderLeaderCategory(players, statName, sortKey, elementId, label, useAverage = false) {
@@ -2638,6 +2643,8 @@
                 p.avgPoints = parseFloat((p.totalPoints / p.gamesPlayed).toFixed(1));
                 p.avgRebounds = parseFloat((p.totalRebounds / p.gamesPlayed).toFixed(1));
                 p.avgAssists = parseFloat((p.totalAssists / p.gamesPlayed).toFixed(1));
+                p.avgSteals = parseFloat((p.totalSteals / p.gamesPlayed).toFixed(1));
+                p.avgBlocks = parseFloat((p.totalBlocks / p.gamesPlayed).toFixed(1));
             });
         }
 
