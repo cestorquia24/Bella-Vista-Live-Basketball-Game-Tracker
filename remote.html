@@ -34,9 +34,9 @@
             font-weight: 700;
             color: #63b3ed;
         }
-        .status { font-size: 0.78rem; font-weight: 600; }
+        .status { font-size: 0.78rem; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
         .status.connected    { color: #68d391; }
-        .status.disconnected { color: #fc8181; }
+        .status.disconnected { color: #fc8181; background: rgba(252,129,129,0.12); }
         .status.connecting   { color: #f6ad55; }
 
         /* ── Timer display bar ── */
@@ -150,6 +150,10 @@
             font-size: 1.05rem;
             border-radius: 10px;
         }
+        .btn-buzzer.active {
+            background: #e53e3e !important;
+            transform: scale(0.97);
+        }
 
         /* ── Flash feedback ── */
         .sent-flash {
@@ -173,6 +177,10 @@
             transition: opacity 0.1s, transform 0.1s;
             touch-action: manipulation;
             -webkit-tap-highlight-color: transparent;
+            /* Prevent long-press copy/select popup on mobile */
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
         .ctrl-btn:active { opacity: 0.7; transform: scale(0.96); }
 
@@ -181,8 +189,11 @@
         .btn-reset      { background: #3182ce; color: white; }
         .btn-reset14    { background: #805ad5; color: white; }
         .btn-adjust     { background: #2d3748; color: #e2e8f0; border: 2px solid #4a5568; }
+        .btn-buzzer     { background: #c05621; color: white; }
         .btn-toggle     { background: #2d3748; color: #a0aec0; border: 2px solid #4a5568; flex: 0 0 44px !important; font-size: 1rem; }
         .btn-toggle.active { color: #f6ad55; border-color: #f6ad55; }
+        .btn-score-add  { background: #2b6cb0; color: white; }
+        .btn-score-undo { background: #744210; color: white; }
 
         /* ── Adjust panel (hidden by default) ── */
         .adjust-panel {
@@ -217,7 +228,7 @@
     <!-- Header -->
     <div class="header">
         <h1>⏱ Remote Control</h1>
-        <div class="status connecting" id="statusMsg">Connecting...</div>
+        <div class="status connecting" id="statusMsg" onclick="manualReconnect()" title="Tap to reconnect">Connecting...</div>
     </div>
 
     <!-- Timer display bar -->
@@ -284,12 +295,14 @@
         </div>
     </div>
 
-    <!-- Buzzer -->
+    <!-- Buzzer — oncontextmenu blocks the long-press copy popup -->
     <div class="buzzer-row">
-        <button class="ctrl-btn btn-buzzer"
-            onmousedown="buzzerStart()" onmouseup="buzzerStop()"
-            onmouseleave="buzzerStop()" ontouchstart="buzzerStart()"
-            ontouchend="buzzerStop()">
+        <button class="ctrl-btn btn-buzzer" id="buzzerBtn"
+            oncontextmenu="return false"
+            onmousedown="buzzerStart(event)" onmouseup="buzzerStop()"
+            onmouseleave="buzzerStop()"
+            ontouchstart="buzzerStart(event)" ontouchend="buzzerStop()"
+            ontouchcancel="buzzerStop()">
             📢 HOLD FOR BUZZER
         </button>
     </div>
@@ -309,7 +322,12 @@
             appId: "1:563016772281:web:e2c3b5d3a08c2bc9308968"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // Guard against "already exists" when page is cached (common on iOS Safari refresh)
+        try {
+            firebase.initializeApp(firebaseConfig);
+        } catch (e) {
+            if (!/already exists/i.test(e.message)) console.error('Firebase init error:', e);
+        }
         const database = firebase.database();
 
         const statusEl        = document.getElementById('statusMsg');
@@ -323,21 +341,60 @@
         const team2NameEl     = document.getElementById('team2Name');
         const team1ScoreEl    = document.getElementById('team1ScoreDisplay');
         const team2ScoreEl    = document.getElementById('team2ScoreDisplay');
+        const buzzerBtn       = document.getElementById('buzzerBtn');
 
         let gameTimerRunning = false;
 
-        // Connection status
+        // ── Connection monitoring & auto-reconnect ──────────────────────────
+        let disconnectTimer  = null;
+        let isConnected      = false;
+
         database.ref('.info/connected').on('value', (snap) => {
-            if (snap.val()) {
+            isConnected = !!snap.val();
+            clearTimeout(disconnectTimer);
+
+            if (isConnected) {
                 statusEl.textContent = '● Connected';
-                statusEl.className = 'status connected';
+                statusEl.className   = 'status connected';
             } else {
-                statusEl.textContent = '● Disconnected — retrying...';
-                statusEl.className = 'status disconnected';
+                statusEl.textContent = '● Disconnected — tap to reconnect';
+                statusEl.className   = 'status disconnected';
+
+                // Stage 1 — nudge the SDK after 8 s
+                disconnectTimer = setTimeout(() => {
+                    database.goOnline();
+
+                    // Stage 2 — force a full cycle after another 15 s
+                    disconnectTimer = setTimeout(() => {
+                        database.goOffline();
+                        setTimeout(() => database.goOnline(), 600);
+
+                        // Stage 3 — reload the page after another 30 s if still stuck
+                        disconnectTimer = setTimeout(() => {
+                            if (!document.hidden && !isConnected) {
+                                location.reload();
+                            }
+                        }, 30000);
+                    }, 15000);
+                }, 8000);
             }
         });
 
-        // Live sync
+        // Re-establish when the page comes back into view or network comes back
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) database.goOnline();
+        });
+        window.addEventListener('online', () => database.goOnline());
+
+        function manualReconnect() {
+            clearTimeout(disconnectTimer);
+            statusEl.textContent = '↺ Reconnecting...';
+            statusEl.className   = 'status connecting';
+            database.goOffline();
+            setTimeout(() => database.goOnline(), 600);
+        }
+
+        // ── Live sync ───────────────────────────────────────────────────────
         database.ref('liveGame').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
@@ -379,6 +436,7 @@
             }
         });
 
+        // ── Controls ────────────────────────────────────────────────────────
         function toggleGameTimer() {
             sendCommand('gameTimer', gameTimerRunning ? 'pause' : 'start');
         }
@@ -402,7 +460,7 @@
                     ? (Math.abs(amount) >= 60 ? `Game Timer ${sign}${amount / 60}min` : `Game Timer ${sign}${amount}s`)
                     : `Shot Clock ${sign}${amount}s`;
                 showFlash(`✓ ${label}`);
-            }).catch(() => showFlash('✗ Failed to send command'));
+            }).catch(() => showFlash('✗ Failed — tap status bar to reconnect'));
         }
 
         function addScore(team, amount) {
@@ -417,7 +475,7 @@
                     : (team2NameEl.textContent || 'Team 2');
                 const sign = amount > 0 ? '+' : '';
                 showFlash(`✓ ${sign}${amount} — ${teamName}`);
-            }).catch(() => showFlash('✗ Failed to send score'));
+            }).catch(() => showFlash('✗ Failed — tap status bar to reconnect'));
         }
 
         function sendCommand(target, command) {
@@ -428,28 +486,59 @@
             }).then(() => {
                 const label = target === 'gameTimer' ? 'Game Timer' : 'Shot Clock';
                 showFlash(`✓ ${command.replace('24', ' 24s').replace('14', ' 14s')} — ${label}`);
-            }).catch(() => showFlash('✗ Failed to send command'));
+            }).catch(() => showFlash('✗ Failed — tap status bar to reconnect'));
         }
 
         let flashTimer = null;
         function showFlash(msg) {
+            const isError = msg.startsWith('✗');
             sentFlash.textContent = msg;
+            sentFlash.style.color  = isError ? '#fc8181' : '#68d391';
             sentFlash.style.opacity = '1';
             clearTimeout(flashTimer);
-            flashTimer = setTimeout(() => { sentFlash.style.opacity = '0'; }, 1800);
+            flashTimer = setTimeout(() => { sentFlash.style.opacity = '0'; }, isError ? 3000 : 1800);
         }
 
+        // ── Buzzer ──────────────────────────────────────────────────────────
         let buzzerActive = false;
-        function buzzerStart() {
+
+        function buzzerStart(e) {
+            // Block the long-press copy/paste popup
+            if (e && e.cancelable) e.preventDefault();
             if (buzzerActive) return;
             buzzerActive = true;
-            database.ref('timerCommands').set({ target: 'buzzer', command: 'start', timestamp: Date.now() });
+            buzzerBtn.classList.add('active');
+
+            database.ref('timerCommands').set({
+                target: 'buzzer', command: 'start', timestamp: Date.now()
+            }).catch(() => {
+                // Write failed — reset state so user can try again
+                buzzerActive = false;
+                buzzerBtn.classList.remove('active');
+                showFlash('✗ Buzzer failed — tap status bar to reconnect');
+            });
         }
+
         function buzzerStop() {
             if (!buzzerActive) return;
             buzzerActive = false;
-            database.ref('timerCommands').set({ target: 'buzzer', command: 'stop', timestamp: Date.now() });
+            buzzerBtn.classList.remove('active');
+
+            database.ref('timerCommands').set({
+                target: 'buzzer', command: 'stop', timestamp: Date.now()
+            }).catch(() => {
+                // Retry once — stopping the buzzer is critical
+                setTimeout(() => {
+                    database.ref('timerCommands').set({
+                        target: 'buzzer', command: 'stop', timestamp: Date.now()
+                    }).catch(() => showFlash('✗ Buzzer stop failed — reconnect needed'));
+                }, 1000);
+            });
         }
+
+        // Safety net: stop buzzer if page loses focus (prevents buzzer stuck on)
+        document.addEventListener('visibilitychange', () => { if (document.hidden) buzzerStop(); });
+        window.addEventListener('blur', buzzerStop);
     </script>
 </body>
 </html>
