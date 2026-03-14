@@ -1477,6 +1477,13 @@
         let trashedHistory = [];
         // IDs permanently deleted (so stale Firebase/local data can't restore them)
         let permDeletedIds = new Set(JSON.parse(localStorage.getItem('permDeletedIds') || '[]'));
+        // Migrate old deletedGameIds tombstone (from pre-trash system)
+        const _oldDeleted = JSON.parse(localStorage.getItem('deletedGameIds') || '[]');
+        if (_oldDeleted.length > 0) {
+            _oldDeleted.forEach(id => permDeletedIds.add(id));
+            localStorage.setItem('permDeletedIds', JSON.stringify([...permDeletedIds]));
+            localStorage.removeItem('deletedGameIds');
+        }
 
         function downloadBackup() {
             const backup = {
@@ -1585,12 +1592,7 @@
 
             // Initialize Firebase and load data
             initializeFirebase();
-            loadData(); // This will call renderCurrentTab() when data is ready
-
-            // Auto-refresh every 2 seconds to pick up new games from Firebase
-            setInterval(function() {
-                loadData();
-            }, 2000);
+            loadData();
         });
 
         // Also refresh when tab becomes visible
@@ -1637,8 +1639,19 @@
         }
 
         function loadFromFirebase() {
-            // Load sequentially: trash first (needed to filter history), then history, then standings
-            database.ref('trashedGames').once('value').then((snap) => {
+            // Step 0: Load permDeletedIds from Firebase first (shared across all devices)
+            database.ref('permDeletedIds').once('value').then((snap) => {
+                const fbPermIds = snap.val();
+                if (fbPermIds && Array.isArray(fbPermIds)) {
+                    fbPermIds.forEach(id => permDeletedIds.add(id));
+                    localStorage.setItem('permDeletedIds', JSON.stringify([...permDeletedIds]));
+                } else if (permDeletedIds.size > 0) {
+                    database.ref('permDeletedIds').set([...permDeletedIds]);
+                }
+                // Step 1: Load trash (needed to filter history)
+                return database.ref('trashedGames').once('value');
+
+            }).then((snap) => {
                 const fbTrashed = snap.val();
                 const localTrashed = JSON.parse(localStorage.getItem('basketballTrashedGames') || '[]');
 
@@ -1652,6 +1665,7 @@
                 }
                 localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
 
+                // Step 2: Load game history
                 return database.ref('gameHistory').once('value');
 
             }).then((snap) => {
@@ -1669,11 +1683,12 @@
                         database.ref('gameHistory').set(gameHistory);
                     }
                 } else if (localHistory.length > 0) {
-                    gameHistory = localHistory.filter(g => !trashedIds.has(g.id));
+                    gameHistory = localHistory.filter(g => !trashedIds.has(g.id) && !permDeletedIds.has(g.id));
                     database.ref('gameHistory').set(gameHistory);
                 }
                 localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
 
+                // Step 3: Load standings
                 return database.ref('seasonStandings').once('value');
 
             }).then((snap) => {
@@ -1778,9 +1793,18 @@
             }
             empty.style.display = 'none';
 
-            // Rebuild dropdown with unique dates
+            // Rebuild dropdown with unique dates (newest first)
             if (select) {
-                const uniqueDates = [...new Set(gameHistory.map(g => g.gameDate))];
+                const uniqueDates = [...new Set(gameHistory.map(g => g.gameDate))]
+                    .sort((a, b) => new Date(b) - new Date(a));
+
+                // Auto-select most recent date on first load
+                if (!selectedDate && uniqueDates.length > 0) {
+                    selectedDate = uniqueDates[0];
+                    const clearBtn = document.getElementById('dateFilterClear');
+                    if (clearBtn) clearBtn.classList.add('visible');
+                }
+
                 select.innerHTML = '<option value="">All Dates</option>';
                 uniqueDates.forEach(date => {
                     const opt = document.createElement('option');
@@ -2322,6 +2346,7 @@
             localStorage.setItem('permDeletedIds', JSON.stringify([...permDeletedIds]));
             if (database) {
                 database.ref('trashedGames').set(trashedHistory.length ? trashedHistory : null);
+                database.ref('permDeletedIds').set([...permDeletedIds]);
             }
             renderTrashTab();
         }
