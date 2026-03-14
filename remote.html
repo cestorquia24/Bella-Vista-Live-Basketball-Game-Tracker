@@ -500,19 +500,21 @@
         }
 
         // ── Buzzer ──────────────────────────────────────────────────────────
+        // Uses a dedicated `buzzerState` path (a flag, not a command) so the
+        // tracker always reflects current state. onDisconnect auto-stops if the
+        // remote crashes or loses connection while the button is held.
         let buzzerActive = false;
+        const buzzerRef = database.ref('buzzerState');
 
         function buzzerStart(e) {
-            // Block the long-press copy/paste popup
             if (e && e.cancelable) e.preventDefault();
             if (buzzerActive) return;
             buzzerActive = true;
             buzzerBtn.classList.add('active');
 
-            database.ref('timerCommands').set({
-                target: 'buzzer', command: 'start', timestamp: Date.now()
-            }).catch(() => {
-                // Write failed — reset state so user can try again
+            // Server auto-stops if remote disconnects while button is held
+            buzzerRef.onDisconnect().set({ active: false, timestamp: 0 });
+            buzzerRef.set({ active: true, timestamp: Date.now() }).catch(() => {
                 buzzerActive = false;
                 buzzerBtn.classList.remove('active');
                 showFlash('✗ Buzzer failed — tap status bar to reconnect');
@@ -524,15 +526,14 @@
             buzzerActive = false;
             buzzerBtn.classList.remove('active');
 
-            database.ref('timerCommands').set({
-                target: 'buzzer', command: 'stop', timestamp: Date.now()
-            }).catch(() => {
-                // Retry once — stopping the buzzer is critical
+            // Cancel the server-side auto-stop (we're stopping manually)
+            buzzerRef.onDisconnect().cancel();
+            buzzerRef.set({ active: false, timestamp: Date.now() }).catch(() => {
+                // Retry once — stopping is critical
                 setTimeout(() => {
-                    database.ref('timerCommands').set({
-                        target: 'buzzer', command: 'stop', timestamp: Date.now()
-                    }).catch(() => showFlash('✗ Buzzer stop failed — reconnect needed'));
-                }, 1000);
+                    buzzerRef.set({ active: false, timestamp: Date.now() })
+                        .catch(() => showFlash('✗ Buzzer stop failed — reconnect needed'));
+                }, 800);
             });
         }
 

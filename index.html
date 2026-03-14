@@ -5114,10 +5114,19 @@
                         saveGameData();
                         if (liveUpdatesEnabled) pushLiveUpdate();
                     }
-                } else if (cmd.target === 'buzzer') {
-                    if (cmd.command === 'start') startTimeoutBuzzer();
-                    else if (cmd.command === 'stop') stopTimeoutBuzzer();
                 }
+            });
+
+            // Dedicated buzzer state listener — a flag, not a command.
+            // This always reflects the current buzzer state, so it can never be
+            // "missed" due to the timestamp deduplication guard above.
+            // The remote also sets an onDisconnect auto-stop so a crashed/disconnected
+            // remote can never leave the buzzer stuck on.
+            database.ref('buzzerState').on('value', (snap) => {
+                const state = snap.val();
+                if (!state) return;
+                if (state.active) startTimeoutBuzzer();
+                else stopTimeoutBuzzer();
             });
         }
 
