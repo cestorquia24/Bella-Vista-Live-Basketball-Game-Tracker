@@ -2708,10 +2708,14 @@
                     gameData.shotClock.seconds--;
                     updateShotClockDisplay();
                     saveGameData();
+                    // Fire buzzer the instant the display hits 0 — no extra tick delay
+                    if (gameData.shotClock.seconds === 0) {
+                        pauseShotClock();
+                        playBuzzerSound('shotClock');
+                    }
                 } else {
+                    // Already at 0 (safety — stop the interval cleanly)
                     pauseShotClock();
-                    // Play loud buzzer sound when shot clock expires
-                    playBuzzerSound('shotClock');
                 }
             }, 1000);
         }
