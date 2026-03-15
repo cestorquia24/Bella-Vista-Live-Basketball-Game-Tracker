@@ -2874,7 +2874,9 @@
             }
         }
 
-        // Start continuous timeout buzzer (hold button) - NBA arena horn sound
+        // Start continuous timeout buzzer (hold button)
+        // Same sawtooth multi-harmonic design as the shot clock horn,
+        // but shifted higher in pitch and louder for maximum impact.
         function startTimeoutBuzzer() {
             if (timeoutBuzzerOscillator) return; // Already playing
 
@@ -2886,77 +2888,28 @@
                 timeoutBuzzerContext = ctx;
                 const now = ctx.currentTime;
 
-                // ── Output chain ──────────────────────────────────────
-                // Master gain — 3 ms slam attack (instant blast)
+                // Master gain — 3 ms instant slam attack
                 const masterGain = ctx.createGain();
                 masterGain.gain.setValueAtTime(0.001, now);
-                masterGain.gain.linearRampToValueAtTime(0.95, now + 0.003);
+                masterGain.gain.linearRampToValueAtTime(1.0, now + 0.003);
                 masterGain.connect(ctx.destination);
                 timeoutBuzzerGain = masterGain;
 
-                // Dynamics compressor — punchy, loud, no peak distortion
-                const compressor = ctx.createDynamicsCompressor();
-                compressor.threshold.value = -4;
-                compressor.knee.value      = 3;
-                compressor.ratio.value     = 8;
-                compressor.attack.value    = 0.001;
-                compressor.release.value   = 0.05;
-                compressor.connect(masterGain);
-
-                // Hard tanh saturation — gives the aggressive electronic edge
-                const saturator = ctx.createWaveShaper();
-                const satCurve  = new Float32Array(512);
-                for (let i = 0; i < 512; i++) {
-                    const x = (i * 2) / 512 - 1;
-                    satCurve[i] = Math.tanh(3.5 * x); // Hard clip with tanh
-                }
-                saturator.curve      = satCurve;
-                saturator.oversample = '4x';
-                saturator.connect(compressor);
-
-                // ── AM modulation bus ─────────────────────────────────
-                // 70 Hz AM creates the "BRRR" pulsing texture of the NBA buzzer.
-                // Oscillators → amBus (gain 0.55 ± 0.45 at 70 Hz) → saturator
-                const amBus = ctx.createGain();
-                amBus.gain.setValueAtTime(0.55, now);   // Center point
-                amBus.connect(saturator);
-
-                const amOsc   = ctx.createOscillator();
-                const amDepth = ctx.createGain();
-                amOsc.type            = 'sine';
-                amOsc.frequency.value = 70;   // 70 pulses/sec = NBA buzz texture
-                amDepth.gain.value    = 0.45; // Depth: gain swings 0.10 → 1.00
-                amOsc.connect(amDepth);
-                amDepth.connect(amBus.gain); // Modulate the bus gain
-                amOsc.start(now);
-
-                // ── Horn oscillator layers ────────────────────────────
-                // F major chord (F4=349 Hz, C5=523 Hz, F5=698 Hz)
-                // Mid-high range cuts through crowd noise like a real NBA horn.
-                // Two detuned F4s create the chorus thickness.
-                const hornLayers = [
-                    // [freq Hz, detune ¢, volume, waveform]
-                    [349,   0,   0.70, 'sawtooth'],  // F4 fundamental
-                    [349,  18,   0.55, 'sawtooth'],  // F4 chorus (+18¢)
-                    [349, -12,   0.45, 'square'],    // F4 square — adds buzz body
-                    [523,   0,   0.30, 'sawtooth'],  // C5 perfect 5th
-                    [698,   8,   0.20, 'sawtooth'],  // F5 octave — projection
-                ];
-
-                const oscillators = hornLayers.map(([freq, detune, vol, wave]) => {
+                // Same 4-harmonic sawtooth stack as shot clock horn, but
+                // shifted up ~33 % in pitch and slightly louder per oscillator.
+                const frequencies = [400, 540, 670, 800]; // Higher than shot clock (300/400/500/600)
+                const oscillators = frequencies.map((freq, index) => {
                     const osc     = ctx.createOscillator();
                     const oscGain = ctx.createGain();
-                    osc.type           = wave;
+                    osc.type            = 'sawtooth';
                     osc.frequency.value = freq;
-                    osc.detune.value   = detune;
-                    oscGain.gain.value = vol;
+                    oscGain.gain.value  = 0.40 / (index + 1); // Louder than shot clock (0.35)
                     osc.connect(oscGain);
-                    oscGain.connect(amBus); // Feed into AM bus
+                    oscGain.connect(masterGain);
                     osc.start(now);
                     return osc;
                 });
 
-                oscillators.push(amOsc); // Include AM osc so it stops with the rest
                 timeoutBuzzerOscillator = oscillators;
             });
         }
@@ -3702,11 +3655,11 @@
             row.dataset.playerId = player.id;
             row.dataset.team = team;
 
-            const stats = currentQuarter === 'total'
-                ? calculateTotalStats(player)
-                : calculateCumulativeStats(player, currentQuarter);
+            // Always show the running game total — quarter selector only controls
+            // which bucket new stats go into, not what is displayed.
+            const stats = calculateTotalStats(player);
 
-            // FOULS: included in cumulative stats above
+            // FOULS: included in total stats above
 
             const swapButtonText = player.isStarter ? '↓ Bench' : '↑ Start';
 
@@ -4079,9 +4032,8 @@
             };
 
             players.forEach(player => {
-                const stats = currentQuarter === 'total'
-                    ? calculateTotalStats(player)
-                    : calculateCumulativeStats(player, currentQuarter);
+                // Always use running total — consistent with player row display
+                const stats = calculateTotalStats(player);
 
                 totals.points += stats.points;
                 totals.rebounds += stats.rebounds;
@@ -4962,9 +4914,8 @@
             playerCard.dataset.playerId = player.id;
             playerCard.dataset.team = team;
 
-            const stats = currentQuarter === 'total'
-                ? calculateTotalStats(player)
-                : calculateCumulativeStats(player, currentQuarter);
+            // Always show running game total — quarter only routes new stat inputs
+            const stats = calculateTotalStats(player);
 
             playerCard.innerHTML = `
                 <div class="quick-stats-player-header">
