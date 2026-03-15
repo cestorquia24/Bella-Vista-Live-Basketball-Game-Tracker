@@ -2548,6 +2548,7 @@
             ],
             'Red Blood Cells': [
                 'Santillan #29',
+                'CJ Santillan',
                 'Agualada #26',
                 'Segura #51',
                 'Lucero #15',
@@ -2879,35 +2880,61 @@
             // Ensure context is running (needed when triggered from Firebase, not user gesture)
             ctx.resume().then(() => {
                 timeoutBuzzerContext = ctx;
-                timeoutBuzzerGain = ctx.createGain();
-                timeoutBuzzerGain.connect(ctx.destination);
+                const now = ctx.currentTime;
 
-                // Multi-harmonic horn sound
-                const frequencies = [
-                    330,  // Low fundamental
-                    440,  // Second tone
-                    550,  // Third harmonic
-                    660   // Fourth harmonic
+                // ── Output chain ──────────────────────────────────────
+                // Master gain — instant blast (5 ms attack)
+                const masterGain = ctx.createGain();
+                masterGain.gain.setValueAtTime(0.001, now);
+                masterGain.gain.linearRampToValueAtTime(0.92, now + 0.005);
+                masterGain.connect(ctx.destination);
+                timeoutBuzzerGain = masterGain;
+
+                // Soft saturation — adds warmth/harmonics without harshness
+                const saturator = ctx.createWaveShaper();
+                const curve = new Float32Array(512);
+                for (let i = 0; i < 512; i++) {
+                    const x = (i * 2) / 512 - 1;
+                    curve[i] = (3 * x) / (2 + x * x * (1 + Math.abs(x)));
+                }
+                saturator.curve = curve;
+                saturator.oversample = '2x';
+                saturator.connect(masterGain);
+
+                // Low-pass filter — removes harsh highs, keeps warm horn character
+                const lowpass = ctx.createBiquadFilter();
+                lowpass.type = 'lowpass';
+                lowpass.frequency.value = 1800;
+                lowpass.Q.value = 0.7;
+                lowpass.connect(saturator);
+
+                // ── Horn layers ───────────────────────────────────────
+                // D major intervals (D3 + A3 + D4) — classic sports arena horn chord
+                // Each layer starts ~4% sharp and settles in 80 ms (air horn "bloom")
+                const hornLayers = [
+                    // [frequency, detune_cents, volume, waveform]
+                    [147,   0,    0.55, 'sawtooth'],  // D3 fundamental
+                    [147,  14,    0.45, 'sawtooth'],  // D3 chorus (slight detune)
+                    [147,  -8,    0.30, 'square'],    // D3 square adds buzz body
+                    [220,   0,    0.35, 'sawtooth'],  // A3 perfect 5th
+                    [294, -10,    0.25, 'sawtooth'],  // D4 octave
                 ];
 
-                const oscillators = frequencies.map((freq, index) => {
-                    const osc = ctx.createOscillator();
+                const oscillators = hornLayers.map(([freq, detune, vol, wave]) => {
+                    const osc     = ctx.createOscillator();
                     const oscGain = ctx.createGain();
-
-                    osc.type = 'sawtooth';
-                    osc.frequency.value = freq;
-
-                    const volume = 0.3 / (index + 1);
-                    oscGain.gain.value = volume;
-
+                    osc.type = wave;
+                    // Pitch bloom: start sharp, settle to target in 80 ms
+                    osc.frequency.setValueAtTime(freq * 1.04, now);
+                    osc.frequency.exponentialRampToValueAtTime(freq, now + 0.08);
+                    osc.detune.value  = detune;
+                    oscGain.gain.value = vol;
                     osc.connect(oscGain);
-                    oscGain.connect(timeoutBuzzerGain);
-
-                    osc.start();
+                    oscGain.connect(lowpass);
+                    osc.start(now);
                     return osc;
                 });
 
-                timeoutBuzzerGain.gain.setValueAtTime(0.8, ctx.currentTime); // Very loud
                 timeoutBuzzerOscillator = oscillators;
             });
         }
@@ -2917,17 +2944,16 @@
             if (!timeoutBuzzerOscillator) return;
 
             try {
-                // Fade out quickly
-                timeoutBuzzerGain.gain.exponentialRampToValueAtTime(0.01, timeoutBuzzerContext.currentTime + 0.1);
+                // Slightly longer fade-out (150 ms) for natural horn release
+                timeoutBuzzerGain.gain.exponentialRampToValueAtTime(0.001, timeoutBuzzerContext.currentTime + 0.15);
                 setTimeout(() => {
                     if (timeoutBuzzerOscillator) {
-                        timeoutBuzzerOscillator.forEach(osc => osc.stop());
+                        timeoutBuzzerOscillator.forEach(osc => { try { osc.stop(); } catch(e) {} });
                         timeoutBuzzerOscillator = null;
                         timeoutBuzzerGain = null;
                         timeoutBuzzerContext = null;
-                        // Note: sharedAudioCtx is kept alive for reuse
                     }
-                }, 100);
+                }, 200);
             } catch(e) {
                 console.error('Error stopping buzzer:', e);
             }
