@@ -2870,7 +2870,7 @@
             }
         }
 
-        // Start continuous timeout buzzer (hold button) - Arena horn sound
+        // Start continuous timeout buzzer (hold button) - NBA arena horn sound
         function startTimeoutBuzzer() {
             if (timeoutBuzzerOscillator) return; // Already playing
 
@@ -2883,58 +2883,76 @@
                 const now = ctx.currentTime;
 
                 // ── Output chain ──────────────────────────────────────
-                // Master gain — instant blast (5 ms attack)
+                // Master gain — 3 ms slam attack (instant blast)
                 const masterGain = ctx.createGain();
                 masterGain.gain.setValueAtTime(0.001, now);
-                masterGain.gain.linearRampToValueAtTime(0.92, now + 0.005);
+                masterGain.gain.linearRampToValueAtTime(0.95, now + 0.003);
                 masterGain.connect(ctx.destination);
                 timeoutBuzzerGain = masterGain;
 
-                // Soft saturation — adds warmth/harmonics without harshness
+                // Dynamics compressor — punchy, loud, no peak distortion
+                const compressor = ctx.createDynamicsCompressor();
+                compressor.threshold.value = -4;
+                compressor.knee.value      = 3;
+                compressor.ratio.value     = 8;
+                compressor.attack.value    = 0.001;
+                compressor.release.value   = 0.05;
+                compressor.connect(masterGain);
+
+                // Hard tanh saturation — gives the aggressive electronic edge
                 const saturator = ctx.createWaveShaper();
-                const curve = new Float32Array(512);
+                const satCurve  = new Float32Array(512);
                 for (let i = 0; i < 512; i++) {
                     const x = (i * 2) / 512 - 1;
-                    curve[i] = (3 * x) / (2 + x * x * (1 + Math.abs(x)));
+                    satCurve[i] = Math.tanh(3.5 * x); // Hard clip with tanh
                 }
-                saturator.curve = curve;
-                saturator.oversample = '2x';
-                saturator.connect(masterGain);
+                saturator.curve      = satCurve;
+                saturator.oversample = '4x';
+                saturator.connect(compressor);
 
-                // Low-pass filter — removes harsh highs, keeps warm horn character
-                const lowpass = ctx.createBiquadFilter();
-                lowpass.type = 'lowpass';
-                lowpass.frequency.value = 1800;
-                lowpass.Q.value = 0.7;
-                lowpass.connect(saturator);
+                // ── AM modulation bus ─────────────────────────────────
+                // 70 Hz AM creates the "BRRR" pulsing texture of the NBA buzzer.
+                // Oscillators → amBus (gain 0.55 ± 0.45 at 70 Hz) → saturator
+                const amBus = ctx.createGain();
+                amBus.gain.setValueAtTime(0.55, now);   // Center point
+                amBus.connect(saturator);
 
-                // ── Horn layers ───────────────────────────────────────
-                // D major intervals (D3 + A3 + D4) — classic sports arena horn chord
-                // Each layer starts ~4% sharp and settles in 80 ms (air horn "bloom")
+                const amOsc   = ctx.createOscillator();
+                const amDepth = ctx.createGain();
+                amOsc.type            = 'sine';
+                amOsc.frequency.value = 70;   // 70 pulses/sec = NBA buzz texture
+                amDepth.gain.value    = 0.45; // Depth: gain swings 0.10 → 1.00
+                amOsc.connect(amDepth);
+                amDepth.connect(amBus.gain); // Modulate the bus gain
+                amOsc.start(now);
+
+                // ── Horn oscillator layers ────────────────────────────
+                // F major chord (F4=349 Hz, C5=523 Hz, F5=698 Hz)
+                // Mid-high range cuts through crowd noise like a real NBA horn.
+                // Two detuned F4s create the chorus thickness.
                 const hornLayers = [
-                    // [frequency, detune_cents, volume, waveform]
-                    [147,   0,    0.55, 'sawtooth'],  // D3 fundamental
-                    [147,  14,    0.45, 'sawtooth'],  // D3 chorus (slight detune)
-                    [147,  -8,    0.30, 'square'],    // D3 square adds buzz body
-                    [220,   0,    0.35, 'sawtooth'],  // A3 perfect 5th
-                    [294, -10,    0.25, 'sawtooth'],  // D4 octave
+                    // [freq Hz, detune ¢, volume, waveform]
+                    [349,   0,   0.70, 'sawtooth'],  // F4 fundamental
+                    [349,  18,   0.55, 'sawtooth'],  // F4 chorus (+18¢)
+                    [349, -12,   0.45, 'square'],    // F4 square — adds buzz body
+                    [523,   0,   0.30, 'sawtooth'],  // C5 perfect 5th
+                    [698,   8,   0.20, 'sawtooth'],  // F5 octave — projection
                 ];
 
                 const oscillators = hornLayers.map(([freq, detune, vol, wave]) => {
                     const osc     = ctx.createOscillator();
                     const oscGain = ctx.createGain();
-                    osc.type = wave;
-                    // Pitch bloom: start sharp, settle to target in 80 ms
-                    osc.frequency.setValueAtTime(freq * 1.04, now);
-                    osc.frequency.exponentialRampToValueAtTime(freq, now + 0.08);
-                    osc.detune.value  = detune;
+                    osc.type           = wave;
+                    osc.frequency.value = freq;
+                    osc.detune.value   = detune;
                     oscGain.gain.value = vol;
                     osc.connect(oscGain);
-                    oscGain.connect(lowpass);
+                    oscGain.connect(amBus); // Feed into AM bus
                     osc.start(now);
                     return osc;
                 });
 
+                oscillators.push(amOsc); // Include AM osc so it stops with the rest
                 timeoutBuzzerOscillator = oscillators;
             });
         }
@@ -2944,8 +2962,8 @@
             if (!timeoutBuzzerOscillator) return;
 
             try {
-                // Slightly longer fade-out (150 ms) for natural horn release
-                timeoutBuzzerGain.gain.exponentialRampToValueAtTime(0.001, timeoutBuzzerContext.currentTime + 0.15);
+                // Short 80 ms cut — NBA horn stops sharp, not a slow air horn fade
+                timeoutBuzzerGain.gain.exponentialRampToValueAtTime(0.001, timeoutBuzzerContext.currentTime + 0.08);
                 setTimeout(() => {
                     if (timeoutBuzzerOscillator) {
                         timeoutBuzzerOscillator.forEach(osc => { try { osc.stop(); } catch(e) {} });
@@ -2953,7 +2971,7 @@
                         timeoutBuzzerGain = null;
                         timeoutBuzzerContext = null;
                     }
-                }, 200);
+                }, 120);
             } catch(e) {
                 console.error('Error stopping buzzer:', e);
             }
