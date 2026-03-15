@@ -5194,9 +5194,12 @@
 
         // Load live updates preference
         function loadLiveUpdatesPreference() {
+            // Always initialize Firebase so the remote control listener is active,
+            // regardless of whether live broadcasting (spectator) is enabled.
+            initializeFirebase();
+
             const saved = localStorage.getItem('liveUpdatesEnabled');
             if (saved === 'true') {
-                initializeFirebase();
                 liveUpdatesEnabled = true;
                 const btn = document.getElementById('liveUpdatesBtn');
                 if (btn) {
