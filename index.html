@@ -2791,43 +2791,31 @@
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
             if (type === 'shotClock') {
-                // Shot clock horn - long loud arena horn (3 seconds)
+                // Shot clock horn — same 4-harmonic sawtooth stack as remote BUZZ,
+                // higher pitch (400/540/670/800 Hz) and louder (gain 1.0), 3 seconds.
                 const gainNode = audioContext.createGain();
                 gainNode.connect(audioContext.destination);
 
-                // Multi-harmonic horn sound (same as arena horn)
-                const frequencies = [
-                    300,  // Low fundamental
-                    400,  // Second tone
-                    500,  // Third harmonic
-                    600   // Fourth harmonic
-                ];
+                const frequencies = [400, 540, 670, 800];
 
                 const oscillators = frequencies.map((freq, index) => {
                     const osc = audioContext.createOscillator();
                     const oscGain = audioContext.createGain();
-
-                    osc.type = 'sawtooth'; // Horn-like sound
+                    osc.type = 'sawtooth';
                     osc.frequency.value = freq;
-
-                    const volume = 0.35 / (index + 1);
-                    oscGain.gain.value = volume;
-
+                    oscGain.gain.value = 0.40 / (index + 1);
                     osc.connect(oscGain);
                     oscGain.connect(gainNode);
-
                     return osc;
                 });
 
-                // Overall volume envelope - stay loud for full duration
-                gainNode.gain.setValueAtTime(0.9, audioContext.currentTime); // Very loud
-                gainNode.gain.setValueAtTime(0.9, audioContext.currentTime + 2.95); // Keep loud
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3); // Quick fade at end
+                // Instant full volume, keep loud for 3 s, quick fade at end
+                gainNode.gain.setValueAtTime(1.0, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(1.0, audioContext.currentTime + 2.95);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 3);
 
-                // Start all oscillators
                 oscillators.forEach(osc => osc.start());
 
-                // Stop all oscillators after 3 seconds
                 setTimeout(() => {
                     oscillators.forEach(osc => osc.stop());
                 }, 3000);
