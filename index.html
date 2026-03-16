@@ -5099,12 +5099,10 @@
                         gameData[cmd.target].scoreAdjustment = Math.max(0, gameData[cmd.target].scoreAdjustment + cmd.amount);
                         updateLiveScoreboard();
                         saveGameData();
-                        if (liveUpdatesEnabled) pushLiveUpdate();
                     } else if (cmd.command === 'scoreReset') {
                         gameData[cmd.target].scoreAdjustment = 0;
                         updateLiveScoreboard();
                         saveGameData();
-                        if (liveUpdatesEnabled) pushLiveUpdate();
                     }
                 }
             });
@@ -5136,8 +5134,9 @@
                     currentQuarter: currentQuarter,
                     team1: gameData.team1,
                     team2: gameData.team2,
-                    team1Score: getOfficialScore('team1'),
-                    team2Score: getOfficialScore('team2'),
+                    // Use player-stats total so remote display shows the real game score
+                    team1Score: calculateTeamTotalPoints('team1'),
+                    team2Score: calculateTeamTotalPoints('team2'),
                     mvp: gameData.mvp,
                     gameTimer: gameData.gameTimer,
                     shotClock: gameData.shotClock,
@@ -5397,16 +5396,16 @@
             }
         }
 
-        // Override saveGameData to also push live updates
+        // Override saveGameData to always push state to Firebase so the remote
+        // display (scores, timer, team names) is always in sync, regardless of
+        // whether the spectator broadcast (liveUpdatesEnabled) is on or off.
         const originalSaveGameData = saveGameData;
         saveGameData = function() {
             originalSaveGameData();
 
-            // Simple one-way push - always push when live updates enabled
-            if (liveUpdatesEnabled) {
+            if (database) {
                 gameData.lastUpdated = Date.now();
                 pushLiveUpdate();
-                console.log('⬆️ Pushing local changes to Firebase');
             }
         };
 
