@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Best Player Poster</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0d0d1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 16px 40px;
+            gap: 16px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .page-title {
+            color: #a78bfa;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        /* ── Controls ───────────────────────────── */
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn {
+            padding: 11px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-photo   { background: #4c1d95; color: #e9d5ff; }
+        .btn-download { background: #065f46; color: #6ee7b7; }
+        .btn-close   { background: #1f2937; color: #9ca3af; }
+        #photoInput  { display: none; }
+
+        /* ── Poster wrapper ─────────────────────── */
+        .poster-wrapper {
+            /* Scales poster to fit narrow screens while keeping aspect ratio */
+            width: min(600px, 100vw - 32px);
+            aspect-ratio: 600 / 900;
+        }
+
+        /* ── Poster (fixed 600×900 for accurate export) ── */
+        #poster {
+            width: 600px;
+            height: 900px;
+            position: relative;
+            overflow: hidden;
+            background: #04040f;
+            transform-origin: top left;
+        }
+
+        /* Purple energy background */
+        .p-glow {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 100% 75% at 50% 42%, rgba(88,28,135,0.60) 0%, transparent 65%),
+                radial-gradient(ellipse 65% 55% at 10% 70%, rgba(124,58,237,0.35) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 50% at 90% 20%, rgba(139,92,246,0.28) 0%, transparent 50%),
+                radial-gradient(ellipse 45% 35% at 50% 90%, rgba(76,29,149,0.45) 0%, transparent 55%);
+            pointer-events: none;
+        }
+
+        /* Lightning bolt SVG decorations */
+        .p-lightning {
+            position: absolute;
+            pointer-events: none;
+            opacity: 0.18;
+        }
+        .p-lightning-left  { left: 10px;  top: 100px; width: 70px; }
+        .p-lightning-right { right: 10px; top: 80px;  width: 70px; transform: scaleX(-1); }
+
+        /* ── Header ── */
+        .p-header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 22px 14px;
+            border-bottom: 1px solid rgba(139,92,246,0.25);
+        }
+
+        .p-logo {
+            width: 66px;
+            height: 66px;
+            object-fit: contain;
+            border-radius: 50%;
+            border: 2px solid rgba(139,92,246,0.55);
+            background: rgba(0,0,0,0.35);
+            filter: drop-shadow(0 0 10px rgba(139,92,246,0.65));
+        }
+        .p-logo-empty {
+            width: 66px; height: 66px;
+            border-radius: 50%;
+            border: 2px solid rgba(88,28,135,0.4);
+            background: rgba(88,28,135,0.15);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .p-title-block { text-align: center; flex: 1; padding: 0 10px; }
+        .p-title-top {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.75rem;
+            color: #fff;
+            line-height: 1;
+            letter-spacing: 0.07em;
+            text-shadow: 0 0 22px rgba(139,92,246,0.85), 0 2px 5px rgba(0,0,0,0.9);
+        }
+        .p-title-bottom {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.15rem;
+            color: #a78bfa;
+            line-height: 1;
+            letter-spacing: 0.09em;
+            text-shadow: 0 0 28px rgba(167,139,250,0.95), 0 2px 5px rgba(0,0,0,0.9);
+        }
+        .p-league-tag {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.56rem;
+            color: rgba(167,139,250,0.55);
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        /* ── Photo area ── */
+        .p-photo-area {
+            position: relative;
+            z-index: 5;
+            height: 450px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .p-photo-hint {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 10px;
+            border: 2px dashed rgba(139,92,246,0.35);
+            transition: border-color 0.2s;
+        }
+        .p-photo-hint:hover { border-color: rgba(139,92,246,0.75); }
+        .p-photo-hint .hint-icon { font-size: 3.5rem; }
+        .p-photo-hint .hint-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            color: rgba(167,139,250,0.45);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .p-photo-hint .hint-sub {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.68rem;
+            color: rgba(167,139,250,0.28);
+            letter-spacing: 0.08em;
+        }
+        #playerPhoto {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: none;
+        }
+        /* Top + bottom fade over photo */
+        .p-photo-area::before,
+        .p-photo-area::after {
+            content: '';
+            position: absolute;
+            left: 0; right: 0;
+            pointer-events: none;
+            z-index: 6;
+        }
+        .p-photo-area::before {
+            top: 0; height: 50px;
+            background: linear-gradient(180deg, #04040f 0%, transparent 100%);
+        }
+        .p-photo-area::after {
+            bottom: 0; height: 130px;
+            background: linear-gradient(180deg, transparent 0%, #04040f 100%);
+        }
+
+        /* ── Name banner ── */
+        .p-name-band {
+            position: relative;
+            z-index: 10;
+            background: linear-gradient(135deg,
+                rgba(76,29,149,0.98) 0%,
+                rgba(49,10,84,0.98)  50%,
+                rgba(88,28,135,0.98) 100%);
+            padding: 10px 24px 8px;
+            clip-path: polygon(0 6px, 100% 0, 100% calc(100% - 6px), 0 100%);
+            border-top: 2px solid rgba(167,139,250,0.55);
+            border-bottom: 2px solid rgba(139,92,246,0.35);
+        }
+        .p-player-name {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.4rem;
+            color: #fff;
+            letter-spacing: 0.12em;
+            line-height: 1;
+            text-align: center;
+            text-shadow: 0 0 35px rgba(167,139,250,0.75), 2px 2px 0 rgba(0,0,0,0.6);
+        }
+        .p-player-team {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.82rem;
+            color: #c4b5fd;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* ── Matchup ── */
+        .p-matchup {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 7px 24px;
+            background: rgba(0,0,0,0.45);
+        }
+        .m-team {
+            display: flex; align-items: center; gap: 5px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.72rem; font-weight: 600;
+            color: #9ca3af; letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap; overflow: hidden;
+            max-width: 160px; text-overflow: ellipsis;
+        }
+        .m-logo {
+            width: 22px; height: 22px;
+            object-fit: contain; border-radius: 50%; flex-shrink: 0;
+        }
+        .m-score {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.45rem; color: #f6e05e;
+            letter-spacing: 0.08em; white-space: nowrap;
+        }
+        .m-vs {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.65rem; font-weight: 700;
+            color: rgba(139,92,246,0.65); letter-spacing: 0.2em;
+        }
+        .m-date {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.6rem;
+            color: rgba(156,163,175,0.45);
+            letter-spacing: 0.1em; margin-left: 2px;
+        }
+
+        /* ── Stats bar ── */
+        .p-stats {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            border-top: 1px solid rgba(139,92,246,0.3);
+            background: rgba(0,0,0,0.62);
+        }
+        .p-stat {
+            flex: 1;
+            display: flex; flex-direction: column;
+            align-items: center;
+            padding: 18px 4px 16px;
+            position: relative;
+        }
+        .p-stat:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0; top: 18%; height: 64%;
+            width: 1px;
+            background: rgba(139,92,246,0.28);
+        }
+        .p-stat-val {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: #fff; line-height: 1;
+            text-shadow: 0 0 22px rgba(167,139,250,0.55);
+        }
+        .p-stat-lbl {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.72rem; font-weight: 700;
+            color: #a78bfa;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+
+        /* ── Footer ── */
+        .p-footer {
+            position: relative;
+            z-index: 10;
+            display: flex; align-items: center;
+            justify-content: center; gap: 7px;
+            padding: 8px 24px 12px;
+            background: rgba(0,0,0,0.55);
+            border-top: 1px solid rgba(88,28,135,0.2);
+        }
+        .p-footer-logo {
+            width: 26px; height: 26px;
+            object-fit: contain; opacity: 0.85;
+            border-radius: 50%;
+            border: 1px solid rgba(139,92,246,0.35);
+        }
+        .p-footer-divider {
+            width: 1px; height: 20px;
+            background: rgba(139,92,246,0.25);
+        }
+        .p-footer-sponsor {
+            width: 26px; height: 26px;
+            object-fit: contain; opacity: 0.75;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .p-footer-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.62rem;
+            color: rgba(167,139,250,0.45);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        /* Downloading state overlay */
+        #downloadOverlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+            align-items: center; justify-content: center;
+            flex-direction: column; gap: 12px;
+            color: #a78bfa;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.1rem; letter-spacing: 0.1em;
+        }
+        #downloadOverlay.show { display: flex; }
+    </style>
+</head>
+<body>
+
+<div class="page-title">🏆 Best Player Poster Generator</div>
+
+<div class="controls">
+    <button class="btn btn-photo" onclick="document.getElementById('photoInput').click()">📷 Upload Player Photo</button>
+    <input type="file" id="photoInput" accept="image/*" onchange="loadPhoto(event)">
+    <button class="btn btn-download" onclick="downloadPoster()">⬇ Download PNG</button>
+    <button class="btn btn-close" onclick="window.close()">✕ Close</button>
+</div>
+
+<!-- Poster -->
+<div class="poster-wrapper" id="posterWrapper">
+<div id="poster">
+
+    <!-- Purple energy glow -->
+    <div class="p-glow"></div>
+
+    <!-- Lightning decorations -->
+    <svg class="p-lightning p-lightning-left" viewBox="0 0 60 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="38,0 18,90 32,90 8,220 52,88 36,88 60,0" fill="#a78bfa"/>
+    </svg>
+    <svg class="p-lightning p-lightning-right" viewBox="0 0 60 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="38,0 18,90 32,90 8,220 52,88 36,88 60,0" fill="#a78bfa"/>
+    </svg>
+
+    <!-- Header -->
+    <div class="p-header">
+        <div id="teamLogoWrap">
+            <div class="p-logo-empty">🏀</div>
+        </div>
+
+        <div class="p-title-block">
+            <div class="p-title-top">BEST PLAYER</div>
+            <div class="p-title-bottom">OF THE GAME</div>
+            <div class="p-league-tag">Bella Vista Basketball League</div>
+        </div>
+
+        <img class="p-logo" src="logos/Bella Vista League Logo.jpeg" alt="BV League" onerror="this.style.display='none'">
+    </div>
+
+    <!-- Player photo -->
+    <div class="p-photo-area" onclick="document.getElementById('photoInput').click()" id="photoArea">
+        <div class="p-photo-hint" id="photoHint">
+            <div class="hint-icon">📸</div>
+            <div class="hint-text">Tap to add player photo</div>
+            <div class="hint-sub">Best result with full-body shot</div>
+        </div>
+        <img id="playerPhoto" src="" alt="Player">
+    </div>
+
+    <!-- Name banner -->
+    <div class="p-name-band">
+        <div class="p-player-name" id="posterName">PLAYER NAME</div>
+        <div class="p-player-team" id="posterTeam">TEAM NAME</div>
+    </div>
+
+    <!-- Matchup strip -->
+    <div class="p-matchup">
+        <div class="m-team">
+            <img class="m-logo" id="matchupLogo1" src="" alt="" onerror="this.style.display='none'">
+            <span id="matchupTeam1">Team 1</span>
+        </div>
+        <div class="m-score" id="matchupScore">0 — 0</div>
+        <div class="m-vs">VS</div>
+        <div class="m-team">
+            <img class="m-logo" id="matchupLogo2" src="" alt="" onerror="this.style.display='none'">
+            <span id="matchupTeam2">Team 2</span>
+        </div>
+        <div class="m-date" id="matchupDate"></div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="p-stats">
+        <div class="p-stat"><div class="p-stat-val" id="statPts">0</div><div class="p-stat-lbl">PTS</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="statReb">0</div><div class="p-stat-lbl">REB</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="statAst">0</div><div class="p-stat-lbl">AST</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="statStl">0</div><div class="p-stat-lbl">STL</div></div>
+        <div class="p-stat"><div class="p-stat-val" id="statBlk">0</div><div class="p-stat-lbl">BLK</div></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-footer">
+        <img class="p-footer-logo" src="logos/Bella Vista League Logo.jpeg" alt="BV" onerror="this.style.display='none'">
+        <div class="p-footer-text">Bella Vista Basketball League</div>
+        <div class="p-footer-divider"></div>
+        <img class="p-footer-sponsor" src="logos/Cafe Bara.jpeg" alt="Cafe Bara" onerror="this.style.display='none'">
+        <div class="p-footer-text" style="color:rgba(167,139,250,0.30);">Cafe Bara</div>
+    </div>
+
+</div><!-- #poster -->
+</div><!-- .poster-wrapper -->
+
+<div id="downloadOverlay">
+    <div style="font-size:2rem">⏳</div>
+    <div>Generating poster...</div>
+</div>
+
+<script>
+    // ── Scale poster to fit wrapper ──────────────────────────────────────────
+    function scalePoster() {
+        const wrapper = document.getElementById('posterWrapper');
+        const poster  = document.getElementById('poster');
+        const scale   = wrapper.offsetWidth / 600;
+        poster.style.transform = `scale(${scale})`;
+        wrapper.style.height   = (900 * scale) + 'px';
+    }
+    scalePoster();
+    window.addEventListener('resize', scalePoster);
+
+    // ── Load data from sessionStorage ───────────────────────────────────────
+    const raw = sessionStorage.getItem('posterData');
+    if (raw) {
+        try {
+            const d = JSON.parse(raw);
+
+            document.getElementById('posterName').textContent = (d.playerName || 'PLAYER NAME').toUpperCase();
+            document.getElementById('posterTeam').textContent = (d.playerTeam || '').toUpperCase();
+
+            // Team logo in header
+            if (d.playerTeamLogo) {
+                const imgEl = document.createElement('img');
+                imgEl.src       = d.playerTeamLogo;
+                imgEl.className = 'p-logo';
+                imgEl.alt       = d.playerTeam || '';
+                imgEl.onerror   = () => imgEl.style.display = 'none';
+                document.getElementById('teamLogoWrap').innerHTML = '';
+                document.getElementById('teamLogoWrap').appendChild(imgEl);
+            }
+
+            // Matchup strip
+            document.getElementById('matchupTeam1').textContent = d.playerTeam   || 'Team 1';
+            document.getElementById('matchupTeam2').textContent = d.opponentTeam || 'Team 2';
+            document.getElementById('matchupScore').textContent =
+                (d.playerTeamScore ?? 0) + ' — ' + (d.opponentTeamScore ?? 0);
+
+            if (d.playerTeamLogo) {
+                document.getElementById('matchupLogo1').src = d.playerTeamLogo;
+            }
+            if (d.opponentTeamLogo) {
+                document.getElementById('matchupLogo2').src = d.opponentTeamLogo;
+            }
+            if (d.gameDate) {
+                document.getElementById('matchupDate').textContent =
+                    new Date(d.gameDate + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+            }
+
+            // Stats
+            if (d.stats) {
+                document.getElementById('statPts').textContent = d.stats.points   ?? 0;
+                document.getElementById('statReb').textContent = d.stats.rebounds ?? 0;
+                document.getElementById('statAst').textContent = d.stats.assists  ?? 0;
+                document.getElementById('statStl').textContent = d.stats.steals   ?? 0;
+                document.getElementById('statBlk').textContent = d.stats.blocks   ?? 0;
+            }
+        } catch(e) {
+            console.error('Failed to parse poster data', e);
+        }
+    }
+
+    // ── Photo upload ─────────────────────────────────────────────────────────
+    function loadPhoto(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = document.getElementById('playerPhoto');
+            img.src   = e.target.result;
+            img.style.display = 'block';
+            document.getElementById('photoHint').style.display = 'none';
+            document.getElementById('photoArea').style.cursor  = 'default';
+            document.getElementById('photoArea').onclick       = null;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Download as PNG ──────────────────────────────────────────────────────
+    async function downloadPoster() {
+        const overlay = document.getElementById('downloadOverlay');
+        overlay.classList.add('show');
+
+        // Temporarily reset transform for full-res capture
+        const poster = document.getElementById('poster');
+        const prev   = poster.style.transform;
+        poster.style.transform = 'scale(1)';
+        document.getElementById('posterWrapper').style.height = '900px';
+
+        try {
+            const canvas = await html2canvas(poster, {
+                scale:       2,       // 2× = 1200×1800 output
+                useCORS:     true,
+                allowTaint:  true,
+                backgroundColor: '#04040f',
+                logging: false
+            });
+
+            const playerName = document.getElementById('posterName').textContent || 'BestPlayer';
+            const link    = document.createElement('a');
+            link.download = `BestPlayer_${playerName.replace(/\s+/g,'_')}.png`;
+            link.href     = canvas.toDataURL('image/png');
+            link.click();
+        } catch(e) {
+            alert('Download failed: ' + e.message);
+        } finally {
+            poster.style.transform = prev;
+            scalePoster();
+            overlay.classList.remove('show');
+        }
+    }
+</script>
+</body>
+</html>

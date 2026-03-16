@@ -1077,6 +1077,26 @@
             border: 2px solid #f39c12;
         }
 
+        .poster-btn {
+            display: none;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #6b21a8 0%, #9333ea 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(147, 51, 234, 0.4);
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .poster-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(147, 51, 234, 0.5);
+        }
+
         .export-section {
             padding: 15px 20px;
             text-align: center;
@@ -2346,6 +2366,7 @@
                     <option value="">-- Select Best Player --</option>
                 </select>
                 <div class="mvp-display" id="mvpDisplay">No player selected</div>
+                <button class="poster-btn" id="posterBtn" onclick="openPosterGenerator()">🎖 Generate Poster</button>
             </div>
         </div>
 
@@ -3369,11 +3390,51 @@
 
         function updateMVPDisplay() {
             const display = document.getElementById('mvpDisplay');
+            const posterBtn = document.getElementById('posterBtn');
             if (gameData.mvp && gameData.mvp.name) {
                 display.textContent = `${gameData.mvp.name} (${gameData.mvp.team})`;
+                if (posterBtn) posterBtn.style.display = 'block';
             } else {
                 display.textContent = 'No player selected';
+                if (posterBtn) posterBtn.style.display = 'none';
             }
+        }
+
+        function openPosterGenerator() {
+            if (!gameData.mvp || !gameData.mvp.teamKey) return;
+
+            const mvpPlayer = gameData[gameData.mvp.teamKey].players.find(p => p.id === gameData.mvp.playerId);
+            if (!mvpPlayer) return;
+
+            // Calculate MVP total stats
+            const stats = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0 };
+            Object.values(mvpPlayer.quarterStats).forEach(qStats => {
+                stats.points   += qStats.points   || 0;
+                stats.rebounds += qStats.rebounds  || 0;
+                stats.assists  += qStats.assists   || 0;
+                stats.steals   += qStats.steals    || 0;
+                stats.blocks   += qStats.blocks    || 0;
+            });
+
+            const isTeam1 = gameData.mvp.teamKey === 'team1';
+            const playerTeam   = isTeam1 ? gameData.team1 : gameData.team2;
+            const opponentTeam = isTeam1 ? gameData.team2 : gameData.team1;
+
+            const posterData = {
+                playerName:        mvpPlayer.name,
+                playerTeam:        playerTeam.name,
+                playerTeamLogo:    playerTeam.logo || '',
+                opponentTeam:      opponentTeam.name,
+                opponentTeamLogo:  opponentTeam.logo || '',
+                playerTeamScore:   calculateTeamTotalPoints(gameData.mvp.teamKey),
+                opponentTeamScore: calculateTeamTotalPoints(isTeam1 ? 'team2' : 'team1'),
+                gameDate:          new Date().toISOString().slice(0, 10),
+                gameName:          gameData.gameName || '',
+                stats
+            };
+
+            sessionStorage.setItem('posterData', JSON.stringify(posterData));
+            window.open('poster.html', '_blank');
         }
 
         function updateLiveScoreboard() {

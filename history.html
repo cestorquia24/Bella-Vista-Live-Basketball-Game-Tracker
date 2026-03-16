@@ -1889,6 +1889,7 @@
                             <button class="game-btn reorder-btn" onclick="moveGameDown(${game.id})" ${!canMoveDown ? 'disabled' : ''}>⬇️ Down</button>
                             <button class="game-btn edit-date-btn" onclick="editGameDate(${game.id})">📅 Date</button>
                             <button class="game-btn view-btn" onclick="viewGameDetails(${game.id})">👁️ View</button>
+                            ${game.mvp ? `<button class="game-btn" style="background:linear-gradient(135deg,#6b21a8,#9333ea);color:white;" onclick="openHistoryPoster(${game.id})">🎖 Poster</button>` : ''}
                             <button class="game-btn delete-btn" onclick="deleteGame(${game.id})">🗑️ Delete</button>
                         </div>
                     `;
@@ -2145,6 +2146,7 @@
                     ${game.mvp ? `<div style="margin-top: 15px; font-size: 1.1em; color: #f39c12;">
                         ⭐ MVP: ${game.mvp.name}
                         <button class="edit-mvp-btn" onclick="editGameMVP(${game.id})" style="margin-left: 10px; padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">✏️ Edit MVP</button>
+                        <button onclick="openHistoryPoster(${game.id})" style="margin-left: 8px; padding: 5px 14px; background: linear-gradient(135deg,#6b21a8,#9333ea); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 700;">🎖 Generate Poster</button>
                     </div>` : `<div style="margin-top: 15px; font-size: 1.1em; color: #a0aec0;">
                         No MVP selected
                         <button class="edit-mvp-btn" onclick="editGameMVP(${game.id})" style="margin-left: 10px; padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">✏️ Select MVP</button>
@@ -2471,6 +2473,46 @@
             // Re-render
             renderCurrentTab();
             alert('Game date updated successfully!');
+        }
+
+        function openHistoryPoster(gameId) {
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game || !game.mvp || !game.mvp.teamKey) return;
+
+            const teamKey   = game.mvp.teamKey;
+            const players   = game[teamKey] && game[teamKey].players ? game[teamKey].players : [];
+            const mvpPlayer = players.find(p => p.id === game.mvp.playerId);
+            if (!mvpPlayer) { alert('Player stats not found for this MVP.'); return; }
+
+            // Sum stats across all quarters
+            const stats = { points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0 };
+            Object.values(mvpPlayer.quarterStats || {}).forEach(q => {
+                stats.points   += q.points   || 0;
+                stats.rebounds += q.rebounds  || 0;
+                stats.assists  += q.assists   || 0;
+                stats.steals   += q.steals    || 0;
+                stats.blocks   += q.blocks    || 0;
+            });
+
+            const isTeam1    = teamKey === 'team1';
+            const playerTeam = isTeam1 ? game.team1 : game.team2;
+            const oppTeam    = isTeam1 ? game.team2 : game.team1;
+
+            const posterData = {
+                playerName:        mvpPlayer.name,
+                playerTeam:        playerTeam.name,
+                playerTeamLogo:    playerTeam.logo  || '',
+                opponentTeam:      oppTeam.name,
+                opponentTeamLogo:  oppTeam.logo     || '',
+                playerTeamScore:   isTeam1 ? game.finalScore.team1 : game.finalScore.team2,
+                opponentTeamScore: isTeam1 ? game.finalScore.team2 : game.finalScore.team1,
+                gameDate:          game.gameDate || new Date().toISOString().slice(0, 10),
+                gameName:          game.gameName || '',
+                stats
+            };
+
+            sessionStorage.setItem('posterData', JSON.stringify(posterData));
+            window.open('poster.html', '_blank');
         }
 
         function editGameMVP(gameId) {
