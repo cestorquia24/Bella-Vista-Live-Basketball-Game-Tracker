@@ -3971,7 +3971,6 @@
                 renderPlayers(team, gameData[team].players);
                 updateTotals();
                 updateLiveScoreboard();
-                saveGameData();
             }
         }
 
@@ -5135,9 +5134,9 @@
                     currentQuarter: currentQuarter,
                     team1: gameData.team1,
                     team2: gameData.team2,
-                    // Use player-stats total so remote display shows the real game score
-                    team1Score: calculateTeamTotalPoints('team1'),
-                    team2Score: calculateTeamTotalPoints('team2'),
+                    // Use remote-controlled official score for cast view — independent of player stats
+                    team1Score: getOfficialScore('team1'),
+                    team2Score: getOfficialScore('team2'),
                     mvp: gameData.mvp,
                     gameTimer: gameData.gameTimer,
                     shotClock: gameData.shotClock,
