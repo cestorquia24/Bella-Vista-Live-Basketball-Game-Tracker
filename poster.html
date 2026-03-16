@@ -710,6 +710,7 @@
     }
 
     // ── Photo upload ─────────────────────────────────────────────────────
+    let _lastUploadedFile    = null;
     let _lastUploadedDataUrl = null;
 
     function applyPhotoToCard(dataUrl) {
@@ -724,6 +725,7 @@
     function loadPhoto(event) {
         const file = event.target.files[0];
         if (!file) return;
+        _lastUploadedFile = file;                    // keep original File for bg removal
         const reader = new FileReader();
         reader.onload = e => {
             _lastUploadedDataUrl = e.target.result;
@@ -739,22 +741,22 @@
     }
 
     async function runBackgroundRemoval() {
-        if (!_lastUploadedDataUrl) return;
+        if (!_lastUploadedFile && !_lastUploadedDataUrl) return;
         const overlay = document.getElementById('processingOverlay');
         const subText = document.getElementById('procSubText');
         subText.innerHTML = 'Loading AI model...<br>First time may take ~30 sec.';
         overlay.classList.add('show');
 
         try {
-            const res  = await fetch(_lastUploadedDataUrl);
-            const blob = await res.blob();
+            // Use original File (Blob subtype) directly — avoids fetch(data:) failures
+            const inputBlob = _lastUploadedFile || dataUrlToBlob(_lastUploadedDataUrl);
 
             const { removeBackground } = await import(
-                'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/index.mjs'
+                'https://staticimgly.com/@imgly/background-removal/1.4.5/dist/browser/index.mjs'
             );
             subText.innerHTML = 'Cutting out player...';
-            const resultBlob = await removeBackground(blob, {
-                publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/browser/',
+            const resultBlob = await removeBackground(inputBlob, {
+                publicPath: 'https://staticimgly.com/@imgly/background-removal/1.4.5/dist/browser/',
                 model: 'small',
                 output: { format: 'image/png', quality: 1 }
             });
@@ -767,10 +769,27 @@
             };
             reader.readAsDataURL(resultBlob);
         } catch(e) {
-            console.error('BG removal failed:', e);
+            console.error('BG removal error:', e);
             overlay.classList.remove('show');
-            alert('Background removal failed on this device. The original photo will be used.');
+            alert(
+                'Background removal could not run on this device.\n\n' +
+                'Easy workaround:\n' +
+                '1. Open remove.bg in your browser\n' +
+                '2. Upload the player photo there\n' +
+                '3. Download the cutout PNG\n' +
+                '4. Upload that cutout here instead'
+            );
         }
+    }
+
+    // Convert data URL → Blob without Fetch API (works on all browsers)
+    function dataUrlToBlob(dataUrl) {
+        const [header, data] = dataUrl.split(',');
+        const mime   = header.match(/:(.*?);/)[1];
+        const bytes  = atob(data);
+        const buffer = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) buffer[i] = bytes.charCodeAt(i);
+        return new Blob([buffer], { type: mime });
     }
 
     // ── Download poster as PNG ────────────────────────────────────────────
