@@ -476,13 +476,7 @@
     </div>
 
     <!-- Stats bar -->
-    <div class="p-stats">
-        <div class="p-stat"><div class="p-stat-val" id="statPts">0</div><div class="p-stat-lbl">PTS</div></div>
-        <div class="p-stat"><div class="p-stat-val" id="statReb">0</div><div class="p-stat-lbl">REB</div></div>
-        <div class="p-stat"><div class="p-stat-val" id="statAst">0</div><div class="p-stat-lbl">AST</div></div>
-        <div class="p-stat"><div class="p-stat-val" id="statStl">0</div><div class="p-stat-lbl">STL</div></div>
-        <div class="p-stat"><div class="p-stat-val" id="statBlk">0</div><div class="p-stat-lbl">BLK</div></div>
-    </div>
+    <div class="p-stats" id="statsBar"></div>
 
     <!-- Footer -->
     <div class="p-footer">
@@ -557,13 +551,23 @@
                     new Date(d.gameDate + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
             }
 
-            // Stats
+            // Stats — only show non-zero values
             if (d.stats) {
-                document.getElementById('statPts').textContent = d.stats.points   ?? 0;
-                document.getElementById('statReb').textContent = d.stats.rebounds ?? 0;
-                document.getElementById('statAst').textContent = d.stats.assists  ?? 0;
-                document.getElementById('statStl').textContent = d.stats.steals   ?? 0;
-                document.getElementById('statBlk').textContent = d.stats.blocks   ?? 0;
+                const allStats = [
+                    { val: d.stats.points   ?? 0, lbl: 'PTS' },
+                    { val: d.stats.rebounds ?? 0, lbl: 'REB' },
+                    { val: d.stats.assists  ?? 0, lbl: 'AST' },
+                    { val: d.stats.steals   ?? 0, lbl: 'STL' },
+                    { val: d.stats.blocks   ?? 0, lbl: 'BLK' },
+                ];
+                const statsBar = document.getElementById('statsBar');
+                statsBar.innerHTML = '';
+                allStats.filter(s => s.val > 0).forEach(s => {
+                    const el = document.createElement('div');
+                    el.className = 'p-stat';
+                    el.innerHTML = `<div class="p-stat-val">${s.val}</div><div class="p-stat-lbl">${s.lbl}</div>`;
+                    statsBar.appendChild(el);
+                });
             }
         } catch(e) {
             console.error('Failed to parse poster data', e);
