@@ -504,10 +504,14 @@
             if (!confirm('Reset scores, game timer and shot clock for a new game?')) return;
             try {
                 const t = Date.now();
-                await database.ref('timerCommands').set({ target: 'team1',    command: 'scoreReset', timestamp: t     });
-                await database.ref('timerCommands').set({ target: 'team2',    command: 'scoreReset', timestamp: t + 1 });
+                await database.ref('timerCommands').set({ target: 'team1',     command: 'scoreReset', timestamp: t     });
+                await database.ref('timerCommands').set({ target: 'team2',     command: 'scoreReset', timestamp: t + 1 });
                 await database.ref('timerCommands').set({ target: 'gameTimer', command: 'reset',      timestamp: t + 2 });
                 await database.ref('timerCommands').set({ target: 'shotClock', command: 'reset24',    timestamp: t + 3 });
+                // Explicitly pause both timers — shot clock auto-starts on reset during play,
+                // but for a new game we want everything stopped and ready.
+                await database.ref('timerCommands').set({ target: 'gameTimer', command: 'pause',      timestamp: t + 4 });
+                await database.ref('timerCommands').set({ target: 'shotClock', command: 'pause',      timestamp: t + 5 });
                 showFlash('✓ Reset — ready for new game');
             } catch {
                 showFlash('✗ Reset failed — check connection');
