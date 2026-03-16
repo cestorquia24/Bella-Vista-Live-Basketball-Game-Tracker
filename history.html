@@ -1921,7 +1921,11 @@
                 pointDiff: seasonStandings.teams[name].pointsFor - seasonStandings.teams[name].pointsAgainst
             }));
 
-            teamsArray.sort((a, b) => b.wins - a.wins || b.pointDiff - a.pointDiff);
+            teamsArray.sort((a, b) =>
+                b.wins - a.wins ||           // 1. Most wins first
+                a.losses - b.losses ||       // 2. Fewer losses first (2-0 beats 2-1)
+                b.pointDiff - a.pointDiff    // 3. Better point differential last
+            );
 
             tbody.innerHTML = '';
             teamsArray.forEach((team, index) => {
