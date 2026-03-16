@@ -166,12 +166,13 @@
             display: block;
         }
 
-        /* Hide edit MVP buttons by default, show only in admin mode */
-        .edit-mvp-btn {
+        /* Hide edit MVP + poster buttons by default, show only in admin mode */
+        .edit-mvp-btn, .poster-admin-btn {
             display: none;
         }
 
-        body.admin-mode .edit-mvp-btn {
+        body.admin-mode .edit-mvp-btn,
+        body.admin-mode .poster-admin-btn {
             display: inline-block;
         }
 
@@ -1889,7 +1890,7 @@
                             <button class="game-btn reorder-btn" onclick="moveGameDown(${game.id})" ${!canMoveDown ? 'disabled' : ''}>⬇️ Down</button>
                             <button class="game-btn edit-date-btn" onclick="editGameDate(${game.id})">📅 Date</button>
                             <button class="game-btn view-btn" onclick="viewGameDetails(${game.id})">👁️ View</button>
-                            ${game.mvp ? `<button class="game-btn" style="background:linear-gradient(135deg,#6b21a8,#9333ea);color:white;" onclick="openHistoryPoster(${game.id})">🎖 Poster</button>` : ''}
+                            ${game.mvp ? `<button class="game-btn poster-admin-btn" style="background:linear-gradient(135deg,#6b21a8,#9333ea);color:white;" onclick="openHistoryPoster(${game.id})">🎖 Poster</button>` : ''}
                             <button class="game-btn delete-btn" onclick="deleteGame(${game.id})">🗑️ Delete</button>
                         </div>
                     `;
@@ -2146,7 +2147,7 @@
                     ${game.mvp ? `<div style="margin-top: 15px; font-size: 1.1em; color: #f39c12;">
                         ⭐ MVP: ${game.mvp.name}
                         <button class="edit-mvp-btn" onclick="editGameMVP(${game.id})" style="margin-left: 10px; padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">✏️ Edit MVP</button>
-                        <button onclick="openHistoryPoster(${game.id})" style="margin-left: 8px; padding: 5px 14px; background: linear-gradient(135deg,#6b21a8,#9333ea); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 700;">🎖 Generate Poster</button>
+                        <button class="edit-mvp-btn poster-admin-btn" onclick="openHistoryPoster(${game.id})" style="margin-left: 8px; padding: 5px 14px; background: linear-gradient(135deg,#6b21a8,#9333ea); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 700;">🎖 Generate Poster</button>
                     </div>` : `<div style="margin-top: 15px; font-size: 1.1em; color: #a0aec0;">
                         No MVP selected
                         <button class="edit-mvp-btn" onclick="editGameMVP(${game.id})" style="margin-left: 10px; padding: 5px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600;">✏️ Select MVP</button>
