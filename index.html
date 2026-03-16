@@ -5197,6 +5197,10 @@
             // regardless of whether live broadcasting (spectator) is enabled.
             initializeFirebase();
 
+            // Always push current state immediately so the remote display
+            // shows the correct team names, scores and timer right away.
+            pushLiveUpdate();
+
             const saved = localStorage.getItem('liveUpdatesEnabled');
             if (saved === 'true') {
                 liveUpdatesEnabled = true;
@@ -5205,8 +5209,6 @@
                     btn.textContent = '📡 Live: ON';
                     btn.style.background = '#48bb78';
                 }
-                // Simple one-way push - just push our state
-                pushLiveUpdate();
                 console.log('✅ Live updates restored from preference');
             }
         }
