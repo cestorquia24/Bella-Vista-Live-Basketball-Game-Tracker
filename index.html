@@ -3971,6 +3971,7 @@
                 renderPlayers(team, gameData[team].players);
                 updateTotals();
                 updateLiveScoreboard();
+                saveGameData(); // keeps remote tracker-reference score in sync
             }
         }
 
@@ -5134,9 +5135,12 @@
                     currentQuarter: currentQuarter,
                     team1: gameData.team1,
                     team2: gameData.team2,
-                    // Use remote-controlled official score for cast view — independent of player stats
+                    // Remote-controlled official score for cast view
                     team1Score: getOfficialScore('team1'),
                     team2Score: getOfficialScore('team2'),
+                    // Tracker master score (reference for remote operator)
+                    team1TrackerScore: calculateTeamTotalPoints('team1'),
+                    team2TrackerScore: calculateTeamTotalPoints('team2'),
                     mvp: gameData.mvp,
                     gameTimer: gameData.gameTimer,
                     shotClock: gameData.shotClock,

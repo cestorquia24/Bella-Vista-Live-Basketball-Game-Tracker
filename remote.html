@@ -108,12 +108,23 @@
             flex-shrink: 0;
         }
         .score-team-value {
-            font-size: 3.2rem;
+            font-size: 2.6rem;
             font-weight: 900;
             color: #f6e05e;
             line-height: 1;
             font-variant-numeric: tabular-nums;
             flex-shrink: 0;
+        }
+        .score-tracker-ref {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #4a5568;
+            letter-spacing: 0.04em;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .score-tracker-ref.mismatch {
+            color: #fc8181;
         }
         .score-btn-grid {
             display: grid;
@@ -258,6 +269,7 @@
         <div class="score-team-box">
             <div class="score-team-name" id="team1Name">Team 1</div>
             <div class="score-team-value" id="team1ScoreDisplay">0</div>
+            <div class="score-tracker-ref" id="team1TrackerRef">Tracker: 0</div>
             <div class="score-btn-grid">
                 <button class="ctrl-btn btn-score-add"  onclick="addScore('team1', 3)">+3</button>
                 <button class="ctrl-btn btn-score-add"  onclick="addScore('team1', 2)">+2</button>
@@ -268,6 +280,7 @@
         <div class="score-team-box">
             <div class="score-team-name" id="team2Name">Team 2</div>
             <div class="score-team-value" id="team2ScoreDisplay">0</div>
+            <div class="score-tracker-ref" id="team2TrackerRef">Tracker: 0</div>
             <div class="score-btn-grid">
                 <button class="ctrl-btn btn-score-add"  onclick="addScore('team2', 3)">+3</button>
                 <button class="ctrl-btn btn-score-add"  onclick="addScore('team2', 2)">+2</button>
@@ -357,7 +370,8 @@
         const team2NameEl     = document.getElementById('team2Name');
         const team1ScoreEl    = document.getElementById('team1ScoreDisplay');
         const team2ScoreEl    = document.getElementById('team2ScoreDisplay');
-        const shotClockToggle = document.getElementById('shotClockToggleBtn');
+        const team1TrackerRef = document.getElementById('team1TrackerRef');
+        const team2TrackerRef = document.getElementById('team2TrackerRef');
         const buzzerBtn       = document.getElementById('buzzerBtn');
 
         let gameTimerRunning = false;
@@ -424,8 +438,20 @@
             // Team names & scores
             if (data.team1) team1NameEl.textContent = data.team1.name || 'Team 1';
             if (data.team2) team2NameEl.textContent = data.team2.name || 'Team 2';
-            team1ScoreEl.textContent = data.team1Score ?? (data.team1 ? 0 : '--');
-            team2ScoreEl.textContent = data.team2Score ?? (data.team2 ? 0 : '--');
+
+            const cast1 = data.team1Score ?? 0;
+            const cast2 = data.team2Score ?? 0;
+            const master1 = data.team1TrackerScore ?? 0;
+            const master2 = data.team2TrackerScore ?? 0;
+
+            team1ScoreEl.textContent = cast1;
+            team2ScoreEl.textContent = cast2;
+
+            // Tracker reference — red warning when cast view is out of sync with master
+            team1TrackerRef.textContent = 'Tracker: ' + master1;
+            team1TrackerRef.className = 'score-tracker-ref' + (cast1 !== master1 ? ' mismatch' : '');
+            team2TrackerRef.textContent = 'Tracker: ' + master2;
+            team2TrackerRef.className = 'score-tracker-ref' + (cast2 !== master2 ? ' mismatch' : '');
 
             if (data.gameTimer) {
                 const secs = data.gameTimer.currentSeconds || 0;
