@@ -596,6 +596,23 @@
         .edit-date-btn:hover { background: #4a5568; color: #e2e8f0; }
         body.admin-mode .edit-date-btn { display: block; }
 
+        /* Edit stats button — admin only */
+        .edit-stats-btn {
+            display: none;
+            background: #d69e2e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 10px;
+            font-size: 0.75em;
+            font-weight: 700;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .edit-stats-btn:hover { background: #b7791f; }
+        body.admin-mode .edit-stats-btn { display: inline-block; }
+
         /* Trash tab — admin only */
         .trash-tab-btn { display: none; }
         body.admin-mode .trash-tab-btn { display: block; }
@@ -1407,6 +1424,43 @@
         </div>
     </div>
 
+    <!-- Edit Player Stats Modal (Admin) -->
+    <div id="editStatsModal" style="display:none; position:fixed; z-index:3000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.85); align-items:center; justify-content:center;">
+        <div style="background:#2d3748; border-radius:12px; padding:30px 36px; max-width:420px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+            <h3 id="editStatsTitle" style="color:#d69e2e; margin-bottom:20px; font-size:1.3em; text-align:center;">✏️ Edit Player Stats</h3>
+            <input type="hidden" id="editStatsGameId">
+            <input type="hidden" id="editStatsTeamKey">
+            <input type="hidden" id="editStatsPlayerName">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+                <div>
+                    <label style="display:block; color:#cbd5e0; margin-bottom:6px; font-weight:600; font-size:0.9em;">Points</label>
+                    <input type="number" id="editStatsPts" min="0" value="0" style="width:100%; padding:10px; border:2px solid #4a5568; border-radius:8px; background:#1a202c; color:white; font-size:1.1em; text-align:center;">
+                </div>
+                <div>
+                    <label style="display:block; color:#cbd5e0; margin-bottom:6px; font-weight:600; font-size:0.9em;">Rebounds</label>
+                    <input type="number" id="editStatsReb" min="0" value="0" style="width:100%; padding:10px; border:2px solid #4a5568; border-radius:8px; background:#1a202c; color:white; font-size:1.1em; text-align:center;">
+                </div>
+                <div>
+                    <label style="display:block; color:#cbd5e0; margin-bottom:6px; font-weight:600; font-size:0.9em;">Assists</label>
+                    <input type="number" id="editStatsAst" min="0" value="0" style="width:100%; padding:10px; border:2px solid #4a5568; border-radius:8px; background:#1a202c; color:white; font-size:1.1em; text-align:center;">
+                </div>
+                <div>
+                    <label style="display:block; color:#cbd5e0; margin-bottom:6px; font-weight:600; font-size:0.9em;">Steals</label>
+                    <input type="number" id="editStatsStl" min="0" value="0" style="width:100%; padding:10px; border:2px solid #4a5568; border-radius:8px; background:#1a202c; color:white; font-size:1.1em; text-align:center;">
+                </div>
+                <div>
+                    <label style="display:block; color:#cbd5e0; margin-bottom:6px; font-weight:600; font-size:0.9em;">Blocks</label>
+                    <input type="number" id="editStatsBlk" min="0" value="0" style="width:100%; padding:10px; border:2px solid #4a5568; border-radius:8px; background:#1a202c; color:white; font-size:1.1em; text-align:center;">
+                </div>
+            </div>
+            <p style="color:#a0aec0; font-size:0.8em; margin-bottom:18px; text-align:center;">Enter the player's total stats. These will be set as the final values.</p>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button onclick="closeEditStatsModal()" style="padding:10px 24px; border:none; border-radius:8px; background:#718096; color:white; font-size:1em; font-weight:600; cursor:pointer;">Cancel</button>
+                <button onclick="savePlayerStats()" style="padding:10px 24px; border:none; border-radius:8px; background:#d69e2e; color:white; font-size:1em; font-weight:600; cursor:pointer;">💾 Save Stats</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Player Game Log Modal -->
     <div id="playerGameLogModal" class="modal">
         <div class="modal-content" style="max-width: 1100px;">
@@ -2185,8 +2239,8 @@
             });
 
             // Filter players with stats and sort by performance (best first)
-            team1PlayersWithStats
-                .filter(p => p.totalPoints > 0 || p.totalRebounds > 0 || p.totalAssists > 0 || p.totalSteals > 0 || p.totalBlocks > 0)
+            // In admin mode, show ALL players so stats can be added to any of them
+            (isAdminMode ? team1PlayersWithStats : team1PlayersWithStats.filter(p => p.totalPoints > 0 || p.totalRebounds > 0 || p.totalAssists > 0 || p.totalSteals > 0 || p.totalBlocks > 0))
                 .sort((a, b) => b.score - a.score) // Sort descending by performance score
                 .forEach(({player, totalPoints, totalRebounds, totalAssists, totalSteals, totalBlocks}) => {
                     let statsHTML = '';
@@ -2196,11 +2250,13 @@
                     if (totalSteals > 0) statsHTML += `<span><strong>${totalSteals}</strong> STL</span>`;
                     if (totalBlocks > 0) statsHTML += `<span><strong>${totalBlocks}</strong> BLK</span>`;
 
+                    const safePlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                     modalHTML += `
                         <div class="modal-player">
                             <div class="player-name-modal">${player.name}</div>
                             <div class="player-stats-modal">
                                 ${statsHTML}
+                                <button class="edit-stats-btn" onclick="editPlayerStats(${game.id}, 'team1', '${safePlayerName}')">✏️ Stats</button>
                             </div>
                         </div>
                     `;
@@ -2237,8 +2293,8 @@
             });
 
             // Filter players with stats and sort by performance (best first)
-            team2PlayersWithStats
-                .filter(p => p.totalPoints > 0 || p.totalRebounds > 0 || p.totalAssists > 0 || p.totalSteals > 0 || p.totalBlocks > 0)
+            // In admin mode, show ALL players so stats can be added to any of them
+            (isAdminMode ? team2PlayersWithStats : team2PlayersWithStats.filter(p => p.totalPoints > 0 || p.totalRebounds > 0 || p.totalAssists > 0 || p.totalSteals > 0 || p.totalBlocks > 0))
                 .sort((a, b) => b.score - a.score) // Sort descending by performance score
                 .forEach(({player, totalPoints, totalRebounds, totalAssists, totalSteals, totalBlocks}) => {
                     let statsHTML = '';
@@ -2248,11 +2304,13 @@
                     if (totalSteals > 0) statsHTML += `<span><strong>${totalSteals}</strong> STL</span>`;
                     if (totalBlocks > 0) statsHTML += `<span><strong>${totalBlocks}</strong> BLK</span>`;
 
+                    const safePlayerName = player.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                     modalHTML += `
                         <div class="modal-player">
                             <div class="player-name-modal">${player.name}</div>
                             <div class="player-stats-modal">
                                 ${statsHTML}
+                                <button class="edit-stats-btn" onclick="editPlayerStats(${game.id}, 'team2', '${safePlayerName}')">✏️ Stats</button>
                             </div>
                         </div>
                     `;
@@ -2593,6 +2651,93 @@
             }
 
             // Close and re-open modal to refresh display
+            closeModal();
+            setTimeout(() => viewGameDetails(gameId), 100);
+        }
+
+        function editPlayerStats(gameId, teamKey, playerName) {
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game) return;
+
+            const player = game[teamKey].players.find(p => p.name === playerName);
+            if (!player) return;
+
+            // Calculate current totals (all quarters including any existing manual entry)
+            let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
+            Object.values(player.quarterStats || {}).forEach(q => {
+                totalPoints   += q.points   || 0;
+                totalRebounds += q.rebounds || 0;
+                totalAssists  += q.assists  || 0;
+                totalSteals   += q.steals   || 0;
+                totalBlocks   += q.blocks   || 0;
+            });
+
+            document.getElementById('editStatsTitle').textContent = `✏️ Stats: ${playerName}`;
+            document.getElementById('editStatsGameId').value = gameId;
+            document.getElementById('editStatsTeamKey').value = teamKey;
+            document.getElementById('editStatsPlayerName').value = playerName;
+            document.getElementById('editStatsPts').value = totalPoints;
+            document.getElementById('editStatsReb').value = totalRebounds;
+            document.getElementById('editStatsAst').value = totalAssists;
+            document.getElementById('editStatsStl').value = totalSteals;
+            document.getElementById('editStatsBlk').value = totalBlocks;
+
+            document.getElementById('editStatsModal').style.display = 'flex';
+        }
+
+        function closeEditStatsModal() {
+            document.getElementById('editStatsModal').style.display = 'none';
+        }
+
+        function savePlayerStats() {
+            const gameId      = parseInt(document.getElementById('editStatsGameId').value);
+            const teamKey     = document.getElementById('editStatsTeamKey').value;
+            const playerName  = document.getElementById('editStatsPlayerName').value;
+
+            const newPts = parseInt(document.getElementById('editStatsPts').value) || 0;
+            const newReb = parseInt(document.getElementById('editStatsReb').value) || 0;
+            const newAst = parseInt(document.getElementById('editStatsAst').value) || 0;
+            const newStl = parseInt(document.getElementById('editStatsStl').value) || 0;
+            const newBlk = parseInt(document.getElementById('editStatsBlk').value) || 0;
+
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game) return;
+
+            const player = game[teamKey].players.find(p => p.name === playerName);
+            if (!player) return;
+
+            if (!player.quarterStats) player.quarterStats = {};
+
+            // Sum all non-manual quarters so manual = newTotal - nonManualTotal
+            let nmPts = 0, nmReb = 0, nmAst = 0, nmStl = 0, nmBlk = 0;
+            Object.entries(player.quarterStats).forEach(([key, q]) => {
+                if (key !== 'manual') {
+                    nmPts += q.points   || 0;
+                    nmReb += q.rebounds || 0;
+                    nmAst += q.assists  || 0;
+                    nmStl += q.steals   || 0;
+                    nmBlk += q.blocks   || 0;
+                }
+            });
+
+            player.quarterStats['manual'] = {
+                points:   Math.max(0, newPts - nmPts),
+                rebounds: Math.max(0, newReb - nmReb),
+                assists:  Math.max(0, newAst - nmAst),
+                steals:   Math.max(0, newStl - nmStl),
+                blocks:   Math.max(0, newBlk - nmBlk)
+            };
+
+            // Persist
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+            }
+
+            // Recalculate standings to reflect the change
+            recalculateStandings();
+
+            closeEditStatsModal();
             closeModal();
             setTimeout(() => viewGameDetails(gameId), 100);
         }
