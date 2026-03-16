@@ -358,6 +358,29 @@
         }
         #downloadOverlay.show { display: flex; }
 
+        /* Success toast */
+        #successToast {
+            position: fixed;
+            bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: #065f46;
+            color: #6ee7b7;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem; font-weight: 700;
+            letter-spacing: 0.1em;
+            padding: 14px 28px;
+            border-radius: 10px;
+            border: 1px solid rgba(110,231,183,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            z-index: 1000;
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s;
+            opacity: 0;
+            white-space: nowrap;
+        }
+        #successToast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
         /* Processing overlay */
         #processingOverlay {
             display: none;
@@ -494,6 +517,8 @@
     <div style="font-size:2rem">⏳</div>
     <div>Generating poster...</div>
 </div>
+
+<div id="successToast">✅ Poster saved to your downloads!</div>
 
 <div id="processingOverlay">
     <div class="proc-spinner"></div>
@@ -655,6 +680,11 @@
             link.download = `BestPlayer_${playerName.replace(/\s+/g,'_')}.png`;
             link.href     = canvas.toDataURL('image/png');
             link.click();
+
+            // Show success toast
+            const toast = document.getElementById('successToast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
         } catch(e) {
             alert('Download failed: ' + e.message);
         } finally {
