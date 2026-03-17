@@ -1,34 +1,34 @@
 const CACHE_NAME = 'bv-tracker-v1';
 
 // All local assets to pre-cache on install
+// Use relative paths so this works on any hosting path (e.g. GitHub Pages subfolders)
 const PRECACHE_ASSETS = [
-  '/',
-  '/index.html',
-  '/history.html',
-  '/spectator.html',
-  '/remote.html',
-  '/poster.html',
-  '/manifest.json',
-  '/bellaLogo.jpg',
-  '/belaLogo1.jpg',
-  '/logos/Orange Inferno.jpg',
-  '/logos/Gray Wolves.jpg',
-  '/logos/Green Bulls.jpg',
-  '/logos/Bella Vista Blue.jpg',
-  '/logos/Black Hoopers.jpg',
-  '/logos/Yellow Slashers.jpg',
-  '/logos/Red Blood Cells.jpg',
-  '/logos/Porpol Ravens.jpg',
-  '/logos/Bella Vista League Logo.jpeg',
-  '/logos/Cafe Bara.jpeg'
+  './',
+  './index.html',
+  './history.html',
+  './spectator.html',
+  './remote.html',
+  './poster.html',
+  './manifest.json',
+  './bellaLogo.jpg',
+  './belaLogo1.jpg',
+  './logos/Orange Inferno.jpg',
+  './logos/Gray Wolves.jpg',
+  './logos/Green Bulls.jpg',
+  './logos/Bella Vista Blue.jpg',
+  './logos/Black Hoopers.jpg',
+  './logos/Yellow Slashers.jpg',
+  './logos/Red Blood Cells.jpg',
+  './logos/Porpol Ravens.jpg',
+  './logos/Bella Vista League Logo.jpeg',
+  './logos/Cafe Bara.jpeg'
 ];
 
 // ── Install: pre-cache all local assets ──────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      // addAll stops on first failure — use individual adds so a missing logo
-      // doesn't block the whole install
+      // Use individual adds so a missing logo doesn't block the whole install
       return Promise.allSettled(
         PRECACHE_ASSETS.map(url => cache.add(url).catch(() => {}))
       );
@@ -74,7 +74,7 @@ self.addEventListener('fetch', event => {
       }).catch(() => {
         // If both cache and network fail for an HTML page, return index as fallback
         if (event.request.destination === 'document') {
-          return caches.match('/index.html');
+          return caches.match('./index.html');
         }
       });
     })

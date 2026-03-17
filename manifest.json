@@ -2,8 +2,8 @@
   "name": "Bella Vista Game Tracker",
   "short_name": "BV Tracker",
   "description": "Live basketball stat tracker for the Bella Vista league",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a202c",
@@ -26,19 +26,19 @@
     {
       "name": "Game Tracker",
       "short_name": "Tracker",
-      "url": "/index.html",
+      "url": "./index.html",
       "description": "Start or continue tracking a game"
     },
     {
       "name": "Game History",
       "short_name": "History",
-      "url": "/history.html",
+      "url": "./history.html",
       "description": "View past games and standings"
     },
     {
       "name": "Spectator View",
       "short_name": "Spectator",
-      "url": "/spectator.html",
+      "url": "./spectator.html",
       "description": "Watch the live score"
     }
   ]
