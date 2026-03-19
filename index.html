@@ -904,6 +904,57 @@
             border-top: 3px solid #667eea;
         }
 
+        /* 4 fouls — orange warning */
+        .player-row.foul-warning {
+            background: rgba(237, 137, 54, 0.12);
+            border-left: 4px solid #ed8936;
+        }
+
+        /* 5 fouls — red, dimmed, foul out */
+        .player-row.foul-out {
+            background: rgba(245, 101, 101, 0.15);
+            border-left: 4px solid #f56565;
+            opacity: 0.6;
+        }
+
+        .foul-badge {
+            font-size: 0.7em;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 20px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        .foul-badge.warning { background: #ed8936; color: white; }
+        .foul-badge.out     { background: #f56565; color: white; }
+
+        /* Foul toast notification */
+        .foul-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-80px);
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 700;
+            color: white;
+            z-index: 9999;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: center;
+            max-width: 90vw;
+            pointer-events: none;
+        }
+
+        .foul-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .foul-toast.warning { background: #ed8936; }
+        .foul-toast.out     { background: #e53e3e; }
+
         .players-list {
             min-height: 60px;
             border-radius: 6px;
@@ -2467,6 +2518,9 @@
             <button class="export-btn" onclick="clearGameData()" style="margin-left: 10px; background: #f56565;">🗑️ Clear & Start New Game</button>
         </div>
 
+        <!-- Foul Warning Toast -->
+        <div id="foulToast" class="foul-toast"></div>
+
         <!-- Quick Stats Floating Button -->
         <button class="quick-stats-fab" id="quickStatsFab" onclick="openQuickStats()" title="Quick Stats Panel">
             📊
@@ -3690,14 +3744,23 @@
             // which bucket new stats go into, not what is displayed.
             const stats = calculateTotalStats(player);
 
-            // FOULS: included in total stats above
+            // Apply foul state class
+            if (stats.fouls >= 5) row.classList.add('foul-out');
+            else if (stats.fouls === 4) row.classList.add('foul-warning');
 
             const swapButtonText = player.isStarter ? '↓ Bench' : '↑ Start';
+
+            // Foul badge shown next to name at 4 or 5 fouls
+            const foulBadge = stats.fouls >= 5
+                ? `<span class="foul-badge out">FOUL OUT</span>`
+                : stats.fouls === 4
+                    ? `<span class="foul-badge warning">4 FOULS</span>`
+                    : '';
 
             row.innerHTML = `
                 <div class="player-row-top">
                     <div class="player-name" onclick="editPlayerName('${team}', ${player.id})" title="Click to edit player name">
-                        ${player.name}
+                        ${player.name}${foulBadge}
                         <span class="edit-icon">✏️</span>
                     </div>
                     <div class="move-btns">
@@ -4019,11 +4082,33 @@
                 });
 
                 player.quarterStats[currentQuarter][statName] = newValue;
+
+                // Check foul thresholds after any foul change
+                if (statName === 'fouls') {
+                    const totalFouls = calculateTotalStats(player).fouls;
+                    if (totalFouls === 5) {
+                        showFoulToast(`🚫 ${player.name} has FOULED OUT! (5 fouls)`, 'out');
+                    } else if (totalFouls === 4) {
+                        showFoulToast(`⚠️ ${player.name} is in foul trouble — 4 fouls`, 'warning');
+                    }
+                }
+
                 renderPlayers(team, gameData[team].players);
                 updateTotals();
                 updateLiveScoreboard();
                 saveGameData(); // keeps remote tracker-reference score in sync
             }
+        }
+
+        let foulToastTimer = null;
+        function showFoulToast(message, type) {
+            const toast = document.getElementById('foulToast');
+            toast.textContent = message;
+            toast.className = `foul-toast ${type} show`;
+            clearTimeout(foulToastTimer);
+            foulToastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 4000);
         }
 
         function calculateTotalStats(player) {
