@@ -3154,6 +3154,27 @@
             const empty = document.getElementById('emptySchedule');
             if (!grid) return;
 
+            // Always fetch fresh from Firebase when opening the tab
+            if (database) {
+                grid.innerHTML = '<div style="text-align:center;color:#718096;padding:40px;">Loading schedule...</div>';
+                database.ref('schedule').once('value').then((snap) => {
+                    const val = snap.val();
+                    if (val) {
+                        scheduleData = Array.isArray(val) ? val : Object.values(val);
+                    } else {
+                        scheduleData = [];
+                    }
+                    localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+                    _renderScheduleCards(grid, empty);
+                }).catch(() => {
+                    _renderScheduleCards(grid, empty);
+                });
+                return;
+            }
+            _renderScheduleCards(grid, empty);
+        }
+
+        function _renderScheduleCards(grid, empty) {
             if (scheduleData.length === 0) {
                 grid.innerHTML = '';
                 empty.style.display = 'block';
