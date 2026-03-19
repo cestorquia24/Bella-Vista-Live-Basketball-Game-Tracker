@@ -2054,8 +2054,7 @@
             }).then((snap) => {
                 const fbSchedule = snap.val();
                 if (fbSchedule) {
-                    // Firebase may return an object with numeric keys instead of a real array
-                    scheduleData = Array.isArray(fbSchedule) ? fbSchedule : Object.values(fbSchedule);
+                    scheduleData = Object.values(fbSchedule);
                 } else {
                     scheduleData = JSON.parse(localStorage.getItem('basketballSchedule') || '[]');
                     if (scheduleData.length > 0) database.ref('schedule').set(scheduleData);
@@ -2093,9 +2092,7 @@
             database.ref('schedule').on('value', (snap) => {
                 if (skipInitialSchedule) { skipInitialSchedule = false; return; }
                 const fbSchedule = snap.val();
-                scheduleData = fbSchedule
-                    ? (Array.isArray(fbSchedule) ? fbSchedule : Object.values(fbSchedule))
-                    : [];
+                scheduleData = fbSchedule ? Object.values(fbSchedule) : [];
                 localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
                 if (currentTab === 'schedule') renderScheduleTab();
             });
@@ -3146,7 +3143,17 @@
 
         function saveScheduleData() {
             localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
-            if (database) database.ref('schedule').set(scheduleData.length ? scheduleData : null);
+            if (database) {
+                // Store as keyed object (idiomatic Firebase — avoids array-vs-object issues)
+                if (scheduleData.length) {
+                    const obj = {};
+                    scheduleData.forEach(g => { obj[g.id] = g; });
+                    database.ref('schedule').set(obj)
+                        .catch(err => console.error('Schedule Firebase write error:', err));
+                } else {
+                    database.ref('schedule').remove();
+                }
+            }
         }
 
         function renderScheduleTab() {
@@ -3159,11 +3166,8 @@
                 grid.innerHTML = '<div style="text-align:center;color:#718096;padding:40px;">Loading schedule...</div>';
                 database.ref('schedule').once('value').then((snap) => {
                     const val = snap.val();
-                    if (val) {
-                        scheduleData = Array.isArray(val) ? val : Object.values(val);
-                    } else {
-                        scheduleData = [];
-                    }
+                    // Firebase stores as keyed object {id: {...}, ...}
+                    scheduleData = val ? Object.values(val) : [];
                     localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
                     _renderScheduleCards(grid, empty);
                 }).catch(() => {
