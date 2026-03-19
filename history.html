@@ -2053,8 +2053,9 @@
 
             }).then((snap) => {
                 const fbSchedule = snap.val();
-                if (fbSchedule && Array.isArray(fbSchedule)) {
-                    scheduleData = fbSchedule;
+                if (fbSchedule) {
+                    // Firebase may return an object with numeric keys instead of a real array
+                    scheduleData = Array.isArray(fbSchedule) ? fbSchedule : Object.values(fbSchedule);
                 } else {
                     scheduleData = JSON.parse(localStorage.getItem('basketballSchedule') || '[]');
                     if (scheduleData.length > 0) database.ref('schedule').set(scheduleData);
@@ -2092,7 +2093,9 @@
             database.ref('schedule').on('value', (snap) => {
                 if (skipInitialSchedule) { skipInitialSchedule = false; return; }
                 const fbSchedule = snap.val();
-                scheduleData = (fbSchedule && Array.isArray(fbSchedule)) ? fbSchedule : [];
+                scheduleData = fbSchedule
+                    ? (Array.isArray(fbSchedule) ? fbSchedule : Object.values(fbSchedule))
+                    : [];
                 localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
                 if (currentTab === 'schedule') renderScheduleTab();
             });
