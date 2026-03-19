@@ -1203,7 +1203,17 @@
     <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./service-worker.js')
-                .then(reg => console.log('✅ SW registered:', reg.scope))
+                .then(reg => {
+                    console.log('✅ SW registered:', reg.scope);
+                    reg.addEventListener('updatefound', () => {
+                        const newSW = reg.installing;
+                        newSW.addEventListener('statechange', () => {
+                            if (newSW.state === 'activated') {
+                                window.location.reload();
+                            }
+                        });
+                    });
+                })
                 .catch(err => console.warn('SW registration failed:', err));
         }
     </script>
