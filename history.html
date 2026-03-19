@@ -2081,10 +2081,20 @@
             realtimeListenerSetup = true;
 
             // Listen for new games saved from the tracker (skip the immediate fire on attach)
-            let skipInitial = true;
+            let skipInitialHistory = true;
             database.ref('gameHistory').on('value', () => {
-                if (skipInitial) { skipInitial = false; return; }
+                if (skipInitialHistory) { skipInitialHistory = false; return; }
                 loadData();
+            });
+
+            // Listen for schedule changes so all devices stay in sync
+            let skipInitialSchedule = true;
+            database.ref('schedule').on('value', (snap) => {
+                if (skipInitialSchedule) { skipInitialSchedule = false; return; }
+                const fbSchedule = snap.val();
+                scheduleData = (fbSchedule && Array.isArray(fbSchedule)) ? fbSchedule : [];
+                localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+                if (currentTab === 'schedule') renderScheduleTab();
             });
         }
 
