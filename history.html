@@ -3141,6 +3141,16 @@
 
         // ── Schedule Functions ────────────────────────────────────────────────────
 
+        function goToHistoryTab() {
+            currentTab = 'history';
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('historyTab').classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.toggle('active', b.textContent.includes('Game History'));
+            });
+            renderGameHistory();
+        }
+
         function saveScheduleData() {
             localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
             if (database) {
@@ -3206,18 +3216,25 @@
                     : `<div style="width:52px;height:52px;background:#2d3748;border-radius:8px;"></div>`;
 
                 // Check if a matching completed game exists in history
-                const completedGame = gameHistory.find(g => {
+                // First try exact date + teams, then fall back to closest game by teams only
+                const sameTeams = (g) => {
                     const t1 = g.team1?.name, t2 = g.team2?.name;
-                    return g.gameDate === game.date &&
-                        ((t1 === game.team1 && t2 === game.team2) ||
-                         (t1 === game.team2 && t2 === game.team1));
-                });
+                    return (t1 === game.team1 && t2 === game.team2) ||
+                           (t1 === game.team2 && t2 === game.team1);
+                };
+                const completedGame = gameHistory.find(g => g.gameDate === game.date && sameTeams(g))
+                    || (diffMs < 0 ? gameHistory.filter(sameTeams).sort((a, b) =>
+                        Math.abs(new Date(a.gameDate) - gameDateTime) - Math.abs(new Date(b.gameDate) - gameDateTime)
+                    )[0] : null);
+
+                const isPast = diffMs < 0;
 
                 let statusClass, badgeClass, badgeText;
                 if (completedGame) {
                     statusClass = 'completed'; badgeClass = 'completed'; badgeText = '✅ Final';
+                } else if (isPast) {
+                    statusClass = 'completed'; badgeClass = 'completed'; badgeText = '⏹ Past';
                 } else if (diffMs > -7200000 && diffMs < 7200000) {
-                    // Within ±2h of game time — mark as potentially live
                     statusClass = 'live'; badgeClass = 'live'; badgeText = '🔴 Today';
                 } else {
                     statusClass = 'upcoming'; badgeClass = 'upcoming'; badgeText = '📅 Upcoming';
@@ -3235,6 +3252,10 @@
                         Final: <strong>${score1} – ${score2}</strong>
                         &nbsp;<a onclick="viewGameDetails('${completedGame.id}')">View Result →</a>
                     </div>`;
+                } else if (isPast) {
+                    extraHTML = `<div class="schedule-result-link">
+                        <a onclick="goToHistoryTab()">View in Game History →</a>
+                    </div>`;
                 } else if (diffMs > 0) {
                     const days  = Math.floor(diffMs / 86400000);
                     const hours = Math.floor((diffMs % 86400000) / 3600000);
@@ -3245,8 +3266,6 @@
                     else                countText = `${mins}m away`;
                     const soonClass = diffMs < 3600000 ? 'soon' : '';
                     extraHTML = `<div class="schedule-countdown ${soonClass}">⏳ ${countText}</div>`;
-                } else {
-                    extraHTML = `<div class="schedule-countdown past">Game time passed</div>`;
                 }
 
                 const dateDisplay = game.date
