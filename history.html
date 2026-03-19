@@ -3148,11 +3148,7 @@
                     const obj = {};
                     scheduleData.forEach(g => { obj[g.id] = g; });
                     database.ref('schedule').set(obj)
-                        .then(() => console.log('✅ Schedule written to Firebase:', Object.keys(obj).length, 'games'))
-                        .catch(err => {
-                            console.error('❌ Schedule Firebase WRITE error:', err);
-                            alert('⚠️ Schedule could not sync to Firebase.\n\nError: ' + err.message + '\n\nCheck Firebase security rules — the "schedule" path may need read/write permission.');
-                        });
+                        .catch(err => console.error('Schedule Firebase write error:', err));
                 } else {
                     database.ref('schedule').remove();
                 }
@@ -3169,13 +3165,12 @@
                 grid.innerHTML = '<div style="text-align:center;color:#718096;padding:40px;">Loading schedule...</div>';
                 database.ref('schedule').once('value').then((snap) => {
                     const val = snap.val();
-                    console.log('📅 Firebase schedule read:', val);
                     scheduleData = val ? Object.values(val) : [];
                     localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
                     _renderScheduleCards(grid, empty);
                 }).catch((err) => {
-                    console.error('❌ Schedule Firebase READ error:', err);
-                    grid.innerHTML = `<div style="color:#fc8181;padding:20px;text-align:center;background:rgba(245,101,101,0.1);border-radius:8px;margin:10px 0;">⚠️ Could not load schedule from Firebase.<br><small style="color:#a0aec0">${err.message}</small></div>`;
+                    console.error('Schedule read error:', err);
+                    _renderScheduleCards(grid, empty);
                 });
                 return;
             }
