@@ -675,18 +675,7 @@
             min-width: 0;
         }
 
-        /* Inline stat label — hidden on desktop, shown on tablet */
-        .stat-label-inline {
-            display: none;
-            font-size: 0.62em;
-            font-weight: 700;
-            color: var(--stat-label-color);
-            text-transform: uppercase;
-            text-align: center;
-            letter-spacing: 0.04em;
-            line-height: 1;
-            margin-bottom: 2px;
-        }
+        /* .stat-label-inline defined with .stat-control block above */
 
         .swap-btn {
             padding: 6px 10px;
@@ -970,31 +959,42 @@
         .stat-control {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
+            align-items: stretch;
             flex: 1;
             min-width: 0;
+            gap: 3px;
         }
 
-        /* On desktop show buttons horizontally */
-        @media (min-width: 1025px) {
-            .stat-control {
-                flex-direction: row;
-                gap: 8px;
-            }
+        /* Inline labels always visible — header row no longer needed */
+        .stat-label-inline {
+            display: block;
+            font-size: 0.62em;
+            font-weight: 700;
+            color: var(--stat-label-color);
+            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: 0.04em;
+            line-height: 1;
+            margin-bottom: 1px;
         }
 
+        .player-header {
+            display: none;
+        }
+
+        /* Desktop stat buttons — compact since column layout gives each button full width */
         .stat-btn {
-            width: 32px;
-            height: 32px;
+            width: 100%;
+            height: 30px;
             border: none;
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
+            cursor: pointer;
             transition: all 0.2s;
         }
+
+        /* stat-btn base defined above */
 
         .stat-btn.minus {
             background: #fed7d7;
@@ -1178,50 +1178,18 @@
                 gap: 3px;
             }
 
-            /* Each stat control fills equal width, buttons stack vertically */
+            /* Each stat control fills equal width */
             .stat-control {
                 flex: 1;
-                flex-direction: column;
                 align-items: stretch;
                 gap: 3px;
             }
 
-            /* Show inline labels since header row is hidden */
-            .stat-label-inline {
-                display: block;
-            }
-
-            /* Bigger tap targets */
+            /* Bigger tap targets on tablet */
             .stat-btn {
-                width: 100%;
                 height: 44px;
                 font-size: 1.3em;
                 border-radius: 8px;
-            }
-
-            .stat-value {
-                min-width: 0;
-                font-size: 1.1em;
-                padding: 2px 0;
-            }
-
-            .quick-score-btns {
-                flex: 1;
-                justify-content: flex-end;
-                gap: 4px;
-            }
-
-            .quick-score-btn {
-                flex: 1;
-                height: 38px;
-                font-size: 0.88em;
-                padding: 0;
-                min-width: 0;
-            }
-
-            /* Hide header row — inline labels replace it */
-            .player-header {
-                display: none;
             }
 
             .swap-btn {
