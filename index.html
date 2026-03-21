@@ -2762,7 +2762,9 @@
                     gameData.gameTimer.currentSeconds = gameData.gameTimer.totalSeconds;
                     updateGameTimerDisplay();
                     // Reset shot clock to 24 (paused)
-                    resetShotClock();
+                    pauseShotClock();
+                    gameData.shotClock.seconds = 24;
+                    updateShotClockDisplay();
                     // Auto-advance to next quarter if there is one
                     if (typeof currentQuarter === 'number' && currentQuarter < gameData.quarters) {
                         switchQuarter(currentQuarter + 1);
@@ -2840,6 +2842,8 @@
             gameData.shotClock.seconds = 24;
             updateShotClockDisplay();
             saveGameData();
+            // Auto-start after reset
+            startShotClock();
         }
 
         // Manual timer adjustments
@@ -2866,6 +2870,8 @@
             gameData.shotClock.seconds = 14;
             updateShotClockDisplay();
             saveGameData();
+            // Auto-start after reset
+            startShotClock();
         }
 
         // Buzzer sound system - loud and long sounds for different events
