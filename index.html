@@ -2306,6 +2306,9 @@
                     <div><strong>Game:</strong> <span id="gameName">Violet vs. Yellow</span></div>
                     <div><strong>Date:</strong> <span id="gameDate">2026-02-13</span></div>
                 </div>
+                <div id="scheduledGameBanner" style="display:none; margin-top:8px; padding:6px 14px; background:rgba(102,126,234,0.2); border:1px solid rgba(102,126,234,0.5); border-radius:8px; font-size:0.85em; color:#a0aec0; text-align:center;">
+                    📅 <span id="scheduledGameBannerText"></span>
+                </div>
             </div>
         </div>
 
@@ -2755,6 +2758,15 @@
                     pauseGameTimer();
                     // Play loud horn sound when game timer ends
                     playBuzzerSound('gameEnd');
+                    // Auto-reset timer to full quarter length
+                    gameData.gameTimer.currentSeconds = gameData.gameTimer.totalSeconds;
+                    updateGameTimerDisplay();
+                    // Auto-advance to next quarter if there is one
+                    if (typeof currentQuarter === 'number' && currentQuarter < gameData.quarters) {
+                        switchQuarter(currentQuarter + 1);
+                    } else {
+                        saveGameData();
+                    }
                 }
             }, 1000);
         }
@@ -3400,6 +3412,39 @@
             populateMVPSelector();
             updateMVPDisplay();
             updatePossessionButtons();
+            checkScheduledGameBanner();
+        }
+
+        function checkScheduledGameBanner() {
+            const banner = document.getElementById('scheduledGameBanner');
+            const bannerText = document.getElementById('scheduledGameBannerText');
+            if (!banner || !bannerText) return;
+
+            try {
+                const schedule = JSON.parse(localStorage.getItem('basketballSchedule') || '[]');
+                const today = new Date().toISOString().slice(0, 10);
+                const t1 = gameData.team1?.name;
+                const t2 = gameData.team2?.name;
+
+                const match = schedule.find(g =>
+                    g.date === today &&
+                    ((g.team1 === t1 && g.team2 === t2) || (g.team1 === t2 && g.team2 === t1))
+                );
+
+                if (match) {
+                    const timeDisplay = match.time ? (() => {
+                        const [h, m] = match.time.split(':');
+                        const d = new Date(); d.setHours(+h, +m);
+                        return ' at ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                    })() : '';
+                    bannerText.textContent = `${match.gameName || 'Scheduled Game'} — Today${timeDisplay}${match.venue ? ' · ' + match.venue : ''}`;
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
+                }
+            } catch (e) {
+                banner.style.display = 'none';
+            }
         }
 
         function populateMVPSelector() {
@@ -5223,6 +5268,10 @@
                         resetGameTimer();
                     } else if (cmd.command === 'adjust') {
                         adjustGameTimer(cmd.amount);
+                    } else if (cmd.command === 'nextQuarter') {
+                        if (typeof currentQuarter === 'number' && currentQuarter < gameData.quarters) {
+                            switchQuarter(currentQuarter + 1);
+                        }
                     }
                 } else if (cmd.target === 'shotClock') {
                     if (cmd.command === 'start')        startShotClock();

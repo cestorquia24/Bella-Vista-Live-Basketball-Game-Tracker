@@ -1826,6 +1826,7 @@
         let gameHistory = [];
         let scheduleData = [];
         let scheduleEditingId = null;
+        let liveGameData = null;
         let selectedDate = null;
         let seasonStandings = { teams: {}, players: {} };
         let currentSort = { column: null, order: 'asc' };
@@ -2094,6 +2095,12 @@
                 const fbSchedule = snap.val();
                 scheduleData = fbSchedule ? Object.values(fbSchedule) : [];
                 localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+                if (currentTab === 'schedule') renderScheduleTab();
+            });
+
+            // Listen for live game changes — updates schedule LIVE badge in real time
+            database.ref('liveGame').on('value', (snap) => {
+                liveGameData = snap.val();
                 if (currentTab === 'schedule') renderScheduleTab();
             });
         }
@@ -3215,6 +3222,14 @@
                     ? `<img src="${logo2}" class="schedule-team-logo" alt="${game.team2}">`
                     : `<div style="width:52px;height:52px;background:#2d3748;border-radius:8px;"></div>`;
 
+                // Check if this scheduled game is currently LIVE
+                const isLiveMatch = liveGameData &&
+                    liveGameData.isLive !== false &&
+                    liveGameData.lastUpdated &&
+                    (Date.now() - liveGameData.lastUpdated < 300000) &&
+                    ((liveGameData.team1?.name === game.team1 && liveGameData.team2?.name === game.team2) ||
+                     (liveGameData.team1?.name === game.team2 && liveGameData.team2?.name === game.team1));
+
                 // Check if a matching completed game exists in history
                 // First try exact date + teams, then fall back to closest game by teams only
                 const sameTeams = (g) => {
@@ -3230,11 +3245,13 @@
                 const isPast = diffMs < 0;
 
                 let statusClass, badgeClass, badgeText;
-                if (completedGame) {
+                if (isLiveMatch) {
+                    statusClass = 'live'; badgeClass = 'live'; badgeText = '🔴 LIVE NOW';
+                } else if (completedGame) {
                     statusClass = 'completed'; badgeClass = 'completed'; badgeText = '✅ Final';
                 } else if (isPast) {
                     statusClass = 'completed'; badgeClass = 'completed'; badgeText = '⏹ Past';
-                } else if (diffMs > -7200000 && diffMs < 7200000) {
+                } else if (diffMs < 7200000 && diffMs > -7200000) {
                     statusClass = 'live'; badgeClass = 'live'; badgeText = '🔴 Today';
                 } else {
                     statusClass = 'upcoming'; badgeClass = 'upcoming'; badgeText = '📅 Upcoming';
@@ -3242,7 +3259,26 @@
 
                 // Countdown / result text
                 let extraHTML = '';
-                if (completedGame) {
+                if (isLiveMatch) {
+                    // Calculate live score from liveGameData player stats
+                    const calcScore = (team) => {
+                        if (!team?.players) return 0;
+                        return team.players.reduce((sum, p) => {
+                            if (!p.quarterStats) return sum;
+                            return sum + Object.values(p.quarterStats).reduce((s, qs) => s + (qs.points || 0), 0);
+                        }, 0);
+                    };
+                    const liveT1 = liveGameData.team1?.name === game.team1 ? liveGameData.team1 : liveGameData.team2;
+                    const liveT2 = liveGameData.team1?.name === game.team1 ? liveGameData.team2 : liveGameData.team1;
+                    const liveScore1 = calcScore(liveT1);
+                    const liveScore2 = calcScore(liveT2);
+                    const qtr = liveGameData.currentQuarter;
+                    const qtrText = qtr && qtr !== 'total' ? `Q${qtr}` : 'Live';
+                    extraHTML = `<div class="schedule-result-link" style="color:#fc8181;font-weight:700;">
+                        ${qtrText}: <strong style="font-size:1.1em">${liveScore1} – ${liveScore2}</strong>
+                        &nbsp;<a href="spectator.html" style="color:#fc8181;">Watch Live →</a>
+                    </div>`;
+                } else if (completedGame) {
                     const s1 = completedGame.team1?.score ?? '–';
                     const s2 = completedGame.team2?.score ?? '–';
                     const t1Name = completedGame.team1?.name;
