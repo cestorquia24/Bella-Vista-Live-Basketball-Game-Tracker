@@ -10,13 +10,13 @@
   "theme_color": "#48bb78",
   "icons": [
     {
-      "src": "bellaLogo.jpg",
+      "src": "logos/Bella Vista League Logo.jpeg",
       "sizes": "192x192",
       "type": "image/jpeg",
       "purpose": "any maskable"
     },
     {
-      "src": "bellaLogo.jpg",
+      "src": "logos/Bella Vista League Logo.jpeg",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any maskable"
