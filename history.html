@@ -808,85 +808,87 @@
         .pb-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 4px 8px; }
         .pb-bracket {
             display: flex; align-items: stretch; gap: 0;
-            min-width: 700px; padding: 16px 14px;
-            background: #0d1117; border-radius: 12px;
+            min-width: 820px; padding: 18px 16px;
+            background: #0d1117; border-radius: 14px;
         }
         /* QF column: two cards stacked */
-        .pb-qf-col { flex: 0 0 140px; display: flex; flex-direction: column; gap: 10px; justify-content: space-around; }
+        .pb-qf-col { flex: 0 0 162px; display: flex; flex-direction: column; gap: 12px; justify-content: space-around; }
         /* QF→SF connector */
-        .pb-conn-qfsf { flex: 0 0 16px; align-self: stretch; display: flex; flex-direction: column; }
+        .pb-conn-qfsf { flex: 0 0 20px; align-self: stretch; display: flex; flex-direction: column; }
         .pb-conn-qfsf .c-up {
             flex: 1; border-right: 2px solid #4a5568; border-bottom: 2px solid #4a5568;
-            border-bottom-right-radius: 6px;
+            border-bottom-right-radius: 7px;
         }
         .pb-conn-qfsf .c-dn {
             flex: 1; border-right: 2px solid #4a5568; border-top: 2px solid #4a5568;
-            border-top-right-radius: 6px;
+            border-top-right-radius: 7px;
         }
         .pb-conn-qfsf.right .c-up {
             border-right: none; border-left: 2px solid #4a5568;
             border-bottom: 2px solid #4a5568;
-            border-bottom-right-radius: 0; border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 0; border-bottom-left-radius: 7px;
         }
         .pb-conn-qfsf.right .c-dn {
             border-right: none; border-left: 2px solid #4a5568;
             border-top: 2px solid #4a5568;
-            border-top-right-radius: 0; border-top-left-radius: 6px;
+            border-top-right-radius: 0; border-top-left-radius: 7px;
         }
         /* SF column */
-        .pb-sf-col { flex: 0 0 140px; display: flex; align-items: center; justify-content: center; }
+        .pb-sf-col { flex: 0 0 162px; display: flex; align-items: center; justify-content: center; }
         /* SF→Finals connector */
-        .pb-conn-sffin { flex: 0 0 16px; align-self: center; height: 2px; background: #4a5568; }
+        .pb-conn-sffin { flex: 0 0 20px; align-self: center; height: 2px; background: #4a5568; }
         /* Finals center column */
         .pb-fin-col {
-            flex: 0 0 160px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+            flex: 0 0 192px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
         }
         .pb-trophy-icon {
-            font-size: 3rem; text-align: center;
-            filter: drop-shadow(0 0 16px rgba(246,224,94,0.7));
+            font-size: 3.8rem; text-align: center;
+            filter: drop-shadow(0 0 20px rgba(246,224,94,0.8));
             margin-bottom: 2px;
         }
         .pb-finals-lbl {
-            font-size: 0.56rem; font-weight: 800; color: #f6e05e;
-            text-transform: uppercase; letter-spacing: 0.12em;
-            text-align: center; margin-bottom: 5px; line-height: 1.4;
+            font-size: 0.64rem; font-weight: 800; color: #f6e05e;
+            text-transform: uppercase; letter-spacing: 0.13em;
+            text-align: center; margin-bottom: 6px; line-height: 1.5;
         }
         /* Match card */
         .pb-card { background: #1a202c; border-radius: 10px; border: 1px solid #2d3748; overflow: hidden; width: 100%; }
         .pb-card.finals-card {
-            border-color: rgba(246,224,94,0.5);
-            box-shadow: 0 0 20px rgba(246,224,94,0.15);
+            border-color: rgba(246,224,94,0.55);
+            box-shadow: 0 0 26px rgba(246,224,94,0.18);
         }
         .pb-card.third-card { border-color: rgba(160,174,192,0.25); }
         .pb-card-lbl {
-            background: #2d3748; font-size: 0.58rem; font-weight: 700; color: #a0aec0;
-            text-align: center; padding: 5px 8px; text-transform: uppercase; letter-spacing: 0.07em;
+            background: #2d3748; font-size: 0.62rem; font-weight: 700; color: #a0aec0;
+            text-align: center; padding: 6px 8px; text-transform: uppercase; letter-spacing: 0.07em;
         }
         .pb-card.finals-card .pb-card-lbl { background: rgba(246,224,94,0.14); color: #f6e05e; }
         .pb-card.third-card  .pb-card-lbl { background: rgba(160,174,192,0.08); color: #a0aec0; }
         /* Team slot */
         .bt-slot {
-            display: flex; align-items: center; gap: 7px; padding: 9px 10px;
-            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 46px;
+            display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 52px;
         }
         .bt-slot:last-of-type { border-bottom: none; }
         .bt-slot.bt-winner { background: rgba(72,187,120,0.13); border-left: 3px solid #48bb78; }
         .bt-slot.bt-loser  { opacity: 0.38; }
-        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.75rem; justify-content: center; padding: 12px 10px; }
+        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.78rem; justify-content: center; padding: 14px 10px; }
         .bt-slot.bt-clickable:hover { background: rgba(102,126,234,0.18); cursor: pointer; }
-        .bt-seed  { font-size: 0.63rem; font-weight: 700; color: #718096; min-width: 18px; }
-        .bt-logo  { width: 25px; height: 25px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
-        .bt-logo-placeholder { width: 25px; height: 25px; background: #2d3748; border-radius: 4px; flex-shrink: 0; }
-        .bt-name  { font-size: 0.76rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bt-ttb   { font-size: 0.54rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 4px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
-        .bt-check { color: #48bb78; font-size: 0.9rem; flex-shrink: 0; }
-        .pb-vs    { text-align: center; font-size: 0.58rem; font-weight: 700; color: #4a5568; padding: 3px; background: #111827; }
-        /* Finals slots slightly bigger */
-        .pb-card.finals-card .bt-slot { padding: 11px 12px; min-height: 52px; }
-        .pb-card.finals-card .bt-logo { width: 30px; height: 30px; }
-        .pb-card.finals-card .bt-logo-placeholder { width: 30px; height: 30px; }
-        .pb-card.finals-card .bt-name { font-size: 0.84rem; }
+        .bt-seed  { font-size: 0.65rem; font-weight: 700; color: #718096; min-width: 20px; }
+        .bt-logo  { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+        .bt-logo-placeholder { width: 28px; height: 28px; background: #2d3748; border-radius: 4px; flex-shrink: 0; }
+        .bt-name  { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bt-ttb   { font-size: 0.56rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 5px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+        .bt-check { color: #48bb78; font-size: 1rem; flex-shrink: 0; }
+        .pb-vs    { text-align: center; font-size: 0.6rem; font-weight: 700; color: #4a5568; padding: 4px; background: #111827; }
+        /* Finals slots — noticeably bigger */
+        .pb-card.finals-card .bt-slot { padding: 14px 14px; min-height: 64px; }
+        .pb-card.finals-card .bt-logo { width: 38px; height: 38px; }
+        .pb-card.finals-card .bt-logo-placeholder { width: 38px; height: 38px; }
+        .pb-card.finals-card .bt-name { font-size: 0.95rem; font-weight: 700; }
+        .pb-card.finals-card .bt-seed { font-size: 0.72rem; min-width: 22px; }
+        .pb-card.finals-card .pb-vs   { padding: 5px; font-size: 0.65rem; }
         /* 3rd place section */
         .pb-third-wrap { text-align: center; padding: 14px 12px 4px; }
         .pb-third-inner {
