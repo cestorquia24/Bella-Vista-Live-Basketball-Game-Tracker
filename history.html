@@ -1709,7 +1709,7 @@
                             <th onclick="sortTeams('team')">Team</th>
                             <th onclick="sortTeams('record')">W-L</th>
                             <th onclick="sortTeams('winPct')">Win %</th>
-                            <th onclick="sortTeams('quotient')" title="Points For ÷ Points Against">QT</th>
+                            <th onclick="sortTeams('quotient')" title="Points For ÷ Points Against — tiebreaker for 3+ team ties">Quotient</th>
                             <th onclick="sortTeams('pointsFor')">PF</th>
                             <th onclick="sortTeams('pointsAgainst')">PA</th>
                             <th onclick="sortTeams('pointDiff')">+/-</th>
@@ -2467,6 +2467,45 @@
             });
         }
 
+        // Shared standings sort used by both the table and playoff seeding.
+        // Tiebreaker order: wins → losses → h2h (2-team tie only) → quotient
+        // h2h is skipped for 3+ team ties because it can be circular (A beat B, B beat C, C beat A).
+        function sortStandings(teams) {
+            // Group teams that are tied on wins AND losses
+            const groups = {};
+            teams.forEach(t => {
+                const key = `${t.wins}_${t.losses}`;
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(t);
+            });
+
+            // Sort group keys: most wins first, fewest losses first
+            const keys = Object.keys(groups).sort((a, b) => {
+                const [aw, al] = a.split('_').map(Number);
+                const [bw, bl] = b.split('_').map(Number);
+                return bw !== aw ? bw - aw : al - bl;
+            });
+
+            const result = [];
+            keys.forEach(key => {
+                const group = groups[key];
+                if (group.length === 2) {
+                    // 2-team tie: head-to-head first, then quotient
+                    group.sort((a, b) => {
+                        const aH2H = (a.h2h?.[b.name]) || 0;
+                        const bH2H = (b.h2h?.[a.name]) || 0;
+                        if (aH2H !== bH2H) return bH2H - aH2H;
+                        return b.quotient - a.quotient;
+                    });
+                } else if (group.length >= 3) {
+                    // 3+ team tie: quotient only (h2h can be circular)
+                    group.sort((a, b) => b.quotient - a.quotient);
+                }
+                result.push(...group);
+            });
+            return result;
+        }
+
         function renderTeamStandings() {
             const tbody = document.getElementById('teamsTableBody');
             const empty = document.getElementById('emptyTeams');
@@ -2480,31 +2519,19 @@
 
             empty.style.display = 'none';
 
-            // Convert to array with computed fields
-            const teamsArray = teams.map(name => {
+            // Sort: wins → losses → h2h (2-team) → quotient (3+ team)
+            const teamsArray = sortStandings(teams.map(name => {
                 const t = seasonStandings.teams[name];
                 return {
                     name,
                     ...t,
-                    winPct:    calculateWinPercentage(t),
-                    quotient:  t.pointsAgainst > 0
-                                   ? parseFloat((t.pointsFor / t.pointsAgainst).toFixed(4))
-                                   : t.pointsFor > 0 ? Infinity : 0,
+                    winPct:   calculateWinPercentage(t),
+                    quotient: t.pointsAgainst > 0
+                                  ? parseFloat((t.pointsFor / t.pointsAgainst).toFixed(4))
+                                  : t.pointsFor > 0 ? Infinity : 0,
                     pointDiff: t.pointsFor - t.pointsAgainst
                 };
-            });
-
-            // Sort: 1) wins  2) losses  3) h2h wins against each other  4) quotient  5) point diff
-            teamsArray.sort((a, b) => {
-                if (b.wins !== a.wins)         return b.wins - a.wins;
-                if (a.losses !== b.losses)     return a.losses - b.losses;
-                // Head-to-head: how many times a beat b vs b beat a
-                const aH2H = (a.h2h && a.h2h[b.name]) || 0;
-                const bH2H = (b.h2h && b.h2h[a.name]) || 0;
-                if (aH2H !== bH2H)             return bH2H - aH2H;
-                if (b.quotient !== a.quotient) return b.quotient - a.quotient;
-                return b.pointDiff - a.pointDiff;
-            });
+            }));
 
             tbody.innerHTML = '';
             teamsArray.forEach((team, index) => {
@@ -3437,23 +3464,15 @@
         }
 
         function getPlayoffSeeds() {
-            const teams = Object.keys(seasonStandings.teams);
-            return teams.map(name => {
+            const teams = Object.keys(seasonStandings.teams).map(name => {
                 const t = seasonStandings.teams[name];
                 return {
                     name, ...t,
                     quotient:  t.pointsAgainst > 0 ? t.pointsFor / t.pointsAgainst : (t.pointsFor > 0 ? Infinity : 0),
                     pointDiff: t.pointsFor - t.pointsAgainst
                 };
-            }).sort((a, b) => {
-                if (b.wins !== a.wins) return b.wins - a.wins;
-                if (a.losses !== b.losses) return a.losses - b.losses;
-                const aH2H = (a.h2h?.[b.name]) || 0;
-                const bH2H = (b.h2h?.[a.name]) || 0;
-                if (aH2H !== bH2H) return bH2H - aH2H;
-                if (b.quotient !== a.quotient) return b.quotient - a.quotient;
-                return b.pointDiff - a.pointDiff;
-            }).slice(0, 8);
+            });
+            return sortStandings(teams).slice(0, 8);
         }
 
         function setPlayoffWinner(round, idx, teamName) {
