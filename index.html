@@ -2689,6 +2689,7 @@
         const gameData = {
             gameName: '',
             gameDate: new Date().toISOString().split('T')[0],
+            savedGameId: null, // set after first save to prevent duplicates on re-save
             team1: { name: '', logo: '', players: [], teamFouls: {}, timeoutsRemaining: 2, currentHalf: 1 },
             team2: { name: '', logo: '', players: [], teamFouls: {}, timeoutsRemaining: 2, currentHalf: 1 },
             quarters: 4,
@@ -3232,6 +3233,7 @@
                 localStorage.removeItem('basketballGameData');
                 localStorage.removeItem('basketballCurrentQuarter');
                 localStorage.removeItem('basketballActionHistory');
+                gameData.savedGameId = null;
                 showSetupScreen();
             }
         }
@@ -4319,9 +4321,12 @@
             // Calculate quarter scores
             const quarterScores = calculateQuarterScores();
 
+            // Reuse the same ID if this game was already saved (prevents duplicates)
+            const gameId = gameData.savedGameId || Date.now();
+
             // Create game record
             const gameRecord = {
-                id: Date.now(),
+                id: gameId,
                 gameName: gameData.gameName,
                 gameDate: gameData.gameDate,
                 finalScore: { team1: team1Score, team2: team2Score },
@@ -4333,9 +4338,18 @@
                 mvp: gameData.mvp
             };
 
-            // Save to history
+            // Save to history — replace existing record if re-saving, otherwise prepend
             let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
-            history.unshift(gameRecord);  // Add to beginning
+            const existingIdx = history.findIndex(g => g.id == gameId);
+            if (existingIdx !== -1) {
+                history[existingIdx] = gameRecord;
+            } else {
+                history.unshift(gameRecord);
+            }
+
+            // Store the ID back so re-saves update in place
+            gameData.savedGameId = gameId;
+            saveGameData();
 
             // Update season standings
             updateSeasonStandings(gameRecord);
