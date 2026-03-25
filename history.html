@@ -804,6 +804,22 @@
         .pb-header p  { color: #718096; font-size: 0.78rem; margin-top: 4px; }
         .pb-admin-hint { text-align: center; font-size: 0.74rem; color: #4a5568; padding: 4px 0 12px; }
         body.admin-mode .pb-admin-hint { color: #68d391; }
+        .pb-season-badge {
+            display: inline-block; font-size: 0.72rem; font-weight: 700;
+            padding: 5px 14px; border-radius: 20px; margin-bottom: 12px;
+        }
+        .pb-season-badge.live {
+            background: rgba(102,126,234,0.15); border: 1px solid rgba(102,126,234,0.4);
+            color: #a3bffa;
+        }
+        .pb-season-badge.locked {
+            background: rgba(72,187,120,0.15); border: 1px solid rgba(72,187,120,0.4);
+            color: #68d391;
+        }
+        .pb-season-progress {
+            text-align: center; font-size: 0.68rem; color: #718096;
+            margin-top: -8px; margin-bottom: 10px;
+        }
         /* Scrollable bracket area */
         .pb-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 4px 8px; }
         .pb-bracket {
@@ -3495,6 +3511,26 @@
             renderPlayoffBracket();
         }
 
+        // Single round-robin: 8 teams → each team plays 7 games
+        const REGULAR_SEASON_GAMES = 7;
+
+        function isRegularSeasonComplete() {
+            const teams = Object.values(seasonStandings.teams);
+            if (teams.length < 8) return false;
+            return teams.every(t => (t.wins + t.losses) >= REGULAR_SEASON_GAMES);
+        }
+
+        function getSeasonProgress() {
+            const teams = Object.values(seasonStandings.teams);
+            if (teams.length === 0) return { min: 0, max: 0, total: 0 };
+            const played = teams.map(t => t.wins + t.losses);
+            return {
+                min:   Math.min(...played),
+                max:   Math.max(...played),
+                total: teams.reduce((s, t) => s + t.wins + t.losses, 0) / 2 // actual games played
+            };
+        }
+
         function renderPlayoffBracket() {
             const container = document.getElementById('playoffBracketContainer');
             if (!container) return;
@@ -3585,6 +3621,14 @@
                 <div class="third-name">${thirdTeam.name}</div>
             </div>` : '';
 
+            const seasonDone = isRegularSeasonComplete();
+            const progress   = getSeasonProgress();
+
+            const seasonBadge = seasonDone
+                ? `<div style="text-align:center"><span class="pb-season-badge locked">🔒 Regular Season Complete — Seedings Locked</span></div>`
+                : `<div style="text-align:center"><span class="pb-season-badge live">🔄 Live — QF seedings update with standings</span></div>
+                   <div class="pb-season-progress">Teams have played ${progress.min}–${progress.max} of ${REGULAR_SEASON_GAMES} regular season games</div>`;
+
             const adminHint = isAdminMode
                 ? '<div class="pb-admin-hint">✏️ Admin: tap a team to mark them as winner</div>'
                 : '<div class="pb-admin-hint">View only — admin sets match results</div>';
@@ -3594,6 +3638,7 @@
                     <h2>🏆 PLAYOFFS</h2>
                     <p>Quarterfinals &nbsp;·&nbsp; Semifinals &nbsp;·&nbsp; Finals</p>
                 </div>
+                ${seasonBadge}
                 ${adminHint}
                 <div class="pb-scroll">
                     <div class="pb-bracket">
