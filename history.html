@@ -1566,8 +1566,9 @@
                         <tr>
                             <th onclick="sortTeams('rank')">Rank</th>
                             <th onclick="sortTeams('team')">Team</th>
-                            <th onclick="sortTeams('record')">Record</th>
+                            <th onclick="sortTeams('record')">W-L</th>
                             <th onclick="sortTeams('winPct')">Win %</th>
+                            <th onclick="sortTeams('quotient')" title="Points For ÷ Points Against">QT</th>
                             <th onclick="sortTeams('pointsFor')">PF</th>
                             <th onclick="sortTeams('pointsAgainst')">PA</th>
                             <th onclick="sortTeams('pointDiff')">+/-</th>
@@ -2313,25 +2314,38 @@
 
             empty.style.display = 'none';
 
-            // Convert to array and sort by wins
-            const teamsArray = teams.map(name => ({
-                name: name,
-                ...seasonStandings.teams[name],
-                winPct: calculateWinPercentage(seasonStandings.teams[name]),
-                pointDiff: seasonStandings.teams[name].pointsFor - seasonStandings.teams[name].pointsAgainst
-            }));
+            // Convert to array with computed fields
+            const teamsArray = teams.map(name => {
+                const t = seasonStandings.teams[name];
+                return {
+                    name,
+                    ...t,
+                    winPct:    calculateWinPercentage(t),
+                    quotient:  t.pointsAgainst > 0
+                                   ? parseFloat((t.pointsFor / t.pointsAgainst).toFixed(4))
+                                   : t.pointsFor > 0 ? Infinity : 0,
+                    pointDiff: t.pointsFor - t.pointsAgainst
+                };
+            });
 
-            teamsArray.sort((a, b) =>
-                b.wins - a.wins ||           // 1. Most wins first
-                a.losses - b.losses ||       // 2. Fewer losses first (2-0 beats 2-1)
-                b.pointDiff - a.pointDiff    // 3. Better point differential last
-            );
+            // Sort: 1) wins  2) losses  3) h2h wins against each other  4) quotient  5) point diff
+            teamsArray.sort((a, b) => {
+                if (b.wins !== a.wins)         return b.wins - a.wins;
+                if (a.losses !== b.losses)     return a.losses - b.losses;
+                // Head-to-head: how many times a beat b vs b beat a
+                const aH2H = (a.h2h && a.h2h[b.name]) || 0;
+                const bH2H = (b.h2h && b.h2h[a.name]) || 0;
+                if (aH2H !== bH2H)             return bH2H - aH2H;
+                if (b.quotient !== a.quotient) return b.quotient - a.quotient;
+                return b.pointDiff - a.pointDiff;
+            });
 
             tbody.innerHTML = '';
             teamsArray.forEach((team, index) => {
                 const row = document.createElement('tr');
                 const teamLogo = TEAM_LOGOS[team.name] || '';
                 const logoHTML = teamLogo ? `<img src="${teamLogo}" class="team-logo-table" alt="${team.name}">` : '';
+                const qtDisplay = isFinite(team.quotient) ? team.quotient.toFixed(4) : '—';
 
                 row.innerHTML = `
                     <td class="rank-cell">#${index + 1}</td>
@@ -2343,9 +2357,10 @@
                     </td>
                     <td class="stat-highlight">${team.wins}-${team.losses}</td>
                     <td>${team.winPct}</td>
+                    <td class="stat-highlight" title="Quotient = PF ÷ PA">${qtDisplay}</td>
                     <td>${team.pointsFor}</td>
                     <td>${team.pointsAgainst}</td>
-                    <td class="stat-highlight">${team.pointDiff > 0 ? '+' : ''}${team.pointDiff}</td>
+                    <td>${team.pointDiff > 0 ? '+' : ''}${team.pointDiff}</td>
                     <td>${team.lastPlayed || '-'}</td>
                 `;
                 tbody.appendChild(row);
@@ -3505,19 +3520,24 @@
 
             // Initialize teams if needed
             if (!seasonStandings.teams[team1Name]) {
-                seasonStandings.teams[team1Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 };
+                seasonStandings.teams[team1Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0, h2h: {} };
             }
             if (!seasonStandings.teams[team2Name]) {
-                seasonStandings.teams[team2Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 };
+                seasonStandings.teams[team2Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0, h2h: {} };
             }
+            // Ensure h2h object exists on older records
+            if (!seasonStandings.teams[team1Name].h2h) seasonStandings.teams[team1Name].h2h = {};
+            if (!seasonStandings.teams[team2Name].h2h) seasonStandings.teams[team2Name].h2h = {};
 
-            // Update win/loss
+            // Update win/loss and head-to-head
             if (gameRecord.winner === team1Name) {
                 seasonStandings.teams[team1Name].wins++;
                 seasonStandings.teams[team2Name].losses++;
+                seasonStandings.teams[team1Name].h2h[team2Name] = (seasonStandings.teams[team1Name].h2h[team2Name] || 0) + 1;
             } else if (gameRecord.winner === team2Name) {
                 seasonStandings.teams[team2Name].wins++;
                 seasonStandings.teams[team1Name].losses++;
+                seasonStandings.teams[team2Name].h2h[team1Name] = (seasonStandings.teams[team2Name].h2h[team1Name] || 0) + 1;
             }
 
             // Update points
