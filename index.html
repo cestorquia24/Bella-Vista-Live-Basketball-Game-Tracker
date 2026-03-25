@@ -2753,7 +2753,7 @@
                 if (gameData.gameTimer.currentSeconds > 0) {
                     gameData.gameTimer.currentSeconds--;
                     updateGameTimerDisplay();
-                    saveGameData();
+                    liveTickUpdate();
                 } else {
                     pauseGameTimer();
                     // Play loud horn sound when game timer ends
@@ -2816,7 +2816,7 @@
                 if (gameData.shotClock.seconds > 0) {
                     gameData.shotClock.seconds--;
                     updateShotClockDisplay();
-                    saveGameData();
+                    liveTickUpdate();
                     // Fire buzzer the instant the display hits 0 — no extra tick delay
                     if (gameData.shotClock.seconds === 0) {
                         pauseShotClock();
@@ -5603,6 +5603,25 @@
                 pushLiveUpdate();
             }
         };
+
+        // Lightweight tick used by timer intervals — saves to localStorage every
+        // second but only pushes to Firebase every 2 s to avoid overwhelming the
+        // connection during long sessions (root cause of sync degradation).
+        let lastTimerPushMs = 0;
+        function liveTickUpdate() {
+            try {
+                localStorage.setItem('basketballGameData', JSON.stringify(gameData));
+                localStorage.setItem('basketballCurrentQuarter', currentQuarter.toString());
+            } catch(e) {}
+            if (database) {
+                const now = Date.now();
+                if (now - lastTimerPushMs >= 2000) {
+                    lastTimerPushMs = now;
+                    gameData.lastUpdated = now;
+                    pushLiveUpdate();
+                }
+            }
+        }
 
         // Push game history to Firebase for cross-device sync
         function pushHistoryToFirebase(history) {
