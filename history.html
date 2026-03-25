@@ -2439,8 +2439,32 @@
             const allPlayers = Object.values(seasonStandings.players);
             const empty = document.getElementById('emptyLeaders');
 
+            // Merge duplicate entries for the same player+team (can happen when a
+            // guest player's name was entered with slight variations across games)
+            const mergeMap = {};
+            allPlayers.forEach(player => {
+                const mergeKey = `${player.teamName}_${player.playerName.trim().toLowerCase()}`;
+                if (!mergeMap[mergeKey]) {
+                    mergeMap[mergeKey] = Object.assign({}, player);
+                } else {
+                    const m = mergeMap[mergeKey];
+                    m.gamesPlayed   += player.gamesPlayed;
+                    m.totalPoints   += player.totalPoints;
+                    m.totalRebounds += player.totalRebounds;
+                    m.totalAssists  += player.totalAssists;
+                    m.totalSteals   += player.totalSteals;
+                    m.totalBlocks   += player.totalBlocks;
+                    m.avgPoints     = parseFloat((m.totalPoints   / m.gamesPlayed).toFixed(1));
+                    m.avgRebounds   = parseFloat((m.totalRebounds / m.gamesPlayed).toFixed(1));
+                    m.avgAssists    = parseFloat((m.totalAssists  / m.gamesPlayed).toFixed(1));
+                    m.avgSteals     = parseFloat((m.totalSteals   / m.gamesPlayed).toFixed(1));
+                    m.avgBlocks     = parseFloat((m.totalBlocks   / m.gamesPlayed).toFixed(1));
+                }
+            });
+            const dedupedPlayers = Object.values(mergeMap);
+
             // Filter out players with no stats
-            const activePlayers = allPlayers.filter(player =>
+            const activePlayers = dedupedPlayers.filter(player =>
                 player.totalPoints > 0 ||
                 player.totalRebounds > 0 ||
                 player.totalAssists > 0 ||
