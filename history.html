@@ -797,6 +797,66 @@
         }
         .schedule-delete-btn:hover { background: #e53e3e; }
 
+        /* ── Playoff Bracket ──────────────────────────────────────────────── */
+        .playoff-bracket-wrapper { padding: 16px 8px; max-width: 960px; margin: 0 auto; }
+        .playoff-title { text-align: center; margin-bottom: 20px; }
+        .playoff-title h2 { font-size: 1.5rem; font-weight: 900; color: #f6e05e; letter-spacing: 0.06em; }
+        .playoff-title p { color: #718096; font-size: 0.8rem; margin-top: 4px; }
+        .playoff-admin-hint { text-align: center; font-size: 0.75rem; color: #4a5568; padding: 6px 0 16px; }
+        body.admin-mode .playoff-admin-hint { color: #68d391; }
+        .bracket-section { margin-bottom: 28px; }
+        .bracket-section-title {
+            text-align: center; font-size: 0.68rem; font-weight: 700; color: #718096;
+            text-transform: uppercase; letter-spacing: 0.12em;
+            margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2d3748;
+        }
+        .bracket-section-title.finals-title { color: #f6e05e; border-color: rgba(246,224,94,0.3); }
+        .bracket-matches-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;
+        }
+        .bracket-match-card {
+            background: #1a202c; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;
+        }
+        .bracket-match-card.finals-card { border-color: rgba(246,224,94,0.4); }
+        .bracket-match-card.third-card  { border-color: rgba(160,174,192,0.3); }
+        .bracket-match-label {
+            background: #2d3748; font-size: 0.62rem; font-weight: 700; color: #a0aec0;
+            text-align: center; padding: 6px 8px; text-transform: uppercase; letter-spacing: 0.07em;
+        }
+        .bracket-match-card.finals-card .bracket-match-label { background: rgba(246,224,94,0.12); color: #f6e05e; }
+        .bracket-match-card.third-card  .bracket-match-label { background: rgba(160,174,192,0.08); color: #a0aec0; }
+        .bt-slot {
+            display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 52px;
+        }
+        .bt-slot:last-of-type { border-bottom: none; }
+        .bt-slot.bt-winner { background: rgba(72,187,120,0.12); border-left: 3px solid #48bb78; }
+        .bt-slot.bt-loser  { opacity: 0.38; }
+        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.8rem; justify-content: center; padding: 14px; }
+        .bt-slot.bt-clickable:hover { background: rgba(102,126,234,0.15); cursor: pointer; }
+        .bt-seed { font-size: 0.68rem; font-weight: 700; color: #718096; min-width: 22px; }
+        .bt-logo { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+        .bt-logo-placeholder { width: 28px; height: 28px; background: #2d3748; border-radius: 4px; flex-shrink: 0; }
+        .bt-name { font-size: 0.82rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bt-ttb { font-size: 0.58rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 5px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+        .bt-check { color: #48bb78; font-size: 1rem; flex-shrink: 0; }
+        .bracket-vs-divider { text-align: center; font-size: 0.62rem; font-weight: 700; color: #4a5568; padding: 3px; background: #171e2a; }
+        .champion-banner {
+            text-align: center; padding: 20px 16px; margin-top: 8px;
+            background: linear-gradient(135deg, rgba(246,224,94,0.12), rgba(246,224,94,0.04));
+            border: 1px solid rgba(246,224,94,0.35); border-radius: 14px;
+        }
+        .champion-banner .trophy { font-size: 2.5rem; }
+        .champion-banner .champion-label { font-size: 0.7rem; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.1em; margin: 6px 0 4px; }
+        .champion-banner .champion-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; margin: 6px auto; display: block; }
+        .champion-banner .champion-name { font-size: 1.3rem; font-weight: 900; color: #f6e05e; }
+        .third-banner {
+            text-align: center; padding: 14px 16px; margin-top: 8px;
+            background: rgba(160,174,192,0.06); border: 1px solid rgba(160,174,192,0.2); border-radius: 12px;
+        }
+        .third-banner .third-label { font-size: 0.68rem; color: #718096; text-transform: uppercase; letter-spacing: 0.08em; }
+        .third-banner .third-name { font-size: 1rem; font-weight: 800; color: #a0aec0; margin-top: 4px; }
+
         /* Schedule Add/Edit Modal */
         .schedule-modal {
             display: none;
@@ -1538,6 +1598,7 @@
             <button class="tab-btn" onclick="switchTab('teams')">🏆 Team Standings</button>
             <button class="tab-btn" onclick="switchTab('players')">⭐ Player Stats</button>
             <button class="tab-btn" onclick="switchTab('leaders')">👑 League Leaders</button>
+            <button class="tab-btn" onclick="switchTab('playoffs')">🥇 Playoffs</button>
             <button class="tab-btn" onclick="switchTab('schedule')">📅 Schedule</button>
             <button class="tab-btn trash-tab-btn" onclick="switchTab('trash')">🗑️ Trash</button>
         </div>
@@ -1703,6 +1764,11 @@
         </div>
     </div>
 
+    <!-- Playoffs Tab -->
+    <div id="playoffsTab" class="tab-content">
+        <div id="playoffBracketContainer"></div>
+    </div>
+
     <!-- Schedule Tab -->
     <div id="scheduleTab" class="tab-content">
         <div class="schedule-header-bar">
@@ -1832,6 +1898,7 @@
         let scheduleEditingId = null;
         let liveGameData = null;
         let scheduleFilter = 'upcoming';
+        let playoffBracket = { qf: [null,null,null,null], sf: [null,null], champion: null, thirdPlace: null };
         let selectedDate = null;
         let seasonStandings = { teams: {}, players: {} };
         let currentSort = { column: null, order: 'asc' };
@@ -2071,6 +2138,16 @@
                 // regardless of timing between gameHistory and seasonStandings writes)
                 migrateHistoryLogos();
                 recalculateStandings();
+
+                // Load playoff bracket
+                const savedBracket = localStorage.getItem('playoffBracket');
+                if (savedBracket) try { playoffBracket = JSON.parse(savedBracket); } catch(e) {}
+                if (database) {
+                    database.ref('playoffBracket').once('value').then(snap => {
+                        if (snap.val()) playoffBracket = snap.val();
+                    }).catch(() => {});
+                }
+
                 setupRealtimeListeners();
                 renderCurrentTab();
 
@@ -2146,6 +2223,8 @@
                 document.getElementById('leadersTab').classList.add('active');
             } else if (tab === 'schedule') {
                 document.getElementById('scheduleTab').classList.add('active');
+            } else if (tab === 'playoffs') {
+                document.getElementById('playoffsTab').classList.add('active');
             } else if (tab === 'trash') {
                 document.getElementById('trashTab').classList.add('active');
             }
@@ -2165,6 +2244,8 @@
                 renderLeagueLeaders();
             } else if (currentTab === 'schedule') {
                 renderScheduleTab();
+            } else if (currentTab === 'playoffs') {
+                renderPlayoffBracket();
             } else if (currentTab === 'trash') {
                 renderTrashTab();
             }
@@ -3247,7 +3328,206 @@
             _renderScheduleCards(grid, empty);
         }
 
-        function setScheduleFilter(val) {
+        // ── Playoff Bracket ───────────────────────────────────────────────────
+
+        function savePlayoffBracket() {
+            localStorage.setItem('playoffBracket', JSON.stringify(playoffBracket));
+            if (database) {
+                database.ref('playoffBracket').set(playoffBracket)
+                    .catch(e => console.error('Playoff bracket save error:', e));
+            }
+        }
+
+        function getPlayoffSeeds() {
+            const teams = Object.keys(seasonStandings.teams);
+            return teams.map(name => {
+                const t = seasonStandings.teams[name];
+                return {
+                    name, ...t,
+                    quotient:  t.pointsAgainst > 0 ? t.pointsFor / t.pointsAgainst : (t.pointsFor > 0 ? Infinity : 0),
+                    pointDiff: t.pointsFor - t.pointsAgainst
+                };
+            }).sort((a, b) => {
+                if (b.wins !== a.wins) return b.wins - a.wins;
+                if (a.losses !== b.losses) return a.losses - b.losses;
+                const aH2H = (a.h2h?.[b.name]) || 0;
+                const bH2H = (b.h2h?.[a.name]) || 0;
+                if (aH2H !== bH2H) return bH2H - aH2H;
+                if (b.quotient !== a.quotient) return b.quotient - a.quotient;
+                return b.pointDiff - a.pointDiff;
+            }).slice(0, 8);
+        }
+
+        function setPlayoffWinner(round, idx, teamName) {
+            if (!isAdminMode) return;
+            if (round === 'qf') {
+                playoffBracket.qf[idx] = teamName;
+                // Clear downstream if QF result changes
+                if (idx === 0 || idx === 3) { playoffBracket.sf[0] = null; playoffBracket.champion = null; playoffBracket.thirdPlace = null; }
+                if (idx === 1 || idx === 2) { playoffBracket.sf[1] = null; playoffBracket.champion = null; playoffBracket.thirdPlace = null; }
+            } else if (round === 'sf') {
+                playoffBracket.sf[idx] = teamName;
+                playoffBracket.champion = null;
+                playoffBracket.thirdPlace = null;
+            } else if (round === 'final') {
+                playoffBracket.champion = teamName;
+            } else if (round === 'third') {
+                playoffBracket.thirdPlace = teamName;
+            }
+            savePlayoffBracket();
+            renderPlayoffBracket();
+        }
+
+        function renderPlayoffBracket() {
+            const container = document.getElementById('playoffBracketContainer');
+            if (!container) return;
+
+            const seeds = getPlayoffSeeds();
+            if (seeds.length < 2) {
+                container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🏆</div><div class="empty-state-text">Not enough teams yet</div><p style="color:#718096;">Standings need at least 2 teams to generate the bracket.</p></div>`;
+                return;
+            }
+            while (seeds.length < 8) seeds.push(null);
+
+            const seedIdx = (name) => seeds.findIndex(s => s?.name === name);
+            const seedNum  = (name) => { const i = seedIdx(name); return i >= 0 ? i + 1 : '?'; };
+
+            // Determine SF participants from QF results
+            const qfw = playoffBracket.qf;
+            const sf1t1 = qfw[0] ? seeds.find(s => s?.name === qfw[0]) : null;
+            const sf1t2 = qfw[3] ? seeds.find(s => s?.name === qfw[3]) : null;
+            const sf2t1 = qfw[1] ? seeds.find(s => s?.name === qfw[1]) : null;
+            const sf2t2 = qfw[2] ? seeds.find(s => s?.name === qfw[2]) : null;
+
+            // Finals participants from SF results
+            const sfw = playoffBracket.sf;
+            const finT1 = sfw[0] ? seeds.find(s => s?.name === sfw[0]) : null;
+            const finT2 = sfw[1] ? seeds.find(s => s?.name === sfw[1]) : null;
+
+            // 3rd place: the SF losers
+            const sf1Loser = sfw[0] && sf1t1 && sf1t2 ? (sfw[0] === sf1t1.name ? sf1t2 : sf1t1) : null;
+            const sf2Loser = sfw[1] && sf2t1 && sf2t2 ? (sfw[1] === sf2t1.name ? sf2t2 : sf2t1) : null;
+
+            // Team slot renderer
+            const slot = (team, sNum, isWinner, isLoser, isTTB, roundKey, idx) => {
+                if (!team) return `<div class="bt-slot bt-tbd">TBD</div>`;
+                const logo   = TEAM_LOGOS[team.name] || '';
+                const logoHtml = logo ? `<img src="${logo}" class="bt-logo">` : `<div class="bt-logo-placeholder"></div>`;
+                const wCls   = isWinner ? 'bt-winner' : isLoser ? 'bt-loser' : '';
+                const clickable = isAdminMode && !isWinner && roundKey
+                    ? `bt-clickable" onclick="setPlayoffWinner('${roundKey}',${idx},'${team.name.replace(/'/g,"\\'")}')` : '';
+                const ttb  = isTTB  ? `<span class="bt-ttb">2× to beat</span>` : '';
+                const check = isWinner ? `<span class="bt-check">✓</span>` : '';
+                return `<div class="bt-slot ${wCls} ${clickable}">
+                    <span class="bt-seed">#${sNum}</span>${logoHtml}
+                    <span class="bt-name">${team.name}</span>${ttb}${check}
+                </div>`;
+            };
+
+            // Build QF cards (1v8, 2v7, 3v6, 4v5)
+            const qfDefs = [
+                { label:'QF · Game 1', s1:0, s2:7, idx:0 },
+                { label:'QF · Game 2', s1:1, s2:6, idx:1 },
+                { label:'QF · Game 3', s1:2, s2:5, idx:2 },
+                { label:'QF · Game 4', s1:3, s2:4, idx:3 },
+            ];
+            const qfCards = qfDefs.map(m => {
+                const t1 = seeds[m.s1], t2 = seeds[m.s2];
+                const w = qfw[m.idx];
+                return `<div class="bracket-match-card">
+                    <div class="bracket-match-label">${m.label}</div>
+                    ${slot(t1, m.s1+1, w===t1?.name, !!(w&&w!==t1?.name), true,  'qf', m.idx)}
+                    <div class="bracket-vs-divider">VS</div>
+                    ${slot(t2, m.s2+1, w===t2?.name, !!(w&&w!==t2?.name), false, 'qf', m.idx)}
+                </div>`;
+            }).join('');
+
+            // SF cards
+            const makeSFCard = (t1, t2, sfIdx, waitFor) => {
+                const w = sfw[sfIdx];
+                if (!t1 && !t2) return `<div class="bracket-match-card">
+                    <div class="bracket-match-label">SF · Game ${sfIdx+1}</div>
+                    <div class="bt-slot bt-tbd">TBD — awaiting ${waitFor}</div>
+                    <div class="bracket-vs-divider">VS</div>
+                    <div class="bt-slot bt-tbd">TBD</div>
+                </div>`;
+                return `<div class="bracket-match-card">
+                    <div class="bracket-match-label">SF · Game ${sfIdx+1}</div>
+                    ${slot(t1, t1?seedNum(t1.name):'?', w===t1?.name, !!(w&&w!==t1?.name), false, 'sf', sfIdx)}
+                    <div class="bracket-vs-divider">VS</div>
+                    ${slot(t2, t2?seedNum(t2.name):'?', w===t2?.name, !!(w&&w!==t2?.name), false, 'sf', sfIdx)}
+                </div>`;
+            };
+
+            const sfCards = [
+                makeSFCard(sf1t1, sf1t2, 0, 'QF Game 1 & 4'),
+                makeSFCard(sf2t1, sf2t2, 1, 'QF Game 2 & 3'),
+            ].join('');
+
+            // Finals card
+            const fw = playoffBracket.champion;
+            const finalsCard = `<div class="bracket-match-card finals-card">
+                <div class="bracket-match-label">🏆 CHAMPIONSHIP FINALS</div>
+                ${slot(finT1, finT1?seedNum(finT1.name):'?', fw===finT1?.name, !!(fw&&fw!==finT1?.name), false, 'final', 0)}
+                <div class="bracket-vs-divider">VS</div>
+                ${slot(finT2, finT2?seedNum(finT2.name):'?', fw===finT2?.name, !!(fw&&fw!==finT2?.name), false, 'final', 0)}
+            </div>`;
+
+            // 3rd place card
+            const tw = playoffBracket.thirdPlace;
+            const thirdCard = `<div class="bracket-match-card third-card">
+                <div class="bracket-match-label">🥉 BATTLE FOR 3RD PLACE</div>
+                ${slot(sf1Loser, sf1Loser?seedNum(sf1Loser.name):'?', tw===sf1Loser?.name, !!(tw&&tw!==sf1Loser?.name), false, 'third', 0)}
+                <div class="bracket-vs-divider">VS</div>
+                ${slot(sf2Loser, sf2Loser?seedNum(sf2Loser.name):'?', tw===sf2Loser?.name, !!(tw&&tw!==sf2Loser?.name), false, 'third', 0)}
+            </div>`;
+
+            // Champion / 3rd place banners
+            const champion = playoffBracket.champion;
+            const champTeam = champion ? seeds.find(s => s?.name === champion) : null;
+            const thirdTeam = playoffBracket.thirdPlace ? seeds.find(s => s?.name === playoffBracket.thirdPlace) : null;
+
+            const champBanner = champTeam ? `<div class="champion-banner">
+                <div class="trophy">🏆</div>
+                <div class="champion-label">Season Champion</div>
+                ${TEAM_LOGOS[champTeam.name] ? `<img src="${TEAM_LOGOS[champTeam.name]}" class="champion-logo">` : ''}
+                <div class="champion-name">${champTeam.name}</div>
+            </div>` : '';
+
+            const thirdBanner = thirdTeam ? `<div class="third-banner">
+                <div class="third-label">🥉 3rd Place</div>
+                <div class="third-name">${thirdTeam.name}</div>
+            </div>` : '';
+
+            const adminHint = isAdminMode
+                ? '<div class="playoff-admin-hint">✏️ Admin: tap a team to mark them as winner</div>'
+                : '<div class="playoff-admin-hint">View only — admin sets match results</div>';
+
+            container.innerHTML = `<div class="playoff-bracket-wrapper">
+                <div class="playoff-title">
+                    <h2>🏆 PLAYOFFS</h2>
+                    <p>Quarterfinals &nbsp;·&nbsp; Semifinals &nbsp;·&nbsp; Finals</p>
+                </div>
+                ${adminHint}
+                <div class="bracket-section">
+                    <div class="bracket-section-title">Quarterfinals — Ranks 1–4 have Twice-to-Beat advantage</div>
+                    <div class="bracket-matches-row">${qfCards}</div>
+                </div>
+                <div class="bracket-section">
+                    <div class="bracket-section-title">Semifinals</div>
+                    <div class="bracket-matches-row" style="grid-template-columns:1fr 1fr;">${sfCards}</div>
+                </div>
+                <div class="bracket-section">
+                    <div class="bracket-section-title finals-title">Finals</div>
+                    <div class="bracket-matches-row" style="grid-template-columns:1fr 1fr;">
+                        ${finalsCard}${thirdCard}
+                    </div>
+                </div>
+                ${champBanner}${thirdBanner}
+            </div>`;
+        }
+
+        // ── Schedule Filter ───────────────────────────────────────────────────
             scheduleFilter = val;
             const grid  = document.getElementById('scheduleGrid');
             const empty = document.getElementById('emptySchedule');
