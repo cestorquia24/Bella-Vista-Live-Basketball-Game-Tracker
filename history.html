@@ -797,65 +797,121 @@
         }
         .schedule-delete-btn:hover { background: #e53e3e; }
 
-        /* ── Playoff Bracket ──────────────────────────────────────────────── */
-        .playoff-bracket-wrapper { padding: 16px 8px; max-width: 960px; margin: 0 auto; }
-        .playoff-title { text-align: center; margin-bottom: 20px; }
-        .playoff-title h2 { font-size: 1.5rem; font-weight: 900; color: #f6e05e; letter-spacing: 0.06em; }
-        .playoff-title p { color: #718096; font-size: 0.8rem; margin-top: 4px; }
-        .playoff-admin-hint { text-align: center; font-size: 0.75rem; color: #4a5568; padding: 6px 0 16px; }
-        body.admin-mode .playoff-admin-hint { color: #68d391; }
-        .bracket-section { margin-bottom: 28px; }
-        .bracket-section-title {
-            text-align: center; font-size: 0.68rem; font-weight: 700; color: #718096;
+        /* ── Playoff Bracket — NBA Style ────────────────────────────────────── */
+        .pb-page { padding: 12px 4px 24px; }
+        .pb-header { text-align: center; padding: 10px 0 6px; }
+        .pb-header h2 { font-size: 1.5rem; font-weight: 900; color: #f6e05e; letter-spacing: 0.07em; }
+        .pb-header p  { color: #718096; font-size: 0.78rem; margin-top: 4px; }
+        .pb-admin-hint { text-align: center; font-size: 0.74rem; color: #4a5568; padding: 4px 0 12px; }
+        body.admin-mode .pb-admin-hint { color: #68d391; }
+        /* Scrollable bracket area */
+        .pb-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 4px 8px; }
+        .pb-bracket {
+            display: flex; align-items: stretch; gap: 0;
+            min-width: 700px; padding: 16px 14px;
+            background: #0d1117; border-radius: 12px;
+        }
+        /* QF column: two cards stacked */
+        .pb-qf-col { flex: 0 0 140px; display: flex; flex-direction: column; gap: 10px; justify-content: space-around; }
+        /* QF→SF connector */
+        .pb-conn-qfsf { flex: 0 0 16px; align-self: stretch; display: flex; flex-direction: column; }
+        .pb-conn-qfsf .c-up {
+            flex: 1; border-right: 2px solid #4a5568; border-bottom: 2px solid #4a5568;
+            border-bottom-right-radius: 6px;
+        }
+        .pb-conn-qfsf .c-dn {
+            flex: 1; border-right: 2px solid #4a5568; border-top: 2px solid #4a5568;
+            border-top-right-radius: 6px;
+        }
+        .pb-conn-qfsf.right .c-up {
+            border-right: none; border-left: 2px solid #4a5568;
+            border-bottom: 2px solid #4a5568;
+            border-bottom-right-radius: 0; border-bottom-left-radius: 6px;
+        }
+        .pb-conn-qfsf.right .c-dn {
+            border-right: none; border-left: 2px solid #4a5568;
+            border-top: 2px solid #4a5568;
+            border-top-right-radius: 0; border-top-left-radius: 6px;
+        }
+        /* SF column */
+        .pb-sf-col { flex: 0 0 140px; display: flex; align-items: center; justify-content: center; }
+        /* SF→Finals connector */
+        .pb-conn-sffin { flex: 0 0 16px; align-self: center; height: 2px; background: #4a5568; }
+        /* Finals center column */
+        .pb-fin-col {
+            flex: 0 0 160px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+        }
+        .pb-trophy-icon {
+            font-size: 3rem; text-align: center;
+            filter: drop-shadow(0 0 16px rgba(246,224,94,0.7));
+            margin-bottom: 2px;
+        }
+        .pb-finals-lbl {
+            font-size: 0.56rem; font-weight: 800; color: #f6e05e;
             text-transform: uppercase; letter-spacing: 0.12em;
-            margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2d3748;
+            text-align: center; margin-bottom: 5px; line-height: 1.4;
         }
-        .bracket-section-title.finals-title { color: #f6e05e; border-color: rgba(246,224,94,0.3); }
-        .bracket-matches-row {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;
+        /* Match card */
+        .pb-card { background: #1a202c; border-radius: 10px; border: 1px solid #2d3748; overflow: hidden; width: 100%; }
+        .pb-card.finals-card {
+            border-color: rgba(246,224,94,0.5);
+            box-shadow: 0 0 20px rgba(246,224,94,0.15);
         }
-        .bracket-match-card {
-            background: #1a202c; border-radius: 12px; border: 1px solid #2d3748; overflow: hidden;
+        .pb-card.third-card { border-color: rgba(160,174,192,0.25); }
+        .pb-card-lbl {
+            background: #2d3748; font-size: 0.58rem; font-weight: 700; color: #a0aec0;
+            text-align: center; padding: 5px 8px; text-transform: uppercase; letter-spacing: 0.07em;
         }
-        .bracket-match-card.finals-card { border-color: rgba(246,224,94,0.4); }
-        .bracket-match-card.third-card  { border-color: rgba(160,174,192,0.3); }
-        .bracket-match-label {
-            background: #2d3748; font-size: 0.62rem; font-weight: 700; color: #a0aec0;
-            text-align: center; padding: 6px 8px; text-transform: uppercase; letter-spacing: 0.07em;
-        }
-        .bracket-match-card.finals-card .bracket-match-label { background: rgba(246,224,94,0.12); color: #f6e05e; }
-        .bracket-match-card.third-card  .bracket-match-label { background: rgba(160,174,192,0.08); color: #a0aec0; }
+        .pb-card.finals-card .pb-card-lbl { background: rgba(246,224,94,0.14); color: #f6e05e; }
+        .pb-card.third-card  .pb-card-lbl { background: rgba(160,174,192,0.08); color: #a0aec0; }
+        /* Team slot */
         .bt-slot {
-            display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 52px;
+            display: flex; align-items: center; gap: 7px; padding: 9px 10px;
+            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 46px;
         }
         .bt-slot:last-of-type { border-bottom: none; }
-        .bt-slot.bt-winner { background: rgba(72,187,120,0.12); border-left: 3px solid #48bb78; }
+        .bt-slot.bt-winner { background: rgba(72,187,120,0.13); border-left: 3px solid #48bb78; }
         .bt-slot.bt-loser  { opacity: 0.38; }
-        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.8rem; justify-content: center; padding: 14px; }
-        .bt-slot.bt-clickable:hover { background: rgba(102,126,234,0.15); cursor: pointer; }
-        .bt-seed { font-size: 0.68rem; font-weight: 700; color: #718096; min-width: 22px; }
-        .bt-logo { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
-        .bt-logo-placeholder { width: 28px; height: 28px; background: #2d3748; border-radius: 4px; flex-shrink: 0; }
-        .bt-name { font-size: 0.82rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bt-ttb { font-size: 0.58rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 5px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
-        .bt-check { color: #48bb78; font-size: 1rem; flex-shrink: 0; }
-        .bracket-vs-divider { text-align: center; font-size: 0.62rem; font-weight: 700; color: #4a5568; padding: 3px; background: #171e2a; }
-        .champion-banner {
-            text-align: center; padding: 20px 16px; margin-top: 8px;
-            background: linear-gradient(135deg, rgba(246,224,94,0.12), rgba(246,224,94,0.04));
-            border: 1px solid rgba(246,224,94,0.35); border-radius: 14px;
+        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.75rem; justify-content: center; padding: 12px 10px; }
+        .bt-slot.bt-clickable:hover { background: rgba(102,126,234,0.18); cursor: pointer; }
+        .bt-seed  { font-size: 0.63rem; font-weight: 700; color: #718096; min-width: 18px; }
+        .bt-logo  { width: 25px; height: 25px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
+        .bt-logo-placeholder { width: 25px; height: 25px; background: #2d3748; border-radius: 4px; flex-shrink: 0; }
+        .bt-name  { font-size: 0.76rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bt-ttb   { font-size: 0.54rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 4px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+        .bt-check { color: #48bb78; font-size: 0.9rem; flex-shrink: 0; }
+        .pb-vs    { text-align: center; font-size: 0.58rem; font-weight: 700; color: #4a5568; padding: 3px; background: #111827; }
+        /* Finals slots slightly bigger */
+        .pb-card.finals-card .bt-slot { padding: 11px 12px; min-height: 52px; }
+        .pb-card.finals-card .bt-logo { width: 30px; height: 30px; }
+        .pb-card.finals-card .bt-logo-placeholder { width: 30px; height: 30px; }
+        .pb-card.finals-card .bt-name { font-size: 0.84rem; }
+        /* 3rd place section */
+        .pb-third-wrap { text-align: center; padding: 14px 12px 4px; }
+        .pb-third-inner {
+            display: inline-block; background: rgba(160,174,192,0.06);
+            border: 1px solid rgba(160,174,192,0.2); border-radius: 10px; overflow: hidden;
+            min-width: 200px; max-width: 320px; width: 100%;
         }
-        .champion-banner .trophy { font-size: 2.5rem; }
-        .champion-banner .champion-label { font-size: 0.7rem; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.1em; margin: 6px 0 4px; }
-        .champion-banner .champion-logo { width: 64px; height: 64px; object-fit: contain; border-radius: 10px; margin: 6px auto; display: block; }
-        .champion-banner .champion-name { font-size: 1.3rem; font-weight: 900; color: #f6e05e; }
-        .third-banner {
-            text-align: center; padding: 14px 16px; margin-top: 8px;
-            background: rgba(160,174,192,0.06); border: 1px solid rgba(160,174,192,0.2); border-radius: 12px;
+        /* Champion banner */
+        .pb-champion {
+            margin: 14px 12px 4px; padding: 18px 16px;
+            background: linear-gradient(135deg, rgba(246,224,94,0.15), rgba(246,224,94,0.04));
+            border: 1px solid rgba(246,224,94,0.4); border-radius: 14px; text-align: center;
         }
-        .third-banner .third-label { font-size: 0.68rem; color: #718096; text-transform: uppercase; letter-spacing: 0.08em; }
-        .third-banner .third-name { font-size: 1rem; font-weight: 800; color: #a0aec0; margin-top: 4px; }
+        .pb-champion .ch-trophy { font-size: 2.6rem; }
+        .pb-champion .ch-label  { font-size: 0.68rem; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.1em; margin: 6px 0 4px; }
+        .pb-champion .ch-logo   { width: 60px; height: 60px; object-fit: contain; border-radius: 10px; margin: 6px auto; display: block; }
+        .pb-champion .ch-name   { font-size: 1.25rem; font-weight: 900; color: #f6e05e; }
+        /* 3rd place banner */
+        .pb-3rd {
+            margin: 6px 12px 8px; padding: 12px 16px;
+            background: rgba(160,174,192,0.06); border: 1px solid rgba(160,174,192,0.2);
+            border-radius: 12px; text-align: center;
+        }
+        .pb-3rd .third-lbl  { font-size: 0.65rem; color: #718096; text-transform: uppercase; letter-spacing: 0.08em; }
+        .pb-3rd .third-name { font-size: 1rem; font-weight: 800; color: #a0aec0; margin-top: 4px; }
 
         /* Schedule Add/Edit Modal */
         .schedule-modal {
@@ -3389,142 +3445,124 @@
             }
             while (seeds.length < 8) seeds.push(null);
 
-            const seedIdx = (name) => seeds.findIndex(s => s?.name === name);
-            const seedNum  = (name) => { const i = seedIdx(name); return i >= 0 ? i + 1 : '?'; };
+            const seedNum = (name) => { const i = seeds.findIndex(s => s?.name === name); return i >= 0 ? i + 1 : '?'; };
 
-            // Determine SF participants from QF results
+            // QF winners
             const qfw = playoffBracket.qf;
+            // SF participants: QF1(1v8)+QF4(4v5) → SF1 ; QF2(2v7)+QF3(3v6) → SF2
             const sf1t1 = qfw[0] ? seeds.find(s => s?.name === qfw[0]) : null;
             const sf1t2 = qfw[3] ? seeds.find(s => s?.name === qfw[3]) : null;
             const sf2t1 = qfw[1] ? seeds.find(s => s?.name === qfw[1]) : null;
             const sf2t2 = qfw[2] ? seeds.find(s => s?.name === qfw[2]) : null;
-
             // Finals participants from SF results
             const sfw = playoffBracket.sf;
             const finT1 = sfw[0] ? seeds.find(s => s?.name === sfw[0]) : null;
             const finT2 = sfw[1] ? seeds.find(s => s?.name === sfw[1]) : null;
-
-            // 3rd place: the SF losers
+            // 3rd place: SF losers
             const sf1Loser = sfw[0] && sf1t1 && sf1t2 ? (sfw[0] === sf1t1.name ? sf1t2 : sf1t1) : null;
             const sf2Loser = sfw[1] && sf2t1 && sf2t2 ? (sfw[1] === sf2t1.name ? sf2t2 : sf2t1) : null;
 
             // Team slot renderer
             const slot = (team, sNum, isWinner, isLoser, isTTB, roundKey, idx) => {
                 if (!team) return `<div class="bt-slot bt-tbd">TBD</div>`;
-                const logo   = TEAM_LOGOS[team.name] || '';
+                const logo = TEAM_LOGOS[team.name] || '';
                 const logoHtml = logo ? `<img src="${logo}" class="bt-logo">` : `<div class="bt-logo-placeholder"></div>`;
-                const wCls   = isWinner ? 'bt-winner' : isLoser ? 'bt-loser' : '';
+                const wCls = isWinner ? 'bt-winner' : isLoser ? 'bt-loser' : '';
                 const clickable = isAdminMode && !isWinner && roundKey
                     ? `bt-clickable" onclick="setPlayoffWinner('${roundKey}',${idx},'${team.name.replace(/'/g,"\\'")}')` : '';
-                const ttb  = isTTB  ? `<span class="bt-ttb">2× to beat</span>` : '';
+                const ttb   = isTTB  ? `<span class="bt-ttb">2× beat</span>` : '';
                 const check = isWinner ? `<span class="bt-check">✓</span>` : '';
-                return `<div class="bt-slot ${wCls} ${clickable}">
-                    <span class="bt-seed">#${sNum}</span>${logoHtml}
-                    <span class="bt-name">${team.name}</span>${ttb}${check}
-                </div>`;
+                return `<div class="bt-slot ${wCls} ${clickable}"><span class="bt-seed">#${sNum}</span>${logoHtml}<span class="bt-name">${team.name}</span>${ttb}${check}</div>`;
             };
 
-            // Build QF cards (1v8, 2v7, 3v6, 4v5)
-            const qfDefs = [
-                { label:'QF · Game 1', s1:0, s2:7, idx:0 },
-                { label:'QF · Game 2', s1:1, s2:6, idx:1 },
-                { label:'QF · Game 3', s1:2, s2:5, idx:2 },
-                { label:'QF · Game 4', s1:3, s2:4, idx:3 },
-            ];
-            const qfCards = qfDefs.map(m => {
-                const t1 = seeds[m.s1], t2 = seeds[m.s2];
-                const w = qfw[m.idx];
-                return `<div class="bracket-match-card">
-                    <div class="bracket-match-label">${m.label}</div>
-                    ${slot(t1, m.s1+1, w===t1?.name, !!(w&&w!==t1?.name), true,  'qf', m.idx)}
-                    <div class="bracket-vs-divider">VS</div>
-                    ${slot(t2, m.s2+1, w===t2?.name, !!(w&&w!==t2?.name), false, 'qf', m.idx)}
-                </div>`;
-            }).join('');
+            // Build a card helper
+            const mkCard = (cls, lbl, t1,s1,w1,l1,ttb1,rk1,i1, t2,s2,w2,l2,ttb2,rk2,i2) =>
+                `<div class="pb-card ${cls}"><div class="pb-card-lbl">${lbl}</div>` +
+                slot(t1,s1,w1,l1,ttb1,rk1,i1) +
+                `<div class="pb-vs">VS</div>` +
+                slot(t2,s2,w2,l2,ttb2,rk2,i2) +
+                `</div>`;
+
+            // QF cards (left side: 1v8, 4v5 ; right side: 2v7, 3v6)
+            const [t1_1,t8,t4,t5,t2_2,t7,t3,t6] = [seeds[0],seeds[7],seeds[3],seeds[4],seeds[1],seeds[6],seeds[2],seeds[5]];
+            const qf1Card = mkCard('','QF 1 · #1 vs #8', t1_1,1,qfw[0]===t1_1?.name,!!(qfw[0]&&qfw[0]!==t1_1?.name),true,'qf',0, t8,8,qfw[0]===t8?.name,!!(qfw[0]&&qfw[0]!==t8?.name),false,'qf',0);
+            const qf4Card = mkCard('','QF 4 · #4 vs #5', t4,4,qfw[3]===t4?.name,!!(qfw[3]&&qfw[3]!==t4?.name),true,'qf',3, t5,5,qfw[3]===t5?.name,!!(qfw[3]&&qfw[3]!==t5?.name),false,'qf',3);
+            const qf2Card = mkCard('','QF 2 · #2 vs #7', t2_2,2,qfw[1]===t2_2?.name,!!(qfw[1]&&qfw[1]!==t2_2?.name),true,'qf',1, t7,7,qfw[1]===t7?.name,!!(qfw[1]&&qfw[1]!==t7?.name),false,'qf',1);
+            const qf3Card = mkCard('','QF 3 · #3 vs #6', t3,3,qfw[2]===t3?.name,!!(qfw[2]&&qfw[2]!==t3?.name),true,'qf',2, t6,6,qfw[2]===t6?.name,!!(qfw[2]&&qfw[2]!==t6?.name),false,'qf',2);
 
             // SF cards
-            const makeSFCard = (t1, t2, sfIdx, waitFor) => {
-                const w = sfw[sfIdx];
-                if (!t1 && !t2) return `<div class="bracket-match-card">
-                    <div class="bracket-match-label">SF · Game ${sfIdx+1}</div>
-                    <div class="bt-slot bt-tbd">TBD — awaiting ${waitFor}</div>
-                    <div class="bracket-vs-divider">VS</div>
-                    <div class="bt-slot bt-tbd">TBD</div>
-                </div>`;
-                return `<div class="bracket-match-card">
-                    <div class="bracket-match-label">SF · Game ${sfIdx+1}</div>
-                    ${slot(t1, t1?seedNum(t1.name):'?', w===t1?.name, !!(w&&w!==t1?.name), false, 'sf', sfIdx)}
-                    <div class="bracket-vs-divider">VS</div>
-                    ${slot(t2, t2?seedNum(t2.name):'?', w===t2?.name, !!(w&&w!==t2?.name), false, 'sf', sfIdx)}
-                </div>`;
-            };
-
-            const sfCards = [
-                makeSFCard(sf1t1, sf1t2, 0, 'QF Game 1 & 4'),
-                makeSFCard(sf2t1, sf2t2, 1, 'QF Game 2 & 3'),
-            ].join('');
+            const sf1w = sfw[0], sf2w = sfw[1];
+            const sf1Card = (!sf1t1 && !sf1t2)
+                ? `<div class="pb-card"><div class="pb-card-lbl">SF · GAME 1</div><div class="bt-slot bt-tbd">TBD — awaiting QF 1 & 4</div><div class="pb-vs">VS</div><div class="bt-slot bt-tbd">TBD</div></div>`
+                : mkCard('','SF · GAME 1', sf1t1,sf1t1?seedNum(sf1t1.name):'?',sf1w===sf1t1?.name,!!(sf1w&&sf1w!==sf1t1?.name),false,'sf',0, sf1t2,sf1t2?seedNum(sf1t2.name):'?',sf1w===sf1t2?.name,!!(sf1w&&sf1w!==sf1t2?.name),false,'sf',0);
+            const sf2Card = (!sf2t1 && !sf2t2)
+                ? `<div class="pb-card"><div class="pb-card-lbl">SF · GAME 2</div><div class="bt-slot bt-tbd">TBD — awaiting QF 2 & 3</div><div class="pb-vs">VS</div><div class="bt-slot bt-tbd">TBD</div></div>`
+                : mkCard('','SF · GAME 2', sf2t1,sf2t1?seedNum(sf2t1.name):'?',sf2w===sf2t1?.name,!!(sf2w&&sf2w!==sf2t1?.name),false,'sf',1, sf2t2,sf2t2?seedNum(sf2t2.name):'?',sf2w===sf2t2?.name,!!(sf2w&&sf2w!==sf2t2?.name),false,'sf',1);
 
             // Finals card
             const fw = playoffBracket.champion;
-            const finalsCard = `<div class="bracket-match-card finals-card">
-                <div class="bracket-match-label">🏆 CHAMPIONSHIP FINALS</div>
-                ${slot(finT1, finT1?seedNum(finT1.name):'?', fw===finT1?.name, !!(fw&&fw!==finT1?.name), false, 'final', 0)}
-                <div class="bracket-vs-divider">VS</div>
-                ${slot(finT2, finT2?seedNum(finT2.name):'?', fw===finT2?.name, !!(fw&&fw!==finT2?.name), false, 'final', 0)}
-            </div>`;
+            const finalsCard = mkCard('finals-card','🏆 CHAMPIONSHIP FINALS', finT1,finT1?seedNum(finT1.name):'?',fw===finT1?.name,!!(fw&&fw!==finT1?.name),false,'final',0, finT2,finT2?seedNum(finT2.name):'?',fw===finT2?.name,!!(fw&&fw!==finT2?.name),false,'final',0);
 
             // 3rd place card
             const tw = playoffBracket.thirdPlace;
-            const thirdCard = `<div class="bracket-match-card third-card">
-                <div class="bracket-match-label">🥉 BATTLE FOR 3RD PLACE</div>
-                ${slot(sf1Loser, sf1Loser?seedNum(sf1Loser.name):'?', tw===sf1Loser?.name, !!(tw&&tw!==sf1Loser?.name), false, 'third', 0)}
-                <div class="bracket-vs-divider">VS</div>
-                ${slot(sf2Loser, sf2Loser?seedNum(sf2Loser.name):'?', tw===sf2Loser?.name, !!(tw&&tw!==sf2Loser?.name), false, 'third', 0)}
-            </div>`;
+            const thirdCard = mkCard('third-card','🥉 BATTLE FOR 3RD PLACE', sf1Loser,sf1Loser?seedNum(sf1Loser.name):'?',tw===sf1Loser?.name,!!(tw&&tw!==sf1Loser?.name),false,'third',0, sf2Loser,sf2Loser?seedNum(sf2Loser.name):'?',tw===sf2Loser?.name,!!(tw&&tw!==sf2Loser?.name),false,'third',0);
 
-            // Champion / 3rd place banners
+            // Champion / 3rd banners
             const champion = playoffBracket.champion;
             const champTeam = champion ? seeds.find(s => s?.name === champion) : null;
             const thirdTeam = playoffBracket.thirdPlace ? seeds.find(s => s?.name === playoffBracket.thirdPlace) : null;
 
-            const champBanner = champTeam ? `<div class="champion-banner">
-                <div class="trophy">🏆</div>
-                <div class="champion-label">Season Champion</div>
-                ${TEAM_LOGOS[champTeam.name] ? `<img src="${TEAM_LOGOS[champTeam.name]}" class="champion-logo">` : ''}
-                <div class="champion-name">${champTeam.name}</div>
+            const champBanner = champTeam ? `<div class="pb-champion">
+                <div class="ch-trophy">🏆</div>
+                <div class="ch-label">Season Champion</div>
+                ${TEAM_LOGOS[champTeam.name] ? `<img src="${TEAM_LOGOS[champTeam.name]}" class="ch-logo">` : ''}
+                <div class="ch-name">${champTeam.name}</div>
             </div>` : '';
 
-            const thirdBanner = thirdTeam ? `<div class="third-banner">
-                <div class="third-label">🥉 3rd Place</div>
+            const thirdBanner = thirdTeam ? `<div class="pb-3rd">
+                <div class="third-lbl">🥉 3rd Place</div>
                 <div class="third-name">${thirdTeam.name}</div>
             </div>` : '';
 
             const adminHint = isAdminMode
-                ? '<div class="playoff-admin-hint">✏️ Admin: tap a team to mark them as winner</div>'
-                : '<div class="playoff-admin-hint">View only — admin sets match results</div>';
+                ? '<div class="pb-admin-hint">✏️ Admin: tap a team to mark them as winner</div>'
+                : '<div class="pb-admin-hint">View only — admin sets match results</div>';
 
-            container.innerHTML = `<div class="playoff-bracket-wrapper">
-                <div class="playoff-title">
+            container.innerHTML = `<div class="pb-page">
+                <div class="pb-header">
                     <h2>🏆 PLAYOFFS</h2>
                     <p>Quarterfinals &nbsp;·&nbsp; Semifinals &nbsp;·&nbsp; Finals</p>
                 </div>
                 ${adminHint}
-                <div class="bracket-section">
-                    <div class="bracket-section-title">Quarterfinals — Ranks 1–4 have Twice-to-Beat advantage</div>
-                    <div class="bracket-matches-row">${qfCards}</div>
-                </div>
-                <div class="bracket-section">
-                    <div class="bracket-section-title">Semifinals</div>
-                    <div class="bracket-matches-row" style="grid-template-columns:1fr 1fr;">${sfCards}</div>
-                </div>
-                <div class="bracket-section">
-                    <div class="bracket-section-title finals-title">Finals</div>
-                    <div class="bracket-matches-row" style="grid-template-columns:1fr 1fr;">
-                        ${finalsCard}${thirdCard}
+                <div class="pb-scroll">
+                    <div class="pb-bracket">
+                        <div class="pb-qf-col">${qf1Card}${qf4Card}</div>
+                        <div class="pb-conn-qfsf"><div class="c-up"></div><div class="c-dn"></div></div>
+                        <div class="pb-sf-col">${sf1Card}</div>
+                        <div class="pb-conn-sffin"></div>
+                        <div class="pb-fin-col">
+                            <div class="pb-trophy-icon">🏆</div>
+                            <div class="pb-finals-lbl">Championship<br>Finals</div>
+                            ${finalsCard}
+                        </div>
+                        <div class="pb-conn-sffin"></div>
+                        <div class="pb-sf-col">${sf2Card}</div>
+                        <div class="pb-conn-qfsf right"><div class="c-up"></div><div class="c-dn"></div></div>
+                        <div class="pb-qf-col">${qf2Card}${qf3Card}</div>
                     </div>
                 </div>
+                <div class="pb-third-wrap"><div class="pb-third-inner">${thirdCard}</div></div>
                 ${champBanner}${thirdBanner}
             </div>`;
+
+            // Center the view on the Finals column on mobile
+            setTimeout(() => {
+                const scroll = container.querySelector('.pb-scroll');
+                const finCol = container.querySelector('.pb-fin-col');
+                if (scroll && finCol) {
+                    scroll.scrollLeft = finCol.offsetLeft - (scroll.clientWidth / 2) + (finCol.offsetWidth / 2);
+                }
+            }, 60);
         }
 
         // ── Schedule Filter ───────────────────────────────────────────────────
