@@ -42,10 +42,10 @@
       "description": "Start or continue tracking a game"
     },
     {
-      "name": "Game History",
-      "short_name": "History",
+      "name": "League Hub",
+      "short_name": "Hub",
       "url": "./history.html",
-      "description": "View past games and standings"
+      "description": "Standings, stats, schedule and playoffs"
     },
     {
       "name": "Spectator View",
