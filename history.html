@@ -1437,12 +1437,30 @@
             color: #a0aec0;
         }
 
+        .leader-stat-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            min-width: 60px;
+        }
         .leader-stat {
             font-size: 1.3em;
             font-weight: 900;
             color: #48bb78;
-            min-width: 50px;
             text-align: right;
+            line-height: 1.1;
+        }
+        .leader-gp {
+            font-size: 0.65rem;
+            color: #4a5568;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .leaders-min-note {
+            text-align: center;
+            font-size: 0.68rem;
+            color: #4a5568;
+            padding: 8px 0 2px;
         }
 
         @media (max-width: 768px) {
@@ -1740,6 +1758,11 @@
 
         <!-- League Leaders Tab -->
         <div id="leadersTab" class="tab-content">
+            <div style="text-align:center; padding: 10px 12px 4px;">
+                <span style="display:inline-block; background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.3); border-radius: 8px; padding: 6px 14px; font-size: 0.75rem; color: #68d391; font-weight: 600;">
+                    📊 Rankings based on per-game averages &nbsp;·&nbsp; Minimum <span id="leadersMinGpNote">3</span> games played to qualify
+                </span>
+            </div>
             <div class="leaders-container">
                 <div class="leader-category">
                     <h3 class="leader-category-title">👑 Points</h3>
@@ -2603,6 +2626,10 @@
             return PLAYER_NAME_CORRECTIONS[name.trim().toLowerCase()] || name;
         }
 
+        // Minimum games a player must have played to appear on the per-game leaderboard.
+        // Raise this as the season progresses to keep rankings meaningful.
+        const MIN_GAMES_FOR_LEADERS = 3;
+
         function renderLeagueLeaders() {
             const allPlayers = Object.values(seasonStandings.players);
             const empty = document.getElementById('emptyLeaders');
@@ -2647,29 +2674,38 @@
                 return;
             }
 
+            // Only rank players who've played enough games — fairer than totals
+            const qualifiedPlayers = activePlayers.filter(p => p.gamesPlayed >= MIN_GAMES_FOR_LEADERS);
+            // Fall back to all active players early in the season so the board isn't empty
+            const leaderPool = qualifiedPlayers.length > 0 ? qualifiedPlayers : activePlayers;
+            const showingAll = qualifiedPlayers.length === 0;
+
             empty.style.display = 'none';
             document.querySelector('.leaders-container').style.display = 'grid';
 
+            // Keep the header note in sync with the constant
+            const gpNoteEl = document.getElementById('leadersMinGpNote');
+            if (gpNoteEl) gpNoteEl.textContent = MIN_GAMES_FOR_LEADERS;
+
             // Points Leaders
-            renderLeaderCategory(activePlayers, 'points', 'avgPoints', 'pointsLeaders', 'PPG');
+            renderLeaderCategory(leaderPool, 'avgPoints',   'pointsLeaders',  'PPG', showingAll);
 
             // Rebounds Leaders
-            renderLeaderCategory(activePlayers, 'rebounds', 'avgRebounds', 'reboundsLeaders', 'RPG');
+            renderLeaderCategory(leaderPool, 'avgRebounds', 'reboundsLeaders','RPG', showingAll);
 
             // Assists Leaders
-            renderLeaderCategory(activePlayers, 'assists', 'avgAssists', 'assistsLeaders', 'APG');
+            renderLeaderCategory(leaderPool, 'avgAssists',  'assistsLeaders', 'APG', showingAll);
 
             // Steals Leaders
-            renderLeaderCategory(activePlayers, 'steals', 'avgSteals', 'stealsLeaders', 'SPG');
+            renderLeaderCategory(leaderPool, 'avgSteals',   'stealsLeaders',  'SPG', showingAll);
 
             // Blocks Leaders
-            renderLeaderCategory(activePlayers, 'blocks', 'avgBlocks', 'blocksLeaders', 'BPG');
+            renderLeaderCategory(leaderPool, 'avgBlocks',   'blocksLeaders',  'BPG', showingAll);
         }
 
-        function renderLeaderCategory(players, statName, sortKey, elementId, label, useAverage = false) {
+        function renderLeaderCategory(players, sortKey, elementId, label, earlySeasonMode) {
             const container = document.getElementById(elementId);
 
-            // Sort players by the stat and take top 10
             const topPlayers = [...players]
                 .filter(p => p[sortKey] > 0)
                 .sort((a, b) => b[sortKey] - a[sortKey])
@@ -2680,21 +2716,18 @@
                 return;
             }
 
-            container.innerHTML = '';
+            const note = earlySeasonMode
+                ? `<div class="leaders-min-note">⚠️ Early season — showing all players (min. ${MIN_GAMES_FOR_LEADERS} GP needed to qualify)</div>`
+                : '';
+
+            container.innerHTML = note;
 
             topPlayers.forEach((player, index) => {
                 const rank = index + 1;
                 const rankClass = rank <= 3 ? `rank-${rank}` : '';
                 const teamLogo = TEAM_LOGOS[player.teamName] || '';
                 const logoHTML = teamLogo ? `<img src="${teamLogo}" class="team-logo-table" alt="${player.teamName}">` : '';
-
-                // Calculate stat value
-                let statValue;
-                if (useAverage) {
-                    statValue = (player[sortKey] / player.gamesPlayed).toFixed(1);
-                } else {
-                    statValue = player[sortKey].toFixed(1);
-                }
+                const statValue = player[sortKey].toFixed(1);
 
                 const item = document.createElement('div');
                 item.className = `leader-item ${rankClass}`;
@@ -2705,7 +2738,10 @@
                         <div class="leader-name"><span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span></div>
                         <div class="leader-team">${player.teamName}</div>
                     </div>
-                    <div class="leader-stat">${statValue}</div>
+                    <div class="leader-stat-col">
+                        <div class="leader-stat">${statValue}</div>
+                        <div class="leader-gp">${player.gamesPlayed} GP</div>
+                    </div>
                 `;
                 container.appendChild(item);
             });
