@@ -2435,6 +2435,15 @@
             renderPlayerStats();
         }
 
+        // Canonical name corrections — maps known typos/aliases to the correct name
+        const PLAYER_NAME_CORRECTIONS = {
+            'bariwan #3': 'Bariuan #3',
+        };
+
+        function correctPlayerName(name) {
+            return PLAYER_NAME_CORRECTIONS[name.trim().toLowerCase()] || name;
+        }
+
         function renderLeagueLeaders() {
             const allPlayers = Object.values(seasonStandings.players);
             const empty = document.getElementById('emptyLeaders');
@@ -2443,9 +2452,10 @@
             // guest player's name was entered with slight variations across games)
             const mergeMap = {};
             allPlayers.forEach(player => {
-                const mergeKey = `${player.teamName}_${player.playerName.trim().toLowerCase()}`;
+                const canonicalName = correctPlayerName(player.playerName);
+                const mergeKey = `${player.teamName}_${canonicalName.trim().toLowerCase()}`;
                 if (!mergeMap[mergeKey]) {
-                    mergeMap[mergeKey] = Object.assign({}, player);
+                    mergeMap[mergeKey] = Object.assign({}, player, { playerName: canonicalName });
                 } else {
                     const m = mergeMap[mergeKey];
                     m.gamesPlayed   += player.gamesPlayed;
