@@ -5339,16 +5339,8 @@
                     pushedBy: sessionId
                 };
 
-                console.log('📤 Pushing to Firebase:', {
-                    gameName: liveData.gameName,
-                    isLive: liveData.isLive,
-                    lastUpdated: new Date(liveData.lastUpdated).toLocaleTimeString(),
-                    team1Score: calculateTeamTotalPoints('team1'),
-                    team2Score: calculateTeamTotalPoints('team2')
-                });
-
-                database.ref('liveGame').set(liveData);
-                console.log('✅ Push successful');
+                database.ref('liveGame').set(liveData)
+                    .catch(err => console.error('❌ Firebase push failed:', err));
             } catch (error) {
                 console.error('❌ Failed to push live update:', error);
             }
