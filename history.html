@@ -808,13 +808,14 @@
         .pb-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 4px 8px; }
         .pb-bracket {
             display: flex; align-items: stretch; gap: 0;
-            min-width: 820px; padding: 18px 16px;
+            width: 100%; padding: 20px 14px;
             background: #0d1117; border-radius: 14px;
+            box-sizing: border-box;
         }
-        /* QF column: two cards stacked */
-        .pb-qf-col { flex: 0 0 162px; display: flex; flex-direction: column; gap: 12px; justify-content: space-around; }
-        /* QF→SF connector */
-        .pb-conn-qfsf { flex: 0 0 20px; align-self: stretch; display: flex; flex-direction: column; }
+        /* QF/SF columns grow proportionally; Finals gets more space */
+        .pb-qf-col { flex: 3 1 0; min-width: 130px; display: flex; flex-direction: column; gap: 12px; justify-content: space-around; }
+        /* QF→SF connector — fixed width */
+        .pb-conn-qfsf { flex: 0 0 22px; align-self: stretch; display: flex; flex-direction: column; }
         .pb-conn-qfsf .c-up {
             flex: 1; border-right: 2px solid #4a5568; border-bottom: 2px solid #4a5568;
             border-bottom-right-radius: 7px;
@@ -834,61 +835,61 @@
             border-top-right-radius: 0; border-top-left-radius: 7px;
         }
         /* SF column */
-        .pb-sf-col { flex: 0 0 162px; display: flex; align-items: center; justify-content: center; }
-        /* SF→Finals connector */
-        .pb-conn-sffin { flex: 0 0 20px; align-self: center; height: 2px; background: #4a5568; }
-        /* Finals center column */
+        .pb-sf-col { flex: 3 1 0; min-width: 130px; display: flex; align-items: center; justify-content: center; }
+        /* SF→Finals connector — fixed width */
+        .pb-conn-sffin { flex: 0 0 22px; align-self: center; height: 2px; background: #4a5568; }
+        /* Finals center column — gets the most space */
         .pb-fin-col {
-            flex: 0 0 192px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            flex: 4 1 0; min-width: 160px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
         }
         .pb-trophy-icon {
-            font-size: 3.8rem; text-align: center;
-            filter: drop-shadow(0 0 20px rgba(246,224,94,0.8));
+            font-size: 4.2rem; text-align: center;
+            filter: drop-shadow(0 0 22px rgba(246,224,94,0.85));
             margin-bottom: 2px;
         }
         .pb-finals-lbl {
-            font-size: 0.64rem; font-weight: 800; color: #f6e05e;
-            text-transform: uppercase; letter-spacing: 0.13em;
+            font-size: 0.68rem; font-weight: 800; color: #f6e05e;
+            text-transform: uppercase; letter-spacing: 0.14em;
             text-align: center; margin-bottom: 6px; line-height: 1.5;
         }
         /* Match card */
         .pb-card { background: #1a202c; border-radius: 10px; border: 1px solid #2d3748; overflow: hidden; width: 100%; }
         .pb-card.finals-card {
             border-color: rgba(246,224,94,0.55);
-            box-shadow: 0 0 26px rgba(246,224,94,0.18);
+            box-shadow: 0 0 28px rgba(246,224,94,0.2);
         }
         .pb-card.third-card { border-color: rgba(160,174,192,0.25); }
         .pb-card-lbl {
-            background: #2d3748; font-size: 0.62rem; font-weight: 700; color: #a0aec0;
-            text-align: center; padding: 6px 8px; text-transform: uppercase; letter-spacing: 0.07em;
+            background: #2d3748; font-size: 0.64rem; font-weight: 700; color: #a0aec0;
+            text-align: center; padding: 7px 8px; text-transform: uppercase; letter-spacing: 0.07em;
         }
         .pb-card.finals-card .pb-card-lbl { background: rgba(246,224,94,0.14); color: #f6e05e; }
         .pb-card.third-card  .pb-card-lbl { background: rgba(160,174,192,0.08); color: #a0aec0; }
         /* Team slot */
         .bt-slot {
-            display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 52px;
+            display: flex; align-items: center; gap: 9px; padding: 11px 13px;
+            border-bottom: 1px solid #2d3748; transition: background 0.15s; min-height: 56px;
         }
         .bt-slot:last-of-type { border-bottom: none; }
         .bt-slot.bt-winner { background: rgba(72,187,120,0.13); border-left: 3px solid #48bb78; }
         .bt-slot.bt-loser  { opacity: 0.38; }
-        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.78rem; justify-content: center; padding: 14px 10px; }
+        .bt-slot.bt-tbd    { color: #4a5568; font-style: italic; font-size: 0.8rem; justify-content: center; padding: 15px 10px; }
         .bt-slot.bt-clickable:hover { background: rgba(102,126,234,0.18); cursor: pointer; }
-        .bt-seed  { font-size: 0.65rem; font-weight: 700; color: #718096; min-width: 20px; }
-        .bt-logo  { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; }
-        .bt-logo-placeholder { width: 28px; height: 28px; background: #2d3748; border-radius: 4px; flex-shrink: 0; }
-        .bt-name  { font-size: 0.8rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .bt-ttb   { font-size: 0.56rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 5px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
-        .bt-check { color: #48bb78; font-size: 1rem; flex-shrink: 0; }
-        .pb-vs    { text-align: center; font-size: 0.6rem; font-weight: 700; color: #4a5568; padding: 4px; background: #111827; }
+        .bt-seed  { font-size: 0.68rem; font-weight: 700; color: #718096; min-width: 22px; }
+        .bt-logo  { width: 32px; height: 32px; object-fit: contain; border-radius: 5px; flex-shrink: 0; }
+        .bt-logo-placeholder { width: 32px; height: 32px; background: #2d3748; border-radius: 5px; flex-shrink: 0; }
+        .bt-name  { font-size: 0.85rem; font-weight: 600; color: #e2e8f0; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bt-ttb   { font-size: 0.57rem; font-weight: 700; background: #d69e2e; color: #1a202c; padding: 2px 5px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+        .bt-check { color: #48bb78; font-size: 1.05rem; flex-shrink: 0; }
+        .pb-vs    { text-align: center; font-size: 0.62rem; font-weight: 700; color: #4a5568; padding: 4px; background: #111827; }
         /* Finals slots — noticeably bigger */
-        .pb-card.finals-card .bt-slot { padding: 14px 14px; min-height: 64px; }
-        .pb-card.finals-card .bt-logo { width: 38px; height: 38px; }
-        .pb-card.finals-card .bt-logo-placeholder { width: 38px; height: 38px; }
-        .pb-card.finals-card .bt-name { font-size: 0.95rem; font-weight: 700; }
-        .pb-card.finals-card .bt-seed { font-size: 0.72rem; min-width: 22px; }
-        .pb-card.finals-card .pb-vs   { padding: 5px; font-size: 0.65rem; }
+        .pb-card.finals-card .bt-slot { padding: 16px 15px; min-height: 70px; }
+        .pb-card.finals-card .bt-logo { width: 44px; height: 44px; border-radius: 6px; }
+        .pb-card.finals-card .bt-logo-placeholder { width: 44px; height: 44px; border-radius: 6px; }
+        .pb-card.finals-card .bt-name { font-size: 1.05rem; font-weight: 700; }
+        .pb-card.finals-card .bt-seed { font-size: 0.76rem; min-width: 24px; }
+        .pb-card.finals-card .pb-vs   { padding: 6px; font-size: 0.66rem; }
         /* 3rd place section */
         .pb-third-wrap { text-align: center; padding: 14px 12px 4px; }
         .pb-third-inner {
