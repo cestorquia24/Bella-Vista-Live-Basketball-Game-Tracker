@@ -1705,13 +1705,16 @@
     <!-- Schedule Tab -->
     <div id="scheduleTab" class="tab-content">
         <div class="schedule-header-bar">
-            <div style="font-size:0.85rem;color:#718096;">Upcoming &amp; past scheduled games</div>
+            <select class="date-filter-select" id="scheduleFilterSelect" onchange="setScheduleFilter(this.value)">
+                <option value="upcoming">Upcoming Games</option>
+                <option value="all">All Games</option>
+            </select>
             <button class="add-schedule-btn" onclick="openScheduleModal()">+ Add Game</button>
         </div>
         <div id="scheduleGrid" class="schedule-grid"></div>
         <div id="emptySchedule" class="empty-state" style="display:none;">
             <div class="empty-state-icon">📅</div>
-            <div class="empty-state-text">No games scheduled yet</div>
+            <div class="empty-state-text">No games scheduled</div>
             <p style="color:#718096;">Admin can add upcoming games here.</p>
         </div>
     </div>
@@ -1827,6 +1830,7 @@
         let scheduleData = [];
         let scheduleEditingId = null;
         let liveGameData = null;
+        let scheduleFilter = 'upcoming';
         let selectedDate = null;
         let seasonStandings = { teams: {}, players: {} };
         let currentSort = { column: null, order: 'asc' };
@@ -2559,7 +2563,7 @@
         }
 
         function viewGameDetails(gameId) {
-            const game = gameHistory.find(g => g.id === gameId);
+            const game = gameHistory.find(g => g.id == gameId);
             if (!game) return;
 
             const modalBody = document.getElementById('modalBody');
@@ -3228,22 +3232,63 @@
             _renderScheduleCards(grid, empty);
         }
 
-        function _renderScheduleCards(grid, empty) {
-            if (scheduleData.length === 0) {
-                grid.innerHTML = '';
-                empty.style.display = 'block';
-                return;
-            }
-            empty.style.display = 'none';
+        function setScheduleFilter(val) {
+            scheduleFilter = val;
+            const grid  = document.getElementById('scheduleGrid');
+            const empty = document.getElementById('emptySchedule');
+            if (grid) _renderScheduleCards(grid, empty);
+        }
 
+        function _renderScheduleCards(grid, empty) {
             const now = new Date();
+            const todayStr = now.toISOString().slice(0, 10);
+
+            // Sort all games by date/time
             const sorted = [...scheduleData].sort((a, b) => {
                 const da = new Date(`${a.date}T${a.time || '00:00'}`);
                 const db = new Date(`${b.date}T${b.time || '00:00'}`);
                 return da - db;
             });
 
-            grid.innerHTML = sorted.map(game => {
+            // Populate filter dropdown with unique past dates
+            const select = document.getElementById('scheduleFilterSelect');
+            if (select) {
+                const currentVal = select.value;
+                const pastDates = [...new Set(
+                    sorted
+                        .filter(g => g.date < todayStr)
+                        .map(g => g.date)
+                )].reverse();
+                select.innerHTML = '<option value="upcoming">Upcoming Games</option><option value="all">All Games</option>';
+                pastDates.forEach(d => {
+                    const label = new Date(d + 'T00:00').toLocaleDateString('en-US',
+                        { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+                    select.innerHTML += `<option value="${d}">${label}</option>`;
+                });
+                select.value = currentVal || scheduleFilter;
+            }
+
+            // Apply filter
+            let filtered;
+            if (scheduleFilter === 'upcoming') {
+                filtered = sorted.filter(g => g.date >= todayStr);
+            } else if (scheduleFilter === 'all') {
+                filtered = sorted;
+            } else {
+                // specific date selected
+                filtered = sorted.filter(g => g.date === scheduleFilter);
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                empty.style.display = 'block';
+                empty.querySelector('.empty-state-text').textContent =
+                    scheduleFilter === 'upcoming' ? 'No upcoming games' : 'No games on this date';
+                return;
+            }
+            empty.style.display = 'none';
+
+            grid.innerHTML = filtered.map(game => {
                 const gameDateTime = new Date(`${game.date}T${game.time || '00:00'}`);
                 const diffMs = gameDateTime - now;
 
@@ -3265,7 +3310,6 @@
                      (liveGameData.team1?.name === game.team2 && liveGameData.team2?.name === game.team1));
 
                 // Check if a matching completed game exists in history
-                // First try exact date + teams, then fall back to closest game by teams only
                 const sameTeams = (g) => {
                     const t1 = g.team1?.name, t2 = g.team2?.name;
                     return (t1 === game.team1 && t2 === game.team2) ||
@@ -3285,16 +3329,15 @@
                     statusClass = 'completed'; badgeClass = 'completed'; badgeText = '✅ Final';
                 } else if (isPast) {
                     statusClass = 'completed'; badgeClass = 'completed'; badgeText = '⏹ Past';
-                } else if (diffMs < 7200000 && diffMs > -7200000) {
+                } else if (diffMs < 7200000) {
                     statusClass = 'live'; badgeClass = 'live'; badgeText = '🔴 Today';
                 } else {
                     statusClass = 'upcoming'; badgeClass = 'upcoming'; badgeText = '📅 Upcoming';
                 }
 
-                // Countdown / result text
+                // Bottom info: live score / final result / countdown
                 let extraHTML = '';
                 if (isLiveMatch) {
-                    // Calculate live score from liveGameData player stats
                     const calcScore = (team) => {
                         if (!team?.players) return 0;
                         return team.players.reduce((sum, p) => {
@@ -3304,12 +3347,10 @@
                     };
                     const liveT1 = liveGameData.team1?.name === game.team1 ? liveGameData.team1 : liveGameData.team2;
                     const liveT2 = liveGameData.team1?.name === game.team1 ? liveGameData.team2 : liveGameData.team1;
-                    const liveScore1 = calcScore(liveT1);
-                    const liveScore2 = calcScore(liveT2);
                     const qtr = liveGameData.currentQuarter;
                     const qtrText = qtr && qtr !== 'total' ? `Q${qtr}` : 'Live';
                     extraHTML = `<div class="schedule-result-link" style="color:#fc8181;font-weight:700;">
-                        ${qtrText}: <strong style="font-size:1.1em">${liveScore1} – ${liveScore2}</strong>
+                        ${qtrText}: <strong style="font-size:1.1em">${calcScore(liveT1)} – ${calcScore(liveT2)}</strong>
                         &nbsp;<a href="spectator.html" style="color:#fc8181;">Watch Live →</a>
                     </div>`;
                 } else if (completedGame) {
@@ -3320,22 +3361,16 @@
                     const score2 = (t1Name === game.team1) ? s2 : s1;
                     extraHTML = `<div class="schedule-result-link">
                         Final: <strong>${score1} – ${score2}</strong>
-                        &nbsp;<a onclick="viewGameDetails('${completedGame.id}')">View Result →</a>
+                        &nbsp;<a onclick="viewGameDetails(${completedGame.id})" style="cursor:pointer;">View Result →</a>
                     </div>`;
-                } else if (isPast) {
-                    extraHTML = `<div class="schedule-result-link">
-                        <a onclick="goToHistoryTab()">View in Game History →</a>
-                    </div>`;
-                } else if (diffMs > 0) {
+                } else if (!isPast && diffMs > 0) {
                     const days  = Math.floor(diffMs / 86400000);
                     const hours = Math.floor((diffMs % 86400000) / 3600000);
                     const mins  = Math.floor((diffMs % 3600000) / 60000);
-                    let countText = '';
-                    if (days > 0)       countText = `${days}d ${hours}h away`;
-                    else if (hours > 0) countText = `${hours}h ${mins}m away`;
-                    else                countText = `${mins}m away`;
-                    const soonClass = diffMs < 3600000 ? 'soon' : '';
-                    extraHTML = `<div class="schedule-countdown ${soonClass}">⏳ ${countText}</div>`;
+                    let countText = days > 0 ? `${days}d ${hours}h away`
+                        : hours > 0 ? `${hours}h ${mins}m away`
+                        : `${mins}m away`;
+                    extraHTML = `<div class="schedule-countdown ${diffMs < 3600000 ? 'soon' : ''}">⏳ ${countText}</div>`;
                 }
 
                 const dateDisplay = game.date
@@ -3367,11 +3402,11 @@
                     <div class="schedule-meta">
                         ${dateDisplay ? `<span>📅 ${dateDisplay}</span>` : ''}
                         ${timeDisplay ? `<span>🕐 ${timeDisplay}</span>` : ''}
-                        ${game.venue  ? `<span>📍 ${game.venue}</span>` : ''}
+                        ${game.venue  ? `<span>📍 ${game.venue}</span>`  : ''}
                     </div>
                     ${extraHTML}
                     <div class="schedule-card-actions">
-                        <button class="schedule-edit-btn" onclick="openScheduleModal('${game.id}')">✏️ Edit</button>
+                        <button class="schedule-edit-btn"   onclick="openScheduleModal('${game.id}')">✏️ Edit</button>
                         <button class="schedule-delete-btn" onclick="deleteScheduledGame('${game.id}')">🗑️ Delete</button>
                     </div>
                 </div>`;
