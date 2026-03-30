@@ -9,325 +9,300 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --col-normal:  #ffffff;
-            --col-warn:    #f59e0b;
-            --col-danger:  #ef4444;
-            --col-sc-ok:   #48bb78;
-            --col-sc-warn: #f59e0b;
-            --col-sc-danger: #ef4444;
-            --col-bg:      #0a0a0a;
-            --col-divider: #1a202c;
-        }
-
         html, body {
             height: 100%;
             overflow: hidden;
-            background: var(--col-bg);
-            color: var(--col-normal);
+            background: #000;
+            color: #fff;
             font-family: 'Oswald', 'Arial Narrow', Arial, sans-serif;
         }
 
-        /* ── Layout ────────────────────────────────── */
         .page {
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
 
-        /* ── Top bar ───────────────────────────────── */
-        .top-bar {
-            background: #111827;
-            border-bottom: 3px solid #2d3748;
-            padding: 0 28px;
-            height: 88px;
+        /* ── Scoreboard bar ─────────────────────────── */
+        .score-bar {
+            background: #0d1117;
+            border-bottom: 3px solid #1a2230;
+            height: 116px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: stretch;
+        }
+
+        /* Team block — fills half the bar on each side */
+        .team-score-block {
+            flex: 1;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            padding: 0 28px;
+            gap: 18px;
+            min-width: 0;
+        }
+        .team-score-block.right { flex-direction: row-reverse; }
+
+        .tsb-logo {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            border-radius: 6px;
             flex-shrink: 0;
         }
 
-        .top-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
+        .tsb-info { display: flex; flex-direction: column; min-width: 0; }
+        .team-score-block.right .tsb-info { align-items: flex-end; }
 
-        .league-logo {
-            width: 58px;
-            height: 58px;
-            object-fit: contain;
-            border-radius: 6px;
-        }
-
-        .league-name {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.6em;
-            letter-spacing: 0.12em;
-            color: #48bb78;
-            line-height: 1;
-        }
-
-        .quarter-badge {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.8em;
-            letter-spacing: 0.1em;
-            color: #f6e05e;
-            padding: 0 24px;
-            border-left: 2px solid #2d3748;
-            border-right: 2px solid #2d3748;
-        }
-
-        .scoreboard {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-        }
-
-        .team-block {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .team-logo-small {
-            width: 46px;
-            height: 46px;
-            object-fit: contain;
-            border-radius: 4px;
-        }
-
-        .team-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .team-info.left { align-items: flex-start; }
-
-        .team-name-top {
-            font-size: 0.72em;
-            color: #a0aec0;
-            letter-spacing: 0.12em;
+        .tsb-name {
+            font-size: 0.8em;
+            letter-spacing: 0.2em;
+            color: #4b5563;
             text-transform: uppercase;
             line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .team-score-top {
+        .tsb-score {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.4em;
-            line-height: 1;
+            font-size: 5em;
+            line-height: 0.88;
             font-variant-numeric: tabular-nums;
-            color: #f7fafc;
+            color: #f9fafb;
+            letter-spacing: 0.02em;
         }
 
-        .score-vs {
+        /* Possession dot */
+        .poss-dot {
+            display: inline-block;
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: #4ade80;
+            margin: 0 5px;
+            vertical-align: middle;
+            box-shadow: 0 0 10px rgba(74,222,128,0.9);
+        }
+        .poss-dot.hidden { visibility: hidden; }
+
+        /* Center: quarter */
+        .center-block {
+            flex-shrink: 0;
+            width: 190px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            border-left: 2px solid #1a2230;
+            border-right: 2px solid #1a2230;
+        }
+
+        .center-label {
+            font-size: 0.62em;
+            letter-spacing: 0.22em;
+            color: #4ade80;
+            text-transform: uppercase;
+        }
+
+        .quarter-display {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.6em;
-            color: #4a5568;
+            font-size: 4.2em;
+            line-height: 0.95;
+            color: #fbbf24;
+            letter-spacing: 0.06em;
         }
 
-        /* ── Clocks area ───────────────────────────── */
+        /* ── Clock panels ───────────────────────────── */
         .clocks-area {
             flex: 1;
             display: flex;
             min-height: 0;
         }
 
-        /* ── Game Timer Panel ──────────────────────── */
-        .game-time-panel {
-            flex: 1.1;
-            border-right: 4px solid var(--col-divider);
+        .clock-panel {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 16px;
             position: relative;
+            transition: background 0.25s;
         }
 
-        .panel-label {
-            font-size: 1.1em;
+        .clock-panel.left {
+            border-right: 3px solid #111827;
+        }
+
+        .clock-label {
+            position: absolute;
+            top: 22px;
+            font-size: 0.95em;
             font-weight: 700;
-            letter-spacing: 0.25em;
-            color: #4a5568;
+            letter-spacing: 0.38em;
+            color: #1f2937;
             text-transform: uppercase;
-            margin-bottom: 4px;
         }
 
-        .game-time-value {
+        /* ── Game Timer ─────────────────────────────── */
+        .game-time-val {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(5em, 16vw, 13em);
-            line-height: 0.9;
+            font-size: clamp(6em, 19vw, 17em);
+            line-height: 0.88;
             font-variant-numeric: tabular-nums;
-            color: var(--col-normal);
-            transition: color 0.4s;
+            color: #f9fafb;
             letter-spacing: 0.02em;
+            transition: color 0.35s;
         }
 
-        /* ── Shot Clock Panel ──────────────────────── */
-        .shot-clock-panel {
-            flex: 0.9;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            position: relative;
-        }
+        .game-time-val.warn   { color: #f59e0b; }
+        .game-time-val.danger { color: #ef4444; }
 
-        .shot-clock-value {
+        /* ── Shot Clock ─────────────────────────────── */
+        .shot-clock-val {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(7em, 22vw, 18em);
-            line-height: 0.9;
+            font-size: clamp(10em, 28vw, 26em);
+            line-height: 0.88;
             font-variant-numeric: tabular-nums;
-            color: var(--col-sc-ok);
-            transition: color 0.3s;
+            color: #4ade80;
+            transition: color 0.25s;
         }
 
-        /* ── Sponsor area ──────────────────────────── */
+        .shot-clock-val.warn {
+            color: #fb923c;
+            text-shadow: 0 0 50px rgba(251,146,60,0.45);
+        }
+        .shot-clock-val.danger {
+            color: #ef4444;
+            text-shadow: 0 0 60px rgba(239,68,68,0.85), 0 0 120px rgba(239,68,68,0.4);
+        }
+
+        /* ── Danger pulse (text) ───────────────────── */
+        @keyframes pulse {
+            0%, 100% { opacity: 1;    transform: scale(1);    }
+            50%       { opacity: 0.45; transform: scale(0.95); }
+        }
+        .danger { animation: pulse 0.48s ease-in-out infinite; }
+
+        /* ── Panel background flash on shot-clock danger ── */
+        @keyframes panelFlash {
+            0%, 100% { background: rgba(239,68,68,0.06); }
+            50%       { background: rgba(239,68,68,0.18); }
+        }
+        .sc-panel-danger { animation: panelFlash 0.48s ease-in-out infinite; }
+
+        /* ── Panel background glow on game-timer warn/danger ── */
+        .gt-panel-warn   { background: rgba(245,158,11,0.04); }
+        .gt-panel-danger { background: rgba(239,68,68,0.06); }
+
+        /* ── Sponsor ────────────────────────────────── */
         .sponsor-wrap {
             position: absolute;
-            bottom: 18px;
+            bottom: 22px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
         }
-
         .sponsor-label {
             font-size: 0.6em;
-            letter-spacing: 0.18em;
-            color: #4a5568;
+            letter-spacing: 0.2em;
+            color: #1f2937;
             text-transform: uppercase;
         }
-
         .sponsor-logo {
             max-height: 38px;
             max-width: 140px;
             object-fit: contain;
-            opacity: 0.85;
-            filter: brightness(1.3) saturate(0.8);
+            opacity: 0.65;
+            filter: brightness(1.5) saturate(0.7);
         }
 
-        /* ── Color states ──────────────────────────── */
-        .game-time-value.warn   { color: var(--col-warn);   }
-        .game-time-value.danger { color: var(--col-danger); }
-
-        .shot-clock-value.warn  { color: var(--col-sc-warn);   }
-        .shot-clock-value.danger{ color: var(--col-sc-danger); }
-
-        /* Pulse on danger */
-        @keyframes pulse {
-            0%, 100% { opacity: 1;   transform: scale(1);    }
-            50%       { opacity: 0.55; transform: scale(0.97); }
-        }
-        .danger { animation: pulse 0.55s ease-in-out infinite; }
-
-        /* Glow on shot clock danger */
-        .shot-clock-value.danger {
-            text-shadow: 0 0 40px rgba(239,68,68,0.7), 0 0 80px rgba(239,68,68,0.4);
-        }
-        .shot-clock-value.warn {
-            text-shadow: 0 0 30px rgba(245,158,11,0.5);
-        }
-
-        /* ── Waiting overlay ───────────────────────── */
+        /* ── Waiting overlay ────────────────────────── */
         #waitingOverlay {
             position: fixed;
             inset: 0;
-            background: rgba(10,10,10,0.97);
+            background: #000;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 22px;
+            gap: 26px;
             z-index: 99;
         }
-
         .waiting-logo {
-            width: 90px;
-            opacity: 0.35;
-            animation: breathe 2.4s ease-in-out infinite;
+            width: 96px;
+            animation: breathe 2.6s ease-in-out infinite;
         }
-
         @keyframes breathe {
-            0%, 100% { opacity: 0.25; transform: scale(0.96); }
-            50%       { opacity: 0.5;  transform: scale(1.02); }
+            0%, 100% { opacity: 0.18; transform: scale(0.94); }
+            50%       { opacity: 0.45; transform: scale(1.03); }
         }
-
         .waiting-text {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.2em;
-            color: #2d3748;
-            letter-spacing: 0.25em;
+            font-size: 2.6em;
+            color: #1f2937;
+            letter-spacing: 0.32em;
         }
-
-        /* ── Possession dot ────────────────────────── */
-        .poss-dot {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #48bb78;
-            margin-left: 8px;
-            vertical-align: middle;
-            box-shadow: 0 0 8px rgba(72,187,120,0.8);
-        }
-        .poss-dot.hidden { visibility: hidden; }
     </style>
 </head>
 <body>
 <div class="page">
 
-    <!-- ── Top Bar ───────────────────────────────── -->
-    <div class="top-bar">
-        <div class="top-left">
-            <img src="bellaLogo.jpg" class="league-logo" alt="BV">
-            <div class="league-name">Bella Vista<br>League</div>
-        </div>
+    <!-- ── Scoreboard Bar ──────────────────────────── -->
+    <div class="score-bar">
 
-        <div class="quarter-badge" id="quarterBadge">Q1</div>
-
-        <div class="scoreboard">
-            <div class="team-block">
-                <div class="team-info left">
-                    <div class="team-name-top" id="team1Name">TEAM 1</div>
-                    <div class="team-score-top" id="team1Score">0 <span class="poss-dot hidden" id="poss1"></span></div>
-                </div>
-                <img id="team1Logo" class="team-logo-small" src="" alt="" style="display:none">
-            </div>
-
-            <div class="score-vs">–</div>
-
-            <div class="team-block">
-                <img id="team2Logo" class="team-logo-small" src="" alt="" style="display:none">
-                <div class="team-info">
-                    <div class="team-name-top" id="team2Name">TEAM 2</div>
-                    <div class="team-score-top"><span class="poss-dot hidden" id="poss2"></span> <span id="team2Score">0</span></div>
+        <!-- Team 1 -->
+        <div class="team-score-block left">
+            <img id="team1Logo" class="tsb-logo" src="" alt="" style="display:none">
+            <div class="tsb-info">
+                <div class="tsb-name" id="team1Name">TEAM 1</div>
+                <div class="tsb-score">
+                    <span id="team1Score">0</span><span class="poss-dot hidden" id="poss1"></span>
                 </div>
             </div>
         </div>
+
+        <!-- Center: quarter -->
+        <div class="center-block">
+            <div class="center-label">Quarter</div>
+            <div class="quarter-display" id="quarterBadge">Q1</div>
+        </div>
+
+        <!-- Team 2 -->
+        <div class="team-score-block right">
+            <img id="team2Logo" class="tsb-logo" src="" alt="" style="display:none">
+            <div class="tsb-info">
+                <div class="tsb-name" id="team2Name">TEAM 2</div>
+                <div class="tsb-score">
+                    <span class="poss-dot hidden" id="poss2"></span><span id="team2Score">0</span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ── Clocks ─────────────────────────────────── -->
     <div class="clocks-area">
 
         <!-- Game Timer -->
-        <div class="game-time-panel">
-            <div class="panel-label">Game Time</div>
-            <div class="game-time-value" id="gameTimerVal">10:00</div>
+        <div class="clock-panel left" id="gameTimePanel">
+            <div class="clock-label">Game Time</div>
+            <div class="game-time-val" id="gameTimerVal">10:00</div>
         </div>
 
         <!-- Shot Clock -->
-        <div class="shot-clock-panel">
-            <div class="panel-label">Shot Clock</div>
-            <div class="shot-clock-value" id="shotClockVal">24</div>
+        <div class="clock-panel right" id="shotClockPanel">
+            <div class="clock-label">Shot Clock</div>
+            <div class="shot-clock-val" id="shotClockVal">24</div>
 
-            <!-- Sponsor — replace sponsor-logo.png with your actual sponsor image file -->
+            <!-- Sponsor — drop sponsor-logo.png in the project folder to display -->
             <div class="sponsor-wrap" id="sponsorWrap">
                 <div class="sponsor-label">Official Timekeeper</div>
-                <img src="sponsor-logo.png" class="sponsor-logo" id="sponsorLogo" alt="Sponsor"
+                <img src="sponsor-logo.png" class="sponsor-logo" alt="Sponsor"
                      onerror="document.getElementById('sponsorWrap').style.display='none'">
             </div>
         </div>
@@ -358,33 +333,31 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // ── Elements ────────────────────────────────────
-    const gameTimerEl  = document.getElementById('gameTimerVal');
-    const shotClockEl  = document.getElementById('shotClockVal');
-    const quarterEl    = document.getElementById('quarterBadge');
-    const team1NameEl  = document.getElementById('team1Name');
-    const team2NameEl  = document.getElementById('team2Name');
-    const team1ScoreEl = document.getElementById('team1Score');
-    const team2ScoreEl = document.getElementById('team2Score');
-    const team1LogoEl  = document.getElementById('team1Logo');
-    const team2LogoEl  = document.getElementById('team2Logo');
-    const poss1El      = document.getElementById('poss1');
-    const poss2El      = document.getElementById('poss2');
-    const overlay      = document.getElementById('waitingOverlay');
+    // ── Elements ──────────────────────────────────────
+    const gameTimerEl    = document.getElementById('gameTimerVal');
+    const shotClockEl    = document.getElementById('shotClockVal');
+    const quarterEl      = document.getElementById('quarterBadge');
+    const team1NameEl    = document.getElementById('team1Name');
+    const team2NameEl    = document.getElementById('team2Name');
+    const team1ScoreEl   = document.getElementById('team1Score');
+    const team2ScoreEl   = document.getElementById('team2Score');
+    const team1LogoEl    = document.getElementById('team1Logo');
+    const team2LogoEl    = document.getElementById('team2Logo');
+    const poss1El        = document.getElementById('poss1');
+    const poss2El        = document.getElementById('poss2');
+    const overlay        = document.getElementById('waitingOverlay');
+    const gameTimePanel  = document.getElementById('gameTimePanel');
+    const shotClockPanel = document.getElementById('shotClockPanel');
 
     let _gtInterval = null;
     let _scInterval = null;
 
-    // ── Game Timer sync ──────────────────────────────
+    // ── Game Timer sync ────────────────────────────────
     function syncGameTimer(seconds, running, lastUpdated) {
         const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
         const expected = Math.max(0, seconds - (running ? elapsed : 0));
 
-        // Smooth-resync: skip restart if already running and within 1-second tolerance.
-        // The 1-second tolerance prevents spurious restarts caused by the tracker
-        // pushing a fresh lastUpdated=now (e.g. on shot-clock reset) while the
-        // local interval has already ticked once — causing an exact-match failure
-        // that would otherwise jump the display back by 1 second.
+        // ±1s tolerance prevents spurious restarts on shot-clock resets
         if (running && _gtInterval !== null) {
             const cur = parseTimerStr(gameTimerEl.textContent);
             if (Math.abs(cur - expected) <= 1) return;
@@ -414,16 +387,21 @@
         gameTimerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
 
         gameTimerEl.classList.remove('warn', 'danger');
-        if      (seconds <= 30) gameTimerEl.classList.add('danger');
-        else if (seconds <= 60) gameTimerEl.classList.add('warn');
+        gameTimePanel.classList.remove('gt-panel-warn', 'gt-panel-danger');
+        if (seconds <= 30) {
+            gameTimerEl.classList.add('danger');
+            gameTimePanel.classList.add('gt-panel-danger');
+        } else if (seconds <= 60) {
+            gameTimerEl.classList.add('warn');
+            gameTimePanel.classList.add('gt-panel-warn');
+        }
     }
 
-    // ── Shot Clock sync ──────────────────────────────
+    // ── Shot Clock sync ────────────────────────────────
     function syncShotClock(seconds, running, lastUpdated) {
         const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
         const expected = Math.max(0, seconds - (running ? elapsed : 0));
 
-        // Smooth-resync: skip restart if already running and in sync
         if (running && _scInterval !== null) {
             const shown = parseInt(shotClockEl.textContent) || 0;
             if (shown === expected) return;
@@ -445,15 +423,19 @@
     function updateShotClockDisplay(val) {
         shotClockEl.textContent = val;
         shotClockEl.classList.remove('warn', 'danger');
-        if      (val <= 5)  shotClockEl.classList.add('danger');
-        else if (val <= 10) shotClockEl.classList.add('warn');
+        shotClockPanel.classList.remove('sc-panel-danger');
+        if (val <= 5) {
+            shotClockEl.classList.add('danger');
+            shotClockPanel.classList.add('sc-panel-danger');
+        } else if (val <= 10) {
+            shotClockEl.classList.add('warn');
+        }
     }
 
-    // ── Firebase listener ─────────────────────────────
+    // ── Firebase listener ──────────────────────────────
     database.ref('liveGame').on('value', snap => {
         const d = snap.val();
 
-        // Show overlay only if no data or teams haven't been set up yet
         const isActive = d && d.team1 && d.team1.name && d.team2 && d.team2.name;
         if (!isActive) {
             overlay.style.display = 'flex';
@@ -467,22 +449,16 @@
         const q = d.currentQuarter;
         quarterEl.textContent = q === 'total' ? 'FINAL' : (q ? `Q${q}` : 'Q1');
 
-        // Teams + scores (use remote-controlled official scores, not tracker stats)
+        // Teams + scores (remote-controlled official scores)
         if (d.team1) {
             team1NameEl.textContent  = (d.team1.name || 'TEAM 1').toUpperCase();
             team1ScoreEl.textContent = d.team1Score != null ? d.team1Score : 0;
-            if (d.team1.logo) {
-                team1LogoEl.src          = d.team1.logo;
-                team1LogoEl.style.display = 'block';
-            }
+            if (d.team1.logo) { team1LogoEl.src = d.team1.logo; team1LogoEl.style.display = 'block'; }
         }
         if (d.team2) {
             team2NameEl.textContent  = (d.team2.name || 'TEAM 2').toUpperCase();
             team2ScoreEl.textContent = d.team2Score != null ? d.team2Score : 0;
-            if (d.team2.logo) {
-                team2LogoEl.src          = d.team2.logo;
-                team2LogoEl.style.display = 'block';
-            }
+            if (d.team2.logo) { team2LogoEl.src = d.team2.logo; team2LogoEl.style.display = 'block'; }
         }
 
         // Possession dots
@@ -491,12 +467,8 @@
         poss2El.classList.toggle('hidden', poss !== 'team2');
 
         // Timers
-        if (d.gameTimer) {
-            syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
-        }
-        if (d.shotClock) {
-            syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning, d.lastUpdated);
-        }
+        if (d.gameTimer) syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
+        if (d.shotClock) syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning, d.lastUpdated);
     });
 </script>
 </body>
