@@ -306,8 +306,8 @@
         </div>
         <!-- row 2 — shot clock resets -->
         <div class="timer-row">
-            <button class="ctrl-btn btn-reset"   onclick="sendResetShotClock(24)">↺ 24s</button>
-            <button class="ctrl-btn btn-reset14" onclick="sendResetShotClock(14)">↺ 14s</button>
+            <button class="ctrl-btn btn-reset"   onclick="sendCommand('shotClock', 'reset24')">↺ 24s</button>
+            <button class="ctrl-btn btn-reset14" onclick="sendCommand('shotClock', 'reset14')">↺ 14s</button>
         </div>
     </div>
 
@@ -555,14 +555,6 @@
 
         function toggleShotClock() {
             sendCommand('shotClock', shotClockRunning ? 'pause' : 'start');
-        }
-
-        // Optimistically show the new value immediately, then send Firebase command.
-        // Tracker also does an immediate Firebase push after reset, so the next
-        // liveGame update will confirm the value quickly.
-        function sendResetShotClock(seconds) {
-            syncShotClock(seconds, true, Date.now());
-            sendCommand('shotClock', seconds === 24 ? 'reset24' : 'reset14');
         }
 
         function toggleAdjust() {

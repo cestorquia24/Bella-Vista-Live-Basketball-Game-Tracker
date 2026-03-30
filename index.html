@@ -2840,15 +2840,20 @@
         }
 
         function resetShotClock() {
-            pauseShotClock();
+            // Stop the interval inline — do NOT call pauseShotClock() here because
+            // pauseShotClock() calls saveGameData() which pushes a stale
+            // {old_seconds, isRunning:false} to Firebase BEFORE we set seconds=24.
+            // That stale push arrives at the remote and overwrites the reset display.
+            gameData.shotClock.isRunning = false;
+            clearInterval(shotClockInterval);
+            shotClockInterval = null;
+            document.getElementById('shotClockStartBtn').style.display = 'inline-block';
+            document.getElementById('shotClockPauseBtn').style.display = 'none';
+            // Set value, start, then ONE clean push: {seconds:24, isRunning:true}
             gameData.shotClock.seconds = 24;
             updateShotClockDisplay();
-            saveGameData();
-            // Auto-start after reset
             startShotClock();
-            // Bypass throttle — push to Firebase immediately so remote sees 24 right away
-            gameData.lastUpdated = Date.now();
-            pushLiveUpdate();
+            saveGameData(); // overridden to call pushLiveUpdate() immediately
         }
 
         // Manual timer adjustments
@@ -2871,15 +2876,16 @@
 
         // FIBA 14-second shot clock (used after offensive rebound)
         function resetShotClockFIBA() {
-            pauseShotClock();
+            // Same inline-stop pattern as resetShotClock() — avoids stale intermediate push
+            gameData.shotClock.isRunning = false;
+            clearInterval(shotClockInterval);
+            shotClockInterval = null;
+            document.getElementById('shotClockStartBtn').style.display = 'inline-block';
+            document.getElementById('shotClockPauseBtn').style.display = 'none';
             gameData.shotClock.seconds = 14;
             updateShotClockDisplay();
-            saveGameData();
-            // Auto-start after reset
             startShotClock();
-            // Bypass throttle — push to Firebase immediately so remote sees 14 right away
-            gameData.lastUpdated = Date.now();
-            pushLiveUpdate();
+            saveGameData(); // overridden to call pushLiveUpdate() immediately
         }
 
         // Buzzer sound system - loud and long sounds for different events
