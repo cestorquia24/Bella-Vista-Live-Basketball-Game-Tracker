@@ -371,37 +371,24 @@
     const gameTimePanel  = document.getElementById('gameTimePanel');
     const shotClockPanel = document.getElementById('shotClockPanel');
 
-    // Module-level display counters so Firebase can snap them mid-interval
-    // without restarting the interval (avoids double-tick / freeze artifacts).
-    let _gtDisplay   = 0;
-    let _scDisplay   = 0;
-    let _gtInterval  = null;
-    let _scInterval  = null;
+    let _gtDisplay  = 0;
+    let _scDisplay  = 0;
+    let _gtInterval = null;
+    let _scInterval = null;
+
+    // Last timer values received from Firebase — used to skip syncs when
+    // a non-timer push (e.g. score-add) arrives with unchanged timer data.
+    let _lastGTSeconds = -1;
+    let _lastGTRunning = false;
+    let _lastSCSeconds = -1;
+    let _lastSCRunning = false;
 
     // ── Game Timer sync ────────────────────────────────
     function syncGameTimer(seconds, running) {
-        if (!running) {
-            if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
-            _gtDisplay = seconds;
-            updateGameTimerDisplay(_gtDisplay);
-            return;
-        }
-
-        // If interval is already running and we're within 1s of the server
-        // value, just snap the display (and the shared counter) to the server
-        // value — no restart, no double-tick, no freeze.
-        if (_gtInterval !== null && Math.abs(_gtDisplay - seconds) <= 1) {
-            _gtDisplay = seconds;
-            updateGameTimerDisplay(_gtDisplay);
-            return;
-        }
-
-        // First start or genuinely out of sync (reset / manual adjust).
         if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
-        _gtDisplay = seconds;
+        _gtDisplay = Math.max(0, seconds);
         updateGameTimerDisplay(_gtDisplay);
-        if (_gtDisplay <= 0) return;
-
+        if (!running || _gtDisplay <= 0) return;
         _gtInterval = setInterval(() => {
             _gtDisplay = Math.max(0, _gtDisplay - 1);
             updateGameTimerDisplay(_gtDisplay);
@@ -431,24 +418,10 @@
 
     // ── Shot Clock sync ────────────────────────────────
     function syncShotClock(seconds, running) {
-        if (!running) {
-            if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
-            _scDisplay = seconds;
-            updateShotClockDisplay(_scDisplay);
-            return;
-        }
-
-        if (_scInterval !== null && Math.abs(_scDisplay - seconds) <= 1) {
-            _scDisplay = seconds;
-            updateShotClockDisplay(_scDisplay);
-            return;
-        }
-
         if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
-        _scDisplay = seconds;
+        _scDisplay = Math.max(0, seconds);
         updateShotClockDisplay(_scDisplay);
-        if (_scDisplay <= 0) return;
-
+        if (!running || _scDisplay <= 0) return;
         _scInterval = setInterval(() => {
             _scDisplay = Math.max(0, _scDisplay - 1);
             updateShotClockDisplay(_scDisplay);
@@ -502,11 +475,25 @@
         poss1El.classList.toggle('hidden', poss !== 'team1');
         poss2El.classList.toggle('hidden', poss !== 'team2');
 
-        // Timers — only sync the clock that this monitor is showing
-        if (mode !== 'shotclock' && d.gameTimer)
-            syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning);
-        if (mode !== 'timer' && d.shotClock)
-            syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning);
+        // Timers — only sync when values actually changed (skip score-add pushes)
+        if (mode !== 'shotclock' && d.gameTimer) {
+            const gtSecs = d.gameTimer.currentSeconds || 0;
+            const gtRun  = !!d.gameTimer.isRunning;
+            if (gtSecs !== _lastGTSeconds || gtRun !== _lastGTRunning) {
+                _lastGTSeconds = gtSecs;
+                _lastGTRunning = gtRun;
+                syncGameTimer(gtSecs, gtRun);
+            }
+        }
+        if (mode !== 'timer' && d.shotClock) {
+            const scSecs = d.shotClock.seconds || 0;
+            const scRun  = !!d.shotClock.isRunning;
+            if (scSecs !== _lastSCSeconds || scRun !== _lastSCRunning) {
+                _lastSCSeconds = scSecs;
+                _lastSCRunning = scRun;
+                syncShotClock(scSecs, scRun);
+            }
+        }
     });
 </script>
 </body>
