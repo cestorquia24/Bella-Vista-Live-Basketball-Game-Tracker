@@ -380,10 +380,14 @@
         const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
         const expected = Math.max(0, seconds - (running ? elapsed : 0));
 
-        // Smooth-resync: skip restart if already running and in sync
+        // Smooth-resync: skip restart if already running and within 1-second tolerance.
+        // The 1-second tolerance prevents spurious restarts caused by the tracker
+        // pushing a fresh lastUpdated=now (e.g. on shot-clock reset) while the
+        // local interval has already ticked once — causing an exact-match failure
+        // that would otherwise jump the display back by 1 second.
         if (running && _gtInterval !== null) {
             const cur = parseTimerStr(gameTimerEl.textContent);
-            if (cur === expected) return;
+            if (Math.abs(cur - expected) <= 1) return;
         }
 
         if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
@@ -445,16 +449,6 @@
         else if (val <= 10) shotClockEl.classList.add('warn');
     }
 
-    // ── Score helper ─────────────────────────────────
-    function calcScore(team) {
-        if (!team || !team.players) return 0;
-        return team.players.reduce((sum, p) => {
-            return sum + Object.values(p.quarterStats || {}).reduce((s, qs) => {
-                return s + (qs && qs.points ? qs.points : 0);
-            }, 0);
-        }, 0);
-    }
-
     // ── Firebase listener ─────────────────────────────
     database.ref('liveGame').on('value', snap => {
         const d = snap.val();
@@ -473,10 +467,10 @@
         const q = d.currentQuarter;
         quarterEl.textContent = q === 'total' ? 'FINAL' : (q ? `Q${q}` : 'Q1');
 
-        // Teams + scores
+        // Teams + scores (use remote-controlled official scores, not tracker stats)
         if (d.team1) {
             team1NameEl.textContent  = (d.team1.name || 'TEAM 1').toUpperCase();
-            team1ScoreEl.textContent = calcScore(d.team1);
+            team1ScoreEl.textContent = d.team1Score != null ? d.team1Score : 0;
             if (d.team1.logo) {
                 team1LogoEl.src          = d.team1.logo;
                 team1LogoEl.style.display = 'block';
@@ -484,7 +478,7 @@
         }
         if (d.team2) {
             team2NameEl.textContent  = (d.team2.name || 'TEAM 2').toUpperCase();
-            team2ScoreEl.textContent = calcScore(d.team2);
+            team2ScoreEl.textContent = d.team2Score != null ? d.team2Score : 0;
             if (d.team2.logo) {
                 team2LogoEl.src          = d.team2.logo;
                 team2LogoEl.style.display = 'block';
