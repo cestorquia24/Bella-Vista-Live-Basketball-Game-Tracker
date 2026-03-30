@@ -2839,7 +2839,8 @@
             // Calculate stats for all players
             const team1PlayersWithStats = game.team1.players.map(player => {
                 let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
-                Object.values(player.quarterStats).forEach(qStats => {
+                Object.values(player.quarterStats || {}).forEach(qStats => {
+                    if (!qStats) return;
                     totalPoints += qStats.points || 0;
                     totalRebounds += qStats.rebounds || 0;
                     totalAssists += qStats.assists || 0;
@@ -2893,7 +2894,8 @@
             // Calculate stats for all players
             const team2PlayersWithStats = game.team2.players.map(player => {
                 let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0;
-                Object.values(player.quarterStats).forEach(qStats => {
+                Object.values(player.quarterStats || {}).forEach(qStats => {
+                    if (!qStats) return;
                     totalPoints += qStats.points || 0;
                     totalRebounds += qStats.rebounds || 0;
                     totalAssists += qStats.assists || 0;
@@ -3997,7 +3999,8 @@
 
                 // Calculate totals for this game
                 let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0, totalFouls = 0;
-                Object.values(player.quarterStats).forEach(qStats => {
+                Object.values(player.quarterStats || {}).forEach(qStats => {
+                    if (!qStats) return;
                     totalPoints += qStats.points || 0;
                     totalRebounds += qStats.rebounds || 0;
                     totalAssists += qStats.assists || 0;
@@ -4028,17 +4031,20 @@
                 const hasStats = totalPoints > 0 || totalRebounds > 0 ||
                                  totalAssists > 0 || totalSteals > 0 || totalBlocks > 0;
                 if (hasStats) p.gamesPlayed++;
-                p.totalPoints += totalPoints;
-                p.totalRebounds += totalRebounds;
-                p.totalAssists += totalAssists;
-                p.totalSteals += totalSteals;
-                p.totalBlocks += totalBlocks;
-                p.totalFouls += totalFouls;
-                p.avgPoints = parseFloat((p.totalPoints / p.gamesPlayed).toFixed(1));
-                p.avgRebounds = parseFloat((p.totalRebounds / p.gamesPlayed).toFixed(1));
-                p.avgAssists = parseFloat((p.totalAssists / p.gamesPlayed).toFixed(1));
-                p.avgSteals = parseFloat((p.totalSteals / p.gamesPlayed).toFixed(1));
-                p.avgBlocks = parseFloat((p.totalBlocks / p.gamesPlayed).toFixed(1));
+                p.totalPoints    += totalPoints;
+                p.totalRebounds  += totalRebounds;
+                p.totalAssists   += totalAssists;
+                p.totalSteals    += totalSteals;
+                p.totalBlocks    += totalBlocks;
+                p.totalFouls     += totalFouls;
+                // Guard against division by zero — keeps averages at 0 for no-show players
+                if (p.gamesPlayed > 0) {
+                    p.avgPoints    = parseFloat((p.totalPoints    / p.gamesPlayed).toFixed(1));
+                    p.avgRebounds  = parseFloat((p.totalRebounds  / p.gamesPlayed).toFixed(1));
+                    p.avgAssists   = parseFloat((p.totalAssists   / p.gamesPlayed).toFixed(1));
+                    p.avgSteals    = parseFloat((p.totalSteals    / p.gamesPlayed).toFixed(1));
+                    p.avgBlocks    = parseFloat((p.totalBlocks    / p.gamesPlayed).toFixed(1));
+                }
             });
         }
 
@@ -4076,7 +4082,8 @@
                 if (playerStats) {
                     // Calculate totals for this game
                     let totalPoints = 0, totalRebounds = 0, totalAssists = 0, totalSteals = 0, totalBlocks = 0, totalFouls = 0;
-                    Object.values(playerStats.quarterStats).forEach(qStats => {
+                    Object.values(playerStats.quarterStats || {}).forEach(qStats => {
+                        if (!qStats) return;
                         totalPoints += qStats.points || 0;
                         totalRebounds += qStats.rebounds || 0;
                         totalAssists += qStats.assists || 0;
