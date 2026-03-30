@@ -442,7 +442,7 @@
         shotClockEl.textContent = val;
         shotClockEl.classList.remove('warn', 'danger');
         if      (val <= 5)  shotClockEl.classList.add('danger');
-        else if (val <= 7)  shotClockEl.classList.add('warn');
+        else if (val <= 10) shotClockEl.classList.add('warn');
     }
 
     // ── Score helper ─────────────────────────────────
