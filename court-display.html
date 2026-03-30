@@ -499,7 +499,7 @@
 
         // Timers
         if (d.gameTimer) {
-            syncGameTimer(d.gameTimer.seconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
+            syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
         }
         if (d.shotClock) {
             syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning, d.lastUpdated);
