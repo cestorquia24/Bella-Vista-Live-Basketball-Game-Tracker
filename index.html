@@ -3319,6 +3319,8 @@
             gameData.mvp = null;
             gameData.savedGameId = null;
             gameData.gameDate = new Date().toISOString().split('T')[0]; // Use today's date
+            const undoBtn = document.getElementById('undoBtn');
+            if (undoBtn) undoBtn.disabled = true;
 
             gameData.gameName = formData.gameName || 'Basketball Game';
             gameData.team1.name = formData.team1Name || 'Team 1';
