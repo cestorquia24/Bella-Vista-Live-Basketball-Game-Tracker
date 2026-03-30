@@ -3211,6 +3211,10 @@
 
         function clearGameData() {
             if (confirm('Clear all game data and start a new game?')) {
+                // Stop any running timers so intervals don't leak into the next game
+                pauseGameTimer();
+                pauseShotClock();
+
                 // Turn off live updates
                 liveUpdatesEnabled = false;
                 localStorage.removeItem('liveUpdatesEnabled');
@@ -3299,6 +3303,10 @@
         function initializeGame(formData) {
             // ALWAYS start fresh - don't load old data
             console.log('Initializing fresh game...');
+
+            // Stop any timers that may still be running from a previous game
+            pauseGameTimer();
+            pauseShotClock();
 
             gameData.gameName = formData.gameName || 'Basketball Game';
             gameData.team1.name = formData.team1Name || 'Team 1';
