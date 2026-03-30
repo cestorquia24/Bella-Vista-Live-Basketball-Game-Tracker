@@ -459,8 +459,8 @@
     database.ref('liveGame').on('value', snap => {
         const d = snap.val();
 
-        // Show overlay only if no data or data is stale (10 min old)
-        const isActive = d && d.lastUpdated && (Date.now() - d.lastUpdated < 600000);
+        // Show overlay only if no data or teams haven't been set up yet
+        const isActive = d && d.team1 && d.team1.name && d.team2 && d.team2.name;
         if (!isActive) {
             overlay.style.display = 'flex';
             if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
