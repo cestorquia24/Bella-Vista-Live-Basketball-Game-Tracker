@@ -3308,6 +3308,18 @@
             pauseGameTimer();
             pauseShotClock();
 
+            // Reset all game-level state so nothing bleeds from the previous game
+            currentQuarter = 1;
+            window.currentQuarter = 1;
+            actionHistory = [];
+            lastTimeoutAction = { team1: null, team2: null };
+            gameData.team1.scoreAdjustment = 0;
+            gameData.team2.scoreAdjustment = 0;
+            gameData.possession = null;
+            gameData.mvp = null;
+            gameData.savedGameId = null;
+            gameData.gameDate = new Date().toISOString().split('T')[0]; // Use today's date
+
             gameData.gameName = formData.gameName || 'Basketball Game';
             gameData.team1.name = formData.team1Name || 'Team 1';
             gameData.team2.name = formData.team2Name || 'Team 2';
@@ -3318,9 +3330,6 @@
 
             gameData.quarters = parseInt(formData.quarters) || 4;
             gameData.minutesPerQuarter = parseInt(formData.minutesPerQuarter) || 10;
-
-            // Clear MVP from previous game
-            gameData.mvp = null;
 
             // Initialize timer based on minutes per quarter
             gameData.gameTimer.totalSeconds = gameData.minutesPerQuarter * 60;
