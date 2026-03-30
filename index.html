@@ -4860,7 +4860,8 @@
                     console.error('Error updating scoreboard:', e);
                 }
             }
-        }, 1000); // Update every 1 second for smooth timer sync
+        }, 200); // Poll every 200ms — reads from same device memory so cost is negligible,
+                 // eliminates the stutter caused by two independent 1-second intervals drifting out of phase
     <\/script>
 <\/head>
 <body>
