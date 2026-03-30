@@ -3239,6 +3239,7 @@
                 if (database) {
                     try {
                         database.ref('liveGame').remove();
+                        database.ref('timerCommands').remove(); // prevent stale commands replaying on reload
                         console.log('✅ Cleared live game from Firebase');
                     } catch (error) {
                         console.error('Failed to clear Firebase live game:', error);
