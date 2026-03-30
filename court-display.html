@@ -375,12 +375,14 @@
     let _scInterval = null;
 
     // ── Game Timer sync ────────────────────────────────
-    function syncGameTimer(seconds, running, lastUpdated) {
-        const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
-        const expected = Math.max(0, seconds - (running ? elapsed : 0));
+    function syncGameTimer(seconds, running) {
+        // With 1s Firebase pushes we trust the server value directly —
+        // no elapsed extrapolation. Elapsed math was the source of the
+        // "game time jumps back on score-add / shot-clock-reset" bug.
+        const expected = seconds;
 
-        // ±3s tolerance: with 1s Firebase pushes, local and expected stay within
-        // 1s of each other. 3s window absorbs slow connections + shot-clock resets.
+        // ±3s guard: only restart interval if significantly out of sync.
+        // Normal 1s local drift never trips this; a real reset/adjust does.
         if (running && _gtInterval !== null) {
             const cur = parseTimerStr(gameTimerEl.textContent);
             if (Math.abs(cur - expected) <= 3) return;
@@ -420,13 +422,13 @@
     }
 
     // ── Shot Clock sync ────────────────────────────────
-    function syncShotClock(seconds, running, lastUpdated) {
-        const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
-        const expected = Math.max(0, seconds - (running ? elapsed : 0));
+    function syncShotClock(seconds, running) {
+        const expected = seconds; // trust server value directly
 
         if (running && _scInterval !== null) {
             const shown = parseInt(shotClockEl.textContent) || 0;
-            if (shown === expected) return;
+            if (Math.abs(shown - expected) <= 1) return;
+        }
         }
 
         if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
@@ -490,9 +492,9 @@
 
         // Timers — only sync the clock that this monitor is showing
         if (mode !== 'shotclock' && d.gameTimer)
-            syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
+            syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning);
         if (mode !== 'timer' && d.shotClock)
-            syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning, d.lastUpdated);
+            syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning);
     });
 </script>
 </body>

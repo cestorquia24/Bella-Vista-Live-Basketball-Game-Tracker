@@ -5639,7 +5639,11 @@
             originalSaveGameData();
 
             if (database) {
-                gameData.lastUpdated = Date.now();
+                const now = Date.now();
+                gameData.lastUpdated = now;
+                // Reset the liveTickUpdate throttle so the immediate push here
+                // and the next timer tick push don't both fire within 1 second.
+                lastTimerPushMs = now;
                 pushLiveUpdate();
             }
         };
