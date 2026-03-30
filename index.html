@@ -2846,6 +2846,9 @@
             saveGameData();
             // Auto-start after reset
             startShotClock();
+            // Bypass throttle — push to Firebase immediately so remote sees 24 right away
+            gameData.lastUpdated = Date.now();
+            pushLiveUpdate();
         }
 
         // Manual timer adjustments
@@ -2874,6 +2877,9 @@
             saveGameData();
             // Auto-start after reset
             startShotClock();
+            // Bypass throttle — push to Firebase immediately so remote sees 14 right away
+            gameData.lastUpdated = Date.now();
+            pushLiveUpdate();
         }
 
         // Buzzer sound system - loud and long sounds for different events
