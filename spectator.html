@@ -734,6 +734,24 @@
         let historyRef;
         const LIVE_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+        // Client-side interpolation — tick locally between Firebase pushes
+        let _gtInterval = null;
+
+        function syncGameTimerSpectator(seconds, running, lastUpdated) {
+            if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
+            const elapsed = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
+            let display = Math.max(0, seconds - elapsed);
+            const el = document.getElementById('gameTimer');
+            const fmt = s => `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`;
+            if (el) el.textContent = fmt(display);
+            if (!running || display <= 0) return;
+            _gtInterval = setInterval(() => {
+                display = Math.max(0, display - 1);
+                if (el) el.textContent = fmt(display);
+                if (display <= 0) { clearInterval(_gtInterval); _gtInterval = null; }
+            }, 1000);
+        }
+
         try {
             firebase.initializeApp(firebaseConfig);
             database = firebase.database();
@@ -945,7 +963,11 @@
                     return `${mins}:${secs.toString().padStart(2, '0')}`;
                 };
                 if (gameData.gameTimer && gameData.gameTimer.currentSeconds !== undefined) {
-                    document.getElementById('gameTimer').textContent = formatTime(gameData.gameTimer.currentSeconds);
+                    syncGameTimerSpectator(
+                        gameData.gameTimer.currentSeconds,
+                        !!gameData.gameTimer.isRunning,
+                        gameData.lastUpdated
+                    );
                 }
             } else {
                 gameTimerDisplay.style.display = 'none';

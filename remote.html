@@ -384,6 +384,63 @@
         let gameTimerRunning = false;
         let shotClockRunning = false;
 
+        // ── Client-side interpolation ────────────────────────────────────────
+        // Firebase pushes every 2s. Between pushes we tick locally so the
+        // display is smooth instead of freezing then jumping.
+        let _gtInterval  = null; // game timer local tick
+        let _scInterval  = null; // shot clock local tick
+
+        function _updateGameTimerDisplay(secs, running) {
+            const mins = Math.floor(secs / 60);
+            const s    = secs % 60;
+            gameTimerVal.textContent = `${mins}:${s.toString().padStart(2, '0')}`;
+            gameTimerVal.className   = 'timer-display-value ' + (running ? 'running' : 'stopped');
+            gameTimerBox.className   = 'timer-display-box'    + (running ? ' running' : '');
+            gameTimerToggle.textContent = running ? '⏸ Pause' : '▶ Start';
+            gameTimerToggle.className   = 'ctrl-btn ' + (running ? 'btn-pause' : 'btn-start');
+        }
+
+        function _updateShotClockDisplay(sc, running) {
+            shotClockVal.textContent = sc;
+            let colorClass = 'stopped', boxClass = '';
+            if (running) {
+                if (sc <= 5)       { colorClass = 'danger';  boxClass = 'danger'; }
+                else if (sc <= 10) { colorClass = 'warning'; boxClass = 'warning'; }
+                else               { colorClass = 'running'; boxClass = 'running'; }
+            }
+            shotClockVal.className = 'timer-display-value ' + colorClass;
+            shotClockBox.className = 'timer-display-box'    + (boxClass ? ' ' + boxClass : '');
+            shotClockToggle.textContent = running ? '⏸ Clock' : '▶ Clock';
+            shotClockToggle.className   = 'ctrl-btn ' + (running ? 'btn-pause' : 'btn-start');
+        }
+
+        function syncGameTimer(seconds, running, lastUpdated) {
+            if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
+            // Compensate for time already elapsed since the tracker pushed this value
+            const elapsed = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
+            let display = Math.max(0, seconds - elapsed);
+            _updateGameTimerDisplay(display, running);
+            if (!running || display <= 0) return;
+            _gtInterval = setInterval(() => {
+                display = Math.max(0, display - 1);
+                _updateGameTimerDisplay(display, true);
+                if (display <= 0) { clearInterval(_gtInterval); _gtInterval = null; }
+            }, 1000);
+        }
+
+        function syncShotClock(seconds, running, lastUpdated) {
+            if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
+            const elapsed = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
+            let display = Math.max(0, seconds - elapsed);
+            _updateShotClockDisplay(display, running);
+            if (!running || display <= 0) return;
+            _scInterval = setInterval(() => {
+                display = Math.max(0, display - 1);
+                _updateShotClockDisplay(display, running);
+                if (display <= 0) { clearInterval(_scInterval); _scInterval = null; }
+            }, 1000);
+        }
+
         // ── Connection monitoring & auto-reconnect ──────────────────────────
         let disconnectTimer  = null;
         let isConnected      = false;
@@ -461,33 +518,13 @@
             team2TrackerRef.className = 'score-tracker-ref' + (cast2 !== master2 ? ' mismatch' : '');
 
             if (data.gameTimer) {
-                const secs = data.gameTimer.currentSeconds || 0;
-                const mins = Math.floor(secs / 60);
-                const s    = secs % 60;
-                gameTimerVal.textContent = `${mins}:${s.toString().padStart(2, '0')}`;
-                gameTimerRunning = data.gameTimer.isRunning;
-                gameTimerVal.className = 'timer-display-value ' + (gameTimerRunning ? 'running' : 'stopped');
-                gameTimerBox.className = 'timer-display-box'    + (gameTimerRunning ? ' running' : '');
-                gameTimerToggle.textContent = gameTimerRunning ? '⏸ Pause' : '▶ Start';
-                gameTimerToggle.className   = 'ctrl-btn ' + (gameTimerRunning ? 'btn-pause' : 'btn-start');
+                gameTimerRunning = !!data.gameTimer.isRunning;
+                syncGameTimer(data.gameTimer.currentSeconds || 0, gameTimerRunning, data.lastUpdated);
             }
 
             if (data.shotClock) {
-                const sc = data.shotClock.seconds;
-                shotClockVal.textContent = sc;
-                let colorClass = 'stopped';
-                let boxClass   = '';
-                if (data.shotClock.isRunning) {
-                    if (sc <= 5)       { colorClass = 'danger';  boxClass = 'danger'; }
-                    else if (sc <= 10) { colorClass = 'warning'; boxClass = 'warning'; }
-                    else               { colorClass = 'running'; boxClass = 'running'; }
-                }
-                shotClockVal.className = 'timer-display-value ' + colorClass;
-                shotClockBox.className = 'timer-display-box'    + (boxClass ? ' ' + boxClass : '');
-
-                shotClockRunning = data.shotClock.isRunning;
-                shotClockToggle.textContent = shotClockRunning ? '⏸ Clock' : '▶ Clock';
-                shotClockToggle.className   = 'ctrl-btn ' + (shotClockRunning ? 'btn-pause' : 'btn-start');
+                shotClockRunning = !!data.shotClock.isRunning;
+                syncShotClock(data.shotClock.seconds || 0, shotClockRunning, data.lastUpdated);
             }
         });
 
