@@ -1779,7 +1779,7 @@
         <div id="leadersTab" class="tab-content">
             <div style="text-align:center; padding: 10px 12px 4px;">
                 <span style="display:inline-block; background: rgba(72,187,120,0.12); border: 1px solid rgba(72,187,120,0.3); border-radius: 8px; padding: 6px 14px; font-size: 0.75rem; color: #68d391; font-weight: 600;">
-                    📊 Rankings based on per-game averages &nbsp;·&nbsp; Must play <span id="leadersMinGpNote">70%</span> of team games to qualify
+                    📊 Rankings based on per-game averages &nbsp;·&nbsp; Must play 70% of team games to qualify
                 </span>
             </div>
             <div class="leaders-container">
@@ -2737,10 +2737,6 @@
 
             empty.style.display = 'none';
             document.querySelector('.leaders-container').style.display = 'grid';
-
-            // Keep the header note in sync
-            const gpNoteEl = document.getElementById('leadersMinGpNote');
-            if (gpNoteEl) gpNoteEl.textContent = '70% of team games';
 
             // Points Leaders
             renderLeaderCategory(leaderPool, 'avgPoints',   'pointsLeaders',  'PPG', showingAll);
