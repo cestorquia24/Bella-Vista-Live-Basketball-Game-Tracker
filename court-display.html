@@ -33,7 +33,6 @@
             align-items: stretch;
         }
 
-        /* Team block — fills half the bar on each side */
         .team-score-block {
             flex: 1;
             display: flex;
@@ -96,7 +95,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0;
             border-left: 2px solid #1a2230;
             border-right: 2px solid #1a2230;
         }
@@ -137,6 +135,11 @@
             border-right: 3px solid #111827;
         }
 
+        /* In single-clock mode, remove the divider */
+        .clocks-area.single .clock-panel.left {
+            border-right: none;
+        }
+
         .clock-label {
             position: absolute;
             top: 22px;
@@ -158,6 +161,11 @@
             transition: color 0.35s;
         }
 
+        /* Full-screen single mode: fill the whole panel */
+        .clocks-area.single .game-time-val {
+            font-size: clamp(8em, 32vw, 28em);
+        }
+
         .game-time-val.warn   { color: #f59e0b; }
         .game-time-val.danger { color: #ef4444; }
 
@@ -171,6 +179,11 @@
             transition: color 0.25s;
         }
 
+        /* Full-screen single mode */
+        .clocks-area.single .shot-clock-val {
+            font-size: clamp(14em, 52vw, 48em);
+        }
+
         .shot-clock-val.warn {
             color: #fb923c;
             text-shadow: 0 0 50px rgba(251,146,60,0.45);
@@ -180,21 +193,21 @@
             text-shadow: 0 0 60px rgba(239,68,68,0.85), 0 0 120px rgba(239,68,68,0.4);
         }
 
-        /* ── Danger pulse (text) ───────────────────── */
+        /* ── Danger pulse ───────────────────────────── */
         @keyframes pulse {
             0%, 100% { opacity: 1;    transform: scale(1);    }
             50%       { opacity: 0.45; transform: scale(0.95); }
         }
         .danger { animation: pulse 0.48s ease-in-out infinite; }
 
-        /* ── Panel background flash on shot-clock danger ── */
+        /* ── Panel flash: shot clock danger ────────── */
         @keyframes panelFlash {
             0%, 100% { background: rgba(239,68,68,0.06); }
             50%       { background: rgba(239,68,68,0.18); }
         }
         .sc-panel-danger { animation: panelFlash 0.48s ease-in-out infinite; }
 
-        /* ── Panel background glow on game-timer warn/danger ── */
+        /* ── Panel tint: game timer warn/danger ─────── */
         .gt-panel-warn   { background: rgba(245,158,11,0.04); }
         .gt-panel-danger { background: rgba(239,68,68,0.06); }
 
@@ -254,8 +267,6 @@
 
     <!-- ── Scoreboard Bar ──────────────────────────── -->
     <div class="score-bar">
-
-        <!-- Team 1 -->
         <div class="team-score-block left">
             <img id="team1Logo" class="tsb-logo" src="" alt="" style="display:none">
             <div class="tsb-info">
@@ -266,13 +277,11 @@
             </div>
         </div>
 
-        <!-- Center: quarter -->
         <div class="center-block">
             <div class="center-label">Quarter</div>
             <div class="quarter-display" id="quarterBadge">Q1</div>
         </div>
 
-        <!-- Team 2 -->
         <div class="team-score-block right">
             <img id="team2Logo" class="tsb-logo" src="" alt="" style="display:none">
             <div class="tsb-info">
@@ -282,24 +291,20 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <!-- ── Clocks ─────────────────────────────────── -->
-    <div class="clocks-area">
+    <div class="clocks-area" id="clocksArea">
 
-        <!-- Game Timer -->
         <div class="clock-panel left" id="gameTimePanel">
             <div class="clock-label">Game Time</div>
             <div class="game-time-val" id="gameTimerVal">10:00</div>
         </div>
 
-        <!-- Shot Clock -->
         <div class="clock-panel right" id="shotClockPanel">
             <div class="clock-label">Shot Clock</div>
             <div class="shot-clock-val" id="shotClockVal">24</div>
 
-            <!-- Sponsor — drop sponsor-logo.png in the project folder to display -->
             <div class="sponsor-wrap" id="sponsorWrap">
                 <div class="sponsor-label">Official Timekeeper</div>
                 <img src="sponsor-logo.png" class="sponsor-logo" alt="Sponsor"
@@ -320,6 +325,23 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 <script>
+    // ── Mode: ?mode=timer | ?mode=shotclock | (both) ──
+    const mode = new URLSearchParams(window.location.search).get('mode');
+    const clocksArea     = document.getElementById('clocksArea');
+    const gameTimePanelEl = document.getElementById('gameTimePanel');
+    const shotClockPanelEl = document.getElementById('shotClockPanel');
+
+    if (mode === 'timer') {
+        shotClockPanelEl.style.display = 'none';
+        clocksArea.classList.add('single');
+        document.title = 'BV Game Time';
+    } else if (mode === 'shotclock') {
+        gameTimePanelEl.style.display = 'none';
+        clocksArea.classList.add('single');
+        document.title = 'BV Shot Clock';
+    }
+
+    // ── Firebase ──────────────────────────────────────
     const firebaseConfig = {
         apiKey:            "AIzaSyCRjX0GdMHSNeykGuxclCgSc3XpY04-oEE",
         authDomain:        "bella-vista-league-live-score.firebaseapp.com",
@@ -357,10 +379,8 @@
         const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
         const expected = Math.max(0, seconds - (running ? elapsed : 0));
 
-        // ±3s tolerance: with 1-second Firebase pushes the local interval and
-        // the incoming expected value should never differ by more than 1 second
-        // under normal conditions. The 3-second window handles slow connections
-        // and the shot-clock-reset edge case without causing spurious restarts.
+        // ±3s tolerance: with 1s Firebase pushes, local and expected stay within
+        // 1s of each other. 3s window absorbs slow connections + shot-clock resets.
         if (running && _gtInterval !== null) {
             const cur = parseTimerStr(gameTimerEl.textContent);
             if (Math.abs(cur - expected) <= 3) return;
@@ -388,7 +408,6 @@
         const m = Math.floor(seconds / 60);
         const s = seconds % 60;
         gameTimerEl.textContent = `${m}:${String(s).padStart(2, '0')}`;
-
         gameTimerEl.classList.remove('warn', 'danger');
         gameTimePanel.classList.remove('gt-panel-warn', 'gt-panel-danger');
         if (seconds <= 30) {
@@ -452,7 +471,7 @@
         const q = d.currentQuarter;
         quarterEl.textContent = q === 'total' ? 'FINAL' : (q ? `Q${q}` : 'Q1');
 
-        // Teams + scores (remote-controlled official scores)
+        // Teams + scores
         if (d.team1) {
             team1NameEl.textContent  = (d.team1.name || 'TEAM 1').toUpperCase();
             team1ScoreEl.textContent = d.team1Score != null ? d.team1Score : 0;
@@ -469,9 +488,11 @@
         poss1El.classList.toggle('hidden', poss !== 'team1');
         poss2El.classList.toggle('hidden', poss !== 'team2');
 
-        // Timers
-        if (d.gameTimer) syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
-        if (d.shotClock) syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning, d.lastUpdated);
+        // Timers — only sync the clock that this monitor is showing
+        if (mode !== 'shotclock' && d.gameTimer)
+            syncGameTimer(d.gameTimer.currentSeconds || 0, !!d.gameTimer.isRunning, d.lastUpdated);
+        if (mode !== 'timer' && d.shotClock)
+            syncShotClock(d.shotClock.seconds || 0, !!d.shotClock.isRunning, d.lastUpdated);
     });
 </script>
 </body>
