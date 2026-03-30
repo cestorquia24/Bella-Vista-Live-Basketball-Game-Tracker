@@ -2666,24 +2666,11 @@
         // Canonical name corrections — maps known typos/aliases to the correct name
         // Keys must be lowercase (lookup normalises with .toLowerCase() before matching)
         const PLAYER_NAME_CORRECTIONS = {
-            // Yellow Slashers
-            'bariwan #3':  'Bariuan #3',
-            'bariuan':     'Bariuan #3',   // entered without jersey number
-            'anog':        'Anog #31',     // entered without jersey number
-            'anog #3':     'Anog #31',     // jersey number confused with Bariuan's
-            // Porpol Ravens
-            's.suyo #24':  'S. Suyo #24',  // missing space after initial
-            's.suyo':      'S. Suyo #24',  // missing space + no number
-            's. suyo':     'S. Suyo #24',  // no jersey number
+            'bariwan #3': 'Bariuan #3',
         };
 
         function correctPlayerName(name) {
-            const lower = name.trim().toLowerCase();
-            if (PLAYER_NAME_CORRECTIONS[lower]) return PLAYER_NAME_CORRECTIONS[lower];
-            // Also normalise "X.Name" → "X. Name" (initial dot with no space)
-            // so e.g. "S.Suyo #24" becomes "s. suyo #24" and hits the table above
-            const dotFixed = lower.replace(/^([a-z])\.\s*/, '$1. ');
-            return PLAYER_NAME_CORRECTIONS[dotFixed] || name;
+            return PLAYER_NAME_CORRECTIONS[name.trim().toLowerCase()] || name;
         }
 
         // Minimum games a player must have played to appear on the per-game leaderboard.
@@ -4030,7 +4017,13 @@
                 }
 
                 const p = seasonStandings.players[key];
-                p.gamesPlayed++;
+                // Only count GP when the player actually has stats.
+                // Players on the predefined roster who didn't show up for a game
+                // are still stored in the game record with all-zero stats, and
+                // should not have their GP inflated.
+                const hasStats = totalPoints > 0 || totalRebounds > 0 ||
+                                 totalAssists > 0 || totalSteals > 0 || totalBlocks > 0;
+                if (hasStats) p.gamesPlayed++;
                 p.totalPoints += totalPoints;
                 p.totalRebounds += totalRebounds;
                 p.totalAssists += totalAssists;
