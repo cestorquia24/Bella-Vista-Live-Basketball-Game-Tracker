@@ -371,33 +371,41 @@
     const gameTimePanel  = document.getElementById('gameTimePanel');
     const shotClockPanel = document.getElementById('shotClockPanel');
 
-    let _gtInterval = null;
-    let _scInterval = null;
+    // Module-level display counters so Firebase can snap them mid-interval
+    // without restarting the interval (avoids double-tick / freeze artifacts).
+    let _gtDisplay   = 0;
+    let _scDisplay   = 0;
+    let _gtInterval  = null;
+    let _scInterval  = null;
 
     // ── Game Timer sync ────────────────────────────────
     function syncGameTimer(seconds, running) {
-        // With 1s Firebase pushes we trust the server value directly —
-        // no elapsed extrapolation. Elapsed math was the source of the
-        // "game time jumps back on score-add / shot-clock-reset" bug.
-        const expected = seconds;
-
-        // ±3s guard: only restart interval if significantly out of sync.
-        // Normal 1s local drift never trips this; a real reset/adjust does.
-        if (running && _gtInterval !== null) {
-            const cur = parseTimerStr(gameTimerEl.textContent);
-            if (Math.abs(cur - expected) <= 3) return;
+        if (!running) {
+            if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
+            _gtDisplay = seconds;
+            updateGameTimerDisplay(_gtDisplay);
+            return;
         }
 
-        if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
+        // If interval is already running and we're within 1s of the server
+        // value, just snap the display (and the shared counter) to the server
+        // value — no restart, no double-tick, no freeze.
+        if (_gtInterval !== null && Math.abs(_gtDisplay - seconds) <= 1) {
+            _gtDisplay = seconds;
+            updateGameTimerDisplay(_gtDisplay);
+            return;
+        }
 
-        let display = expected;
-        updateGameTimerDisplay(display);
-        if (!running || display <= 0) return;
+        // First start or genuinely out of sync (reset / manual adjust).
+        if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
+        _gtDisplay = seconds;
+        updateGameTimerDisplay(_gtDisplay);
+        if (_gtDisplay <= 0) return;
 
         _gtInterval = setInterval(() => {
-            display = Math.max(0, display - 1);
-            updateGameTimerDisplay(display);
-            if (display <= 0) { clearInterval(_gtInterval); _gtInterval = null; }
+            _gtDisplay = Math.max(0, _gtDisplay - 1);
+            updateGameTimerDisplay(_gtDisplay);
+            if (_gtDisplay <= 0) { clearInterval(_gtInterval); _gtInterval = null; }
         }, 1000);
     }
 
@@ -423,23 +431,28 @@
 
     // ── Shot Clock sync ────────────────────────────────
     function syncShotClock(seconds, running) {
-        const expected = seconds; // trust server value directly
+        if (!running) {
+            if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
+            _scDisplay = seconds;
+            updateShotClockDisplay(_scDisplay);
+            return;
+        }
 
-        if (running && _scInterval !== null) {
-            const shown = parseInt(shotClockEl.textContent) || 0;
-            if (Math.abs(shown - expected) <= 1) return;
+        if (_scInterval !== null && Math.abs(_scDisplay - seconds) <= 1) {
+            _scDisplay = seconds;
+            updateShotClockDisplay(_scDisplay);
+            return;
         }
 
         if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
-
-        let display = expected;
-        updateShotClockDisplay(display);
-        if (!running || display <= 0) return;
+        _scDisplay = seconds;
+        updateShotClockDisplay(_scDisplay);
+        if (_scDisplay <= 0) return;
 
         _scInterval = setInterval(() => {
-            display = Math.max(0, display - 1);
-            updateShotClockDisplay(display);
-            if (display <= 0) { clearInterval(_scInterval); _scInterval = null; }
+            _scDisplay = Math.max(0, _scDisplay - 1);
+            updateShotClockDisplay(_scDisplay);
+            if (_scDisplay <= 0) { clearInterval(_scInterval); _scInterval = null; }
         }, 1000);
     }
 
