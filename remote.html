@@ -373,6 +373,7 @@
         const shotClockBox    = document.getElementById('shotClockBox');
         const sentFlash       = document.getElementById('sentFlash');
         const gameTimerToggle = document.getElementById('gameTimerToggleBtn');
+        const shotClockToggle = document.getElementById('shotClockToggleBtn');
         const team1NameEl     = document.getElementById('team1Name');
         const team2NameEl     = document.getElementById('team2Name');
         const team1ScoreEl    = document.getElementById('team1ScoreDisplay');
@@ -424,7 +425,7 @@
             if (running && _gtInterval !== null && expected >= 1) {
                 const parts = gameTimerVal.textContent.split(':');
                 const shown = parts.length === 2 ? parseInt(parts[0]) * 60 + parseInt(parts[1]) : 0;
-                if (Math.abs(shown - expected) <= 1) return; // already smooth — leave interval alone
+                if (shown === expected) return; // exact match — leave interval alone
             }
 
             if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
@@ -446,7 +447,7 @@
             // A divergence of 2+ seconds means a reset/manual adjustment happened → full resync.
             if (running && _scInterval !== null && expected >= 1) {
                 const shown = parseInt(shotClockVal.textContent) || 0;
-                if (Math.abs(shown - expected) <= 1) return; // still in sync — leave interval alone
+                if (shown === expected) return; // exact match — leave interval alone
             }
 
             if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
