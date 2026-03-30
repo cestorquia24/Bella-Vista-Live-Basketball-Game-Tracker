@@ -2673,9 +2673,17 @@
             return PLAYER_NAME_CORRECTIONS[name.trim().toLowerCase()] || name;
         }
 
-        // Minimum games a player must have played to appear on the per-game leaderboard.
-        // Raise this as the season progresses to keep rankings meaningful.
-        const MIN_GAMES_FOR_LEADERS = 3;
+        // A player must have played at least 70% of their team's games to qualify.
+        // e.g. team played 5 → need 4; team played 7 → need 5.
+        // Hard floor of 1 so the board isn't empty in the very first week.
+        const MIN_GAMES_FLOOR = 1;
+        const MIN_GAMES_PCT   = 0.70;
+
+        function minGamesRequired(teamName) {
+            const t = seasonStandings.teams[teamName];
+            const teamGames = t ? (t.wins + t.losses) : 0;
+            return Math.max(MIN_GAMES_FLOOR, Math.ceil(teamGames * MIN_GAMES_PCT));
+        }
 
         function renderLeagueLeaders() {
             const allPlayers = Object.values(seasonStandings.players);
@@ -2721,8 +2729,8 @@
                 return;
             }
 
-            // Only rank players who've played enough games — fairer than totals
-            const qualifiedPlayers = activePlayers.filter(p => p.gamesPlayed >= MIN_GAMES_FOR_LEADERS);
+            // Only rank players who've played ≥70% of their team's games
+            const qualifiedPlayers = activePlayers.filter(p => p.gamesPlayed >= minGamesRequired(p.teamName));
             // Fall back to all active players early in the season so the board isn't empty
             const leaderPool = qualifiedPlayers.length > 0 ? qualifiedPlayers : activePlayers;
             const showingAll = qualifiedPlayers.length === 0;
@@ -2730,9 +2738,9 @@
             empty.style.display = 'none';
             document.querySelector('.leaders-container').style.display = 'grid';
 
-            // Keep the header note in sync with the constant
+            // Keep the header note in sync
             const gpNoteEl = document.getElementById('leadersMinGpNote');
-            if (gpNoteEl) gpNoteEl.textContent = MIN_GAMES_FOR_LEADERS;
+            if (gpNoteEl) gpNoteEl.textContent = '70% of team games';
 
             // Points Leaders
             renderLeaderCategory(leaderPool, 'avgPoints',   'pointsLeaders',  'PPG', showingAll);
@@ -2764,7 +2772,7 @@
             }
 
             const note = earlySeasonMode
-                ? `<div class="leaders-min-note">⚠️ Early season — showing all players (min. ${MIN_GAMES_FOR_LEADERS} GP needed to qualify)</div>`
+                ? `<div class="leaders-min-note">⚠️ Early season — showing all players (need 70% of team games to qualify)</div>`
                 : '';
 
             container.innerHTML = note;
