@@ -5645,8 +5645,9 @@
         };
 
         // Lightweight tick used by timer intervals — saves to localStorage every
-        // second but only pushes to Firebase every 2 s to avoid overwhelming the
-        // connection during long sessions (root cause of sync degradation).
+        // second and pushes to Firebase every 1 s so court-display and cast view
+        // always receive fresh timer values and never need to extrapolate more
+        // than 1 second ahead (eliminates the game-timer-reset-on-shot-clock-reset bug).
         let lastTimerPushMs = 0;
         function liveTickUpdate() {
             try {
@@ -5655,7 +5656,7 @@
             } catch(e) {}
             if (database) {
                 const now = Date.now();
-                if (now - lastTimerPushMs >= 2000) {
+                if (now - lastTimerPushMs >= 1000) {
                     lastTimerPushMs = now;
                     gameData.lastUpdated = now;
                     pushLiveUpdate();

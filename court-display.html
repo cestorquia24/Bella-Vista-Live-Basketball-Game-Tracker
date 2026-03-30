@@ -357,10 +357,13 @@
         const elapsed  = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
         const expected = Math.max(0, seconds - (running ? elapsed : 0));
 
-        // ±1s tolerance prevents spurious restarts on shot-clock resets
+        // ±3s tolerance: with 1-second Firebase pushes the local interval and
+        // the incoming expected value should never differ by more than 1 second
+        // under normal conditions. The 3-second window handles slow connections
+        // and the shot-clock-reset edge case without causing spurious restarts.
         if (running && _gtInterval !== null) {
             const cur = parseTimerStr(gameTimerEl.textContent);
-            if (Math.abs(cur - expected) <= 1) return;
+            if (Math.abs(cur - expected) <= 3) return;
         }
 
         if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }

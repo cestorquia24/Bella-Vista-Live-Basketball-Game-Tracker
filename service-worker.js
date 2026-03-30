@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bv-tracker-v50';
+const CACHE_NAME = 'bv-tracker-v51';
 
 // All local assets to pre-cache on install
 // Use relative paths so this works on any hosting path (e.g. GitHub Pages subfolders)
