@@ -3767,7 +3767,7 @@
             const byDate = {};
             filtered.forEach(g => {
                 const dk = g.date || 'unknown';
-                if (\!byDate[dk]) byDate[dk] = [];
+                if (!byDate[dk]) byDate[dk] = [];
                 byDate[dk].push(g);
             });
 
@@ -3896,7 +3896,7 @@
             };
 
             grid.innerHTML = Object.keys(byDate).sort().map(dk => {
-                const dlabel = dk \!== 'unknown'
+                const dlabel = dk !== 'unknown'
                     ? new Date(dk + 'T00:00').toLocaleDateString('en-US',
                         { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
                     : 'Unknown Date';
