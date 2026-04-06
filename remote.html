@@ -386,10 +386,17 @@
         let shotClockRunning = false;
 
         // ── Client-side interpolation ────────────────────────────────────────
-        // Firebase pushes every 2s. Between pushes we tick locally so the
-        // display is smooth instead of freezing then jumping.
-        let _gtInterval  = null; // game timer local tick
-        let _scInterval  = null; // shot clock local tick
+        // Identical logic to court-display.html so both views stay in sync.
+        let _gtInterval    = null;
+        let _scInterval    = null;
+        let _gtDisplay     = 0;
+        let _scDisplay     = 0;
+        // Cache last values received from Firebase — skip sync when unchanged
+        // (prevents score-add pushes from restarting the timer intervals).
+        let _lastGTSeconds = -1;
+        let _lastGTRunning = false;
+        let _lastSCSeconds = -1;
+        let _lastSCRunning = false;
 
         function _updateGameTimerDisplay(secs, running) {
             const mins = Math.floor(secs / 60);
@@ -415,49 +422,31 @@
             shotClockToggle.className   = 'ctrl-btn ' + (running ? 'btn-pause' : 'btn-start');
         }
 
-        function syncGameTimer(seconds, running, lastUpdated) {
-            const elapsed = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
-            const expected = Math.max(0, seconds - elapsed);
-
-            // Don't restart the local interval if we're already running and in sync (±1s).
-            // Restarting every Firebase push (every ~2s) resets the tick phase and causes
-            // the display to visibly freeze for up to 1s — the "jump to catch up" the user sees.
-            if (running && _gtInterval !== null && expected >= 1) {
-                const parts = gameTimerVal.textContent.split(':');
-                const shown = parts.length === 2 ? parseInt(parts[0]) * 60 + parseInt(parts[1]) : 0;
-                if (shown === expected) return; // exact match — leave interval alone
-            }
-
+        function syncGameTimer(seconds, running) {
+            // Absorb ±1s drift silently — prevents snap caused by stale timer
+            // values piggybacked on shot-clock-reset or score-add Firebase pushes.
+            if (_gtInterval && running && Math.abs(seconds - _gtDisplay) <= 1) return;
             if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
-            let display = expected;
-            _updateGameTimerDisplay(display, running);
-            if (!running || display <= 0) return;
+            _gtDisplay = Math.max(0, seconds);
+            _updateGameTimerDisplay(_gtDisplay, running);
+            if (!running || _gtDisplay <= 0) return;
             _gtInterval = setInterval(() => {
-                display = Math.max(0, display - 1);
-                _updateGameTimerDisplay(display, true);
-                if (display <= 0) { clearInterval(_gtInterval); _gtInterval = null; }
+                _gtDisplay = Math.max(0, _gtDisplay - 1);
+                _updateGameTimerDisplay(_gtDisplay, true);
+                if (_gtDisplay <= 0) { clearInterval(_gtInterval); _gtInterval = null; }
             }, 1000);
         }
 
-        function syncShotClock(seconds, running, lastUpdated) {
-            const elapsed = lastUpdated ? Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000)) : 0;
-            const expected = Math.max(0, seconds - elapsed);
-
-            // Same smooth-resync guard: if already running and within 1s, don't restart.
-            // A divergence of 2+ seconds means a reset/manual adjustment happened → full resync.
-            if (running && _scInterval !== null && expected >= 1) {
-                const shown = parseInt(shotClockVal.textContent) || 0;
-                if (shown === expected) return; // exact match — leave interval alone
-            }
-
+        function syncShotClock(seconds, running) {
+            if (_scInterval && running && Math.abs(seconds - _scDisplay) <= 1) return;
             if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
-            let display = expected;
-            _updateShotClockDisplay(display, running);
-            if (!running || display <= 0) return;
+            _scDisplay = Math.max(0, seconds);
+            _updateShotClockDisplay(_scDisplay, running);
+            if (!running || _scDisplay <= 0) return;
             _scInterval = setInterval(() => {
-                display = Math.max(0, display - 1);
-                _updateShotClockDisplay(display, running);
-                if (display <= 0) { clearInterval(_scInterval); _scInterval = null; }
+                _scDisplay = Math.max(0, _scDisplay - 1);
+                _updateShotClockDisplay(_scDisplay, true);
+                if (_scDisplay <= 0) { clearInterval(_scInterval); _scInterval = null; }
             }, 1000);
         }
 
@@ -539,12 +528,24 @@
 
             if (data.gameTimer) {
                 gameTimerRunning = !!data.gameTimer.isRunning;
-                syncGameTimer(data.gameTimer.currentSeconds || 0, gameTimerRunning, data.lastUpdated);
+                const gtSecs = data.gameTimer.currentSeconds || 0;
+                const gtRun  = gameTimerRunning;
+                if (gtSecs !== _lastGTSeconds || gtRun !== _lastGTRunning) {
+                    _lastGTSeconds = gtSecs;
+                    _lastGTRunning = gtRun;
+                    syncGameTimer(gtSecs, gtRun);
+                }
             }
 
             if (data.shotClock) {
                 shotClockRunning = !!data.shotClock.isRunning;
-                syncShotClock(data.shotClock.seconds || 0, shotClockRunning, data.lastUpdated);
+                const scSecs = data.shotClock.seconds || 0;
+                const scRun  = shotClockRunning;
+                if (scSecs !== _lastSCSeconds || scRun !== _lastSCRunning) {
+                    _lastSCSeconds = scSecs;
+                    _lastSCRunning = scRun;
+                    syncShotClock(scSecs, scRun);
+                }
             }
         });
 
