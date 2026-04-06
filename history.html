@@ -649,9 +649,37 @@
         body.admin-mode .add-schedule-btn { display: inline-block; }
 
         .schedule-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        .schedule-date-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .schedule-date-heading {
+            font-size: 1em;
+            font-weight: 700;
+            color: #90cdf4;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 8px 12px;
+            background: rgba(49, 130, 206, 0.12);
+            border-left: 3px solid #63b3ed;
+            border-radius: 4px;
+        }
+
+        .schedule-date-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(2, 1fr);
             gap: 16px;
+        }
+
+        @media (max-width: 700px) {
+            .schedule-date-cards { grid-template-columns: 1fr; }
         }
         .schedule-card {
             background: rgba(45, 55, 72, 0.9);
@@ -3735,7 +3763,15 @@
             }
             empty.style.display = 'none';
 
-            grid.innerHTML = filtered.map(game => {
+            // Group by scheduled date → 2-column grid per date
+            const byDate = {};
+            filtered.forEach(g => {
+                const dk = g.date || 'unknown';
+                if (\!byDate[dk]) byDate[dk] = [];
+                byDate[dk].push(g);
+            });
+
+            const buildCard = (game) => {
                 const gameDateTime = new Date(`${game.date}T${game.time || '00:00'}`);
                 const diffMs = gameDateTime - now;
 
@@ -3857,6 +3893,17 @@
                         <button class="schedule-delete-btn" onclick="deleteScheduledGame('${game.id}')">🗑️ Delete</button>
                     </div>
                 </div>`;
+            };
+
+            grid.innerHTML = Object.keys(byDate).sort().map(dk => {
+                const dlabel = dk \!== 'unknown'
+                    ? new Date(dk + 'T00:00').toLocaleDateString('en-US',
+                        { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+                    : 'Unknown Date';
+                return '<div class="schedule-date-group">'
+                     + '<div class="schedule-date-heading">' + dlabel + '</div>'
+                     + '<div class="schedule-date-cards">' + byDate[dk].map(buildCard).join('') + '</div>'
+                     + '</div>';
             }).join('');
         }
 

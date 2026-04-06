@@ -2268,6 +2268,11 @@
                     <input type="text" id="gameNameInput" value="" placeholder="Will auto-generate from teams" required>
                 </div>
 
+                <div class="form-group">
+                    <label for="gameDateInput">Game Date</label>
+                    <input type="date" id="gameDateInput" required>
+                </div>
+
                 <div class="form-row" style="display: none;">
                     <div class="form-group">
                         <label for="team1PlayersInput">Team 1 Players</label>
@@ -3325,7 +3330,7 @@
             gameData.possession = null;
             gameData.mvp = null;
             gameData.savedGameId = null;
-            gameData.gameDate = new Date().toISOString().split('T')[0]; // Use today's date
+            gameData.gameDate = formData.gameDate || new Date().toISOString().split('T')[0];
             const undoBtn = document.getElementById('undoBtn');
             if (undoBtn) undoBtn.disabled = true;
 
@@ -5025,6 +5030,11 @@
 
         function showSetupScreen() {
             document.getElementById('setupScreen').classList.remove('hidden');
+            // Always reset game date to today when opening setup screen
+            const dateInput = document.getElementById('gameDateInput');
+            if (dateInput) {
+                dateInput.value = new Date().toISOString().split('T')[0];
+            }
         }
 
         function hideSetupScreen() {
@@ -5036,6 +5046,7 @@
 
             const formData = {
                 gameName: document.getElementById('gameNameInput').value,
+                gameDate: document.getElementById('gameDateInput').value,
                 team1Name: document.getElementById('team1Selector').value,
                 team2Name: document.getElementById('team2Selector').value,
                 team1Players: document.getElementById('team1PlayersInput').value,
