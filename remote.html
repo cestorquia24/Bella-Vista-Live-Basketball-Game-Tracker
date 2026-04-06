@@ -503,6 +503,11 @@
         database.ref('liveGame').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) {
+                if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
+                if (_scInterval) { clearInterval(_scInterval); _scInterval = null; }
+                // Reset cache so next game always triggers a full re-sync
+                _lastGTSeconds = -1; _lastGTRunning = false;
+                _lastSCSeconds = -1; _lastSCRunning = false;
                 gameTimerVal.textContent = '--:--';
                 shotClockVal.textContent = '--';
                 return;
