@@ -385,6 +385,11 @@
 
     // ── Game Timer sync ────────────────────────────────
     function syncGameTimer(seconds, running) {
+        // If the interval is already running and the incoming value is within ±1
+        // of what we're currently showing, absorb the drift silently.
+        // This prevents the "adds 1 second" snap caused by stale timer values
+        // piggybacked on shot-clock-reset Firebase pushes.
+        if (_gtInterval && running && Math.abs(seconds - _gtDisplay) <= 1) return;
         if (_gtInterval) { clearInterval(_gtInterval); _gtInterval = null; }
         _gtDisplay = Math.max(0, seconds);
         updateGameTimerDisplay(_gtDisplay);
