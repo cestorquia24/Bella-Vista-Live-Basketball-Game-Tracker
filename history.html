@@ -674,17 +674,17 @@
 
         .schedule-date-cards {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
         }
 
-        @media (max-width: 700px) {
+        @media (max-width: 900px) {
             .schedule-date-cards { grid-template-columns: 1fr; }
         }
         .schedule-card {
             background: rgba(45, 55, 72, 0.9);
             border-radius: 12px;
-            padding: 18px;
+            padding: 24px;
             box-shadow: 0 4px 16px rgba(0,0,0,0.3);
             transition: all 0.3s;
             border-left: 4px solid #4a5568;
@@ -702,7 +702,7 @@
             gap: 8px;
         }
         .schedule-game-name {
-            font-size: 0.82rem;
+            font-size: 0.95rem;
             font-weight: 700;
             color: #a0aec0;
             flex: 1;
@@ -728,7 +728,7 @@
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            margin: 10px 0 14px;
+            margin: 16px 0 18px;
         }
         .schedule-team {
             display: flex;
@@ -739,16 +739,16 @@
             min-width: 0;
         }
         .schedule-team-logo {
-            width: 52px;
-            height: 52px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 4px;
         }
         .schedule-team-name {
-            font-size: 0.73rem;
+            font-size: 0.9rem;
             font-weight: 700;
-            color: #a0aec0;
+            color: #e2e8f0;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
@@ -756,7 +756,7 @@
             width: 100%;
         }
         .schedule-vs {
-            font-size: 1.1rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: #4a5568;
             flex-shrink: 0;
@@ -764,17 +764,17 @@
         .schedule-meta {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            font-size: 0.82rem;
-            color: #718096;
+            gap: 6px;
+            font-size: 0.95rem;
+            color: #a0aec0;
             border-top: 1px solid #2d3748;
             padding-top: 12px;
         }
         .schedule-meta span { display: flex; align-items: center; gap: 6px; }
         .schedule-countdown {
             text-align: center;
-            margin-top: 10px;
-            font-size: 0.85rem;
+            margin-top: 12px;
+            font-size: 1rem;
             font-weight: 700;
             color: #667eea;
         }
@@ -3779,10 +3779,10 @@
                 const logo2 = TEAM_LOGOS[game.team2] || '';
                 const logo1HTML = logo1
                     ? `<img src="${logo1}" class="schedule-team-logo" alt="${game.team1}">`
-                    : `<div style="width:52px;height:52px;background:#2d3748;border-radius:8px;"></div>`;
+                    : `<div style="width:80px;height:80px;background:#2d3748;border-radius:10px;"></div>`;
                 const logo2HTML = logo2
                     ? `<img src="${logo2}" class="schedule-team-logo" alt="${game.team2}">`
-                    : `<div style="width:52px;height:52px;background:#2d3748;border-radius:8px;"></div>`;
+                    : `<div style="width:80px;height:80px;background:#2d3748;border-radius:10px;"></div>`;
 
                 // Check if this scheduled game is currently LIVE
                 const isLiveMatch = liveGameData &&
