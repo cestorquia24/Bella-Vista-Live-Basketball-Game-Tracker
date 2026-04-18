@@ -2388,10 +2388,10 @@
 
                 // Load playoff bracket
                 const savedBracket = localStorage.getItem('playoffBracket');
-                if (savedBracket) try { playoffBracket = JSON.parse(savedBracket); } catch(e) {}
+                if (savedBracket) try { playoffBracket = JSON.parse(savedBracket); normalizeBracket(); } catch(e) {}
                 if (database) {
                     database.ref('playoffBracket').once('value').then(snap => {
-                        if (snap.val()) playoffBracket = snap.val();
+                        if (snap.val()) { playoffBracket = snap.val(); normalizeBracket(); }
                     }).catch(() => {});
                 }
 
@@ -3656,6 +3656,18 @@
 
         // ── Playoff Bracket ───────────────────────────────────────────────────
 
+        // Firebase removes null array entries; ensure qf/sf are always proper arrays
+        function normalizeBracket() {
+            if (!Array.isArray(playoffBracket.qf)) {
+                const q = playoffBracket.qf || {};
+                playoffBracket.qf = [q[0]||null, q[1]||null, q[2]||null, q[3]||null];
+            }
+            if (!Array.isArray(playoffBracket.sf)) {
+                const s = playoffBracket.sf || {};
+                playoffBracket.sf = [s[0]||null, s[1]||null];
+            }
+        }
+
         function savePlayoffBracket() {
             localStorage.setItem('playoffBracket', JSON.stringify(playoffBracket));
             if (database) {
@@ -3678,6 +3690,7 @@
 
         function setPlayoffWinner(round, idx, teamName) {
             if (!isAdminMode) return;
+            normalizeBracket();
             if (round === 'qf') {
                 playoffBracket.qf[idx] = teamName;
                 // Clear downstream if QF result changes
@@ -3719,6 +3732,7 @@
         function renderPlayoffBracket() {
             const container = document.getElementById('playoffBracketContainer');
             if (!container) return;
+            normalizeBracket();
 
             const seeds = getPlayoffSeeds();
             if (seeds.length < 2) {
@@ -4314,6 +4328,7 @@
         // ── Admin Bracket Override ────────────────────────────────────────────
         function populateBracketOverrideDropdowns() {
             if (!isAdminMode) return;
+            normalizeBracket();
             const seeds = getPlayoffSeeds();
             const teamNames = seeds.filter(Boolean).map(s => s.name);
             const selIds = ['baQf0','baQf1','baQf2','baQf3','baSf0','baSf1','baChampion','baThird'];
