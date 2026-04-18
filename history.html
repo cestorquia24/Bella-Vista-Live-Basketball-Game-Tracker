@@ -603,6 +603,28 @@
         .edit-date-btn:hover { background: #4a5568; color: #e2e8f0; }
         body.admin-mode .edit-date-btn { display: block; }
 
+        /* Game round badge + admin round select */
+        .game-round-badge {
+            display: inline-block;
+            font-size: 0.65rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 10px;
+            margin-left: 8px; vertical-align: middle;
+            background: rgba(102,126,234,0.18);
+            border: 1px solid rgba(102,126,234,0.4);
+            color: #a3bffa;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .game-round-badge.qf  { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #fbbf24; }
+        .game-round-badge.sf  { background: rgba(239,68,68,0.15);  border-color: rgba(239,68,68,0.4);  color: #fc8181; }
+        .game-round-badge.fin { background: rgba(246,224,94,0.15); border-color: rgba(246,224,94,0.4); color: #f6e05e; }
+        .round-select-wrap { display: none; }
+        body.admin-mode .round-select-wrap { display: inline-block; margin-left: 8px; }
+        .round-select {
+            background: #1a202c; color: #e2e8f0;
+            border: 1px solid #4a5568; border-radius: 6px;
+            padding: 4px 8px; font-size: 0.75rem; cursor: pointer;
+        }
+
         /* Edit stats button — admin only */
         .edit-stats-btn {
             display: none;
@@ -2563,9 +2585,23 @@
 
                     const card = document.createElement('div');
                     card.className = 'game-card';
+                    const round = game.gameRound || 'Regular Season';
+                    const badgeCls = round === 'Quarterfinal' ? 'qf' : round === 'Semifinal' ? 'sf' : round === 'Final' ? 'fin' : '';
+                    const roundLabel = round === 'Regular Season' ? 'Reg. Season' : round;
                     card.innerHTML = `
                         <div class="game-card-header">
                             <span class="game-card-name">${game.gameName}</span>
+                            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                                <span class="game-round-badge ${badgeCls}">${roundLabel}</span>
+                                <span class="round-select-wrap">
+                                    <select class="round-select" onchange="setGameRound(${game.id}, this.value)">
+                                        <option value="Regular Season" ${round==='Regular Season'?'selected':''}>Regular Season</option>
+                                        <option value="Quarterfinal"   ${round==='Quarterfinal'?'selected':''}>Quarterfinal</option>
+                                        <option value="Semifinal"      ${round==='Semifinal'?'selected':''}>Semifinal</option>
+                                        <option value="Final"          ${round==='Final'?'selected':''}>Final</option>
+                                    </select>
+                                </span>
+                            </div>
                             <div class="${winnerBadgeClass}">${winnerText}</div>
                         </div>
                         <div class="matchup-row">
@@ -3280,6 +3316,22 @@
             // Re-render
             renderCurrentTab();
             alert('Game date updated successfully!');
+        }
+
+        function setGameRound(gameId, newRound) {
+            if (!isAdminMode) return;
+            const game = gameHistory.find(g => g.id === gameId);
+            if (!game) return;
+            game.gameRound = newRound;
+            // Recalculate standings so playoff games no longer affect team W/L
+            recalculateStandings();
+            // Save updated history to Firebase
+            if (database) {
+                database.ref('gameHistory').set(gameHistory)
+                    .catch(e => console.error('gameHistory sync error:', e));
+            }
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            renderCurrentTab();
         }
 
         function openHistoryPoster(gameId) {
