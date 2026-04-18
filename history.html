@@ -1775,6 +1775,7 @@
             <button class="tab-btn" onclick="switchTab('teams')">🏆 Team Standings</button>
             <button class="tab-btn" onclick="switchTab('players')">⭐ Player Stats</button>
             <button class="tab-btn" onclick="switchTab('leaders')">👑 League Leaders</button>
+            <button class="tab-btn" onclick="switchTab('playoffleaders')">🏆 Playoff Leaders</button>
             <button class="tab-btn" onclick="switchTab('playoffs')">🥇 Playoffs</button>
             <button class="tab-btn" onclick="switchTab('schedule')">📅 Schedule</button>
             <button class="tab-btn trash-tab-btn" onclick="switchTab('trash')">🗑️ Trash</button>
@@ -1855,31 +1856,6 @@
                 <p style="color: #718096;">Player statistics will appear after saving your first game.</p>
             </div>
 
-            <!-- Playoff Player Stats -->
-            <div class="playoff-stats-section">
-                <div class="playoff-stats-header">🏆 Playoff Player Stats</div>
-                <div class="table-container" style="border-radius: 0 0 10px 10px; border-top: none;">
-                    <table id="playoffPlayersTable">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Team</th>
-                                <th>GP</th>
-                                <th>PPG</th>
-                                <th>RPG</th>
-                                <th>APG</th>
-                                <th>SPG</th>
-                                <th>BPG</th>
-                                <th>Total PTS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="playoffPlayersTableBody"></tbody>
-                    </table>
-                </div>
-                <div id="emptyPlayoffPlayers" class="playoff-empty" style="display:none;">
-                    No playoff games recorded yet. Tag games as Quarterfinal / Semifinal / Final when saving.
-                </div>
-            </div>
         </div>
 
         <!-- League Leaders Tab -->
@@ -1919,6 +1895,46 @@
                 <div class="empty-state-icon">👑</div>
                 <div class="empty-state-text">No league leaders yet</div>
                 <p style="color: #718096;">League leaders will appear after saving your first game.</p>
+            </div>
+        </div>
+
+        <!-- Playoff Leaders Tab -->
+        <div id="playoffLeadersTab" class="tab-content">
+            <div style="text-align:center; padding: 10px 12px 4px;">
+                <span style="display:inline-block; background: rgba(246,224,94,0.12); border: 1px solid rgba(246,224,94,0.3); border-radius: 8px; padding: 6px 14px; font-size: 0.75rem; color: #f6e05e; font-weight: 600;">
+                    🏆 Playoff Rankings &nbsp;·&nbsp; Per-game averages &nbsp;·&nbsp; Top 5 players per category
+                </span>
+            </div>
+            <div class="leaders-container" id="playoffLeadersContainer">
+                <div class="leader-category">
+                    <h3 class="leader-category-title">👑 Points</h3>
+                    <div class="leader-list" id="playoffPointsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">🏀 Rebounds</h3>
+                    <div class="leader-list" id="playoffReboundsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">🎯 Assists</h3>
+                    <div class="leader-list" id="playoffAssistsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">✋ Steals</h3>
+                    <div class="leader-list" id="playoffStealsLeaders"></div>
+                </div>
+
+                <div class="leader-category">
+                    <h3 class="leader-category-title">🚫 Blocks</h3>
+                    <div class="leader-list" id="playoffBlocksLeaders"></div>
+                </div>
+            </div>
+            <div id="emptyPlayoffLeaders" class="empty-state" style="display: none;">
+                <div class="empty-state-icon">🏆</div>
+                <div class="empty-state-text">No playoff leaders yet</div>
+                <p style="color: #718096;">Tag games as Quarterfinal / Semifinal / Final to populate playoff stats.</p>
             </div>
         </div>
     </div>
@@ -2468,6 +2484,8 @@
                 document.getElementById('playersTab').classList.add('active');
             } else if (tab === 'leaders') {
                 document.getElementById('leadersTab').classList.add('active');
+            } else if (tab === 'playoffleaders') {
+                document.getElementById('playoffLeadersTab').classList.add('active');
             } else if (tab === 'schedule') {
                 document.getElementById('scheduleTab').classList.add('active');
             } else if (tab === 'playoffs') {
@@ -2487,9 +2505,10 @@
             } else if (currentTab === 'players') {
                 populateTeamFilter();
                 renderPlayerStats();
-                renderPlayoffPlayerStats();
             } else if (currentTab === 'leaders') {
                 renderLeagueLeaders();
+            } else if (currentTab === 'playoffleaders') {
+                renderPlayoffLeaders();
             } else if (currentTab === 'schedule') {
                 renderScheduleTab();
             } else if (currentTab === 'playoffs') {
@@ -2935,6 +2954,86 @@
 
             container.innerHTML = note;
 
+            topPlayers.forEach((player, index) => {
+                const rank = index + 1;
+                const rankClass = rank <= 3 ? `rank-${rank}` : '';
+                const teamLogo = TEAM_LOGOS[player.teamName] || '';
+                const logoHTML = teamLogo ? `<img src="${teamLogo}" class="team-logo-table" alt="${player.teamName}">` : '';
+                const statValue = player[sortKey].toFixed(1);
+
+                const item = document.createElement('div');
+                item.className = `leader-item ${rankClass}`;
+                item.innerHTML = `
+                    <div class="leader-rank">${rank}</div>
+                    ${logoHTML}
+                    <div class="leader-info">
+                        <div class="leader-name"><span class="player-name-clickable" onclick="openPlayerGameLog('${player.playerName}', '${player.teamName}')">${player.playerName}</span></div>
+                        <div class="leader-team">${player.teamName}</div>
+                    </div>
+                    <div class="leader-stat-col">
+                        <div class="leader-stat">${statValue}</div>
+                        <div class="leader-gp">${player.gamesPlayed} GP</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function renderPlayoffLeaders() {
+            const empty = document.getElementById('emptyPlayoffLeaders');
+            const container = document.getElementById('playoffLeadersContainer');
+
+            const allPlayers = Object.values(seasonStandings.players)
+                .filter(p => (p.playoffGamesPlayed || 0) > 0)
+                .map(p => {
+                    const gp = p.playoffGamesPlayed || 1;
+                    return {
+                        playerName:  p.playerName,
+                        teamName:    p.teamName,
+                        gamesPlayed: p.playoffGamesPlayed || 0,
+                        avgPoints:   parseFloat(((p.playoffPoints   || 0) / gp).toFixed(1)),
+                        avgRebounds: parseFloat(((p.playoffRebounds || 0) / gp).toFixed(1)),
+                        avgAssists:  parseFloat(((p.playoffAssists  || 0) / gp).toFixed(1)),
+                        avgSteals:   parseFloat(((p.playoffSteals   || 0) / gp).toFixed(1)),
+                        avgBlocks:   parseFloat(((p.playoffBlocks   || 0) / gp).toFixed(1)),
+                    };
+                });
+
+            const activePlayers = allPlayers.filter(p =>
+                p.avgPoints > 0 || p.avgRebounds > 0 || p.avgAssists > 0 ||
+                p.avgSteals > 0 || p.avgBlocks > 0
+            );
+
+            if (activePlayers.length === 0) {
+                if (empty)     empty.style.display = 'block';
+                if (container) container.style.display = 'none';
+                return;
+            }
+            if (empty)     empty.style.display = 'none';
+            if (container) container.style.display = 'grid';
+
+            renderPlayoffLeaderCategory(activePlayers, 'avgPoints',   'playoffPointsLeaders',   'PPG');
+            renderPlayoffLeaderCategory(activePlayers, 'avgRebounds', 'playoffReboundsLeaders', 'RPG');
+            renderPlayoffLeaderCategory(activePlayers, 'avgAssists',  'playoffAssistsLeaders',  'APG');
+            renderPlayoffLeaderCategory(activePlayers, 'avgSteals',   'playoffStealsLeaders',   'SPG');
+            renderPlayoffLeaderCategory(activePlayers, 'avgBlocks',   'playoffBlocksLeaders',   'BPG');
+        }
+
+        function renderPlayoffLeaderCategory(players, sortKey, elementId, label) {
+            const container = document.getElementById(elementId);
+            if (!container) return;
+
+            const topPlayers = [...players]
+                .filter(p => p[sortKey] > 0)
+                .sort((a, b) => b[sortKey] - a[sortKey])
+                .slice(0, 5);
+
+            if (topPlayers.length === 0) {
+                container.innerHTML = '<div style="color: #718096; text-align: center; padding: 20px;">No data yet</div>';
+                return;
+            }
+
+            container.innerHTML = '';
             topPlayers.forEach((player, index) => {
                 const rank = index + 1;
                 const rankClass = rank <= 3 ? `rank-${rank}` : '';
