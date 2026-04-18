@@ -960,6 +960,37 @@
         .pb-3rd .third-lbl  { font-size: 0.65rem; color: #718096; text-transform: uppercase; letter-spacing: 0.08em; }
         .pb-3rd .third-name { font-size: 1rem; font-weight: 800; color: #a0aec0; margin-top: 4px; }
 
+        /* ── Admin Bracket Override Panel ──────────────────────────────────── */
+        .bracket-admin-panel {
+            display: none;
+            background: rgba(17,24,39,0.95);
+            border: 1px solid rgba(102,126,234,0.4);
+            border-radius: 12px;
+            padding: 16px 18px 18px;
+            margin-bottom: 18px;
+        }
+        body.admin-mode .bracket-admin-panel { display: block; }
+        .ba-title { font-size: 0.88rem; font-weight: 700; color: #a3bffa; margin-bottom: 14px; }
+        .ba-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+        .ba-row { display: flex; flex-direction: column; gap: 4px; }
+        .ba-label { font-size: 0.68rem; color: #718096; text-transform: uppercase; letter-spacing: 0.06em; }
+        .ba-select { background: #1a202c; color: #e2e8f0; border: 1px solid #4a5568; border-radius: 6px; padding: 7px 10px; font-size: 0.82rem; width: 100%; }
+        .ba-save-btn { width: 100%; background: #667eea; color: white; border: none; border-radius: 8px; padding: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+        .ba-save-btn:hover { background: #5a67d8; }
+
+        /* ── Playoff Player Stats ───────────────────────────────────────────── */
+        .playoff-stats-section { margin-top: 28px; }
+        .playoff-stats-header {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 16px;
+            background: rgba(246,224,94,0.08);
+            border: 1px solid rgba(246,224,94,0.25);
+            border-radius: 10px 10px 0 0;
+            font-size: 0.95rem; font-weight: 800; color: #f6e05e;
+        }
+        #playoffPlayersTableBody td { color: #e2e8f0; }
+        .playoff-empty { text-align: center; padding: 28px; color: #718096; font-size: 0.9rem; background: rgba(246,224,94,0.04); border: 1px solid rgba(246,224,94,0.12); border-top: none; border-radius: 0 0 10px 10px; }
+
         /* Schedule Add/Edit Modal */
         .schedule-modal {
             display: none;
@@ -1801,6 +1832,32 @@
                 <div class="empty-state-text">No player stats yet</div>
                 <p style="color: #718096;">Player statistics will appear after saving your first game.</p>
             </div>
+
+            <!-- Playoff Player Stats -->
+            <div class="playoff-stats-section">
+                <div class="playoff-stats-header">🏆 Playoff Player Stats</div>
+                <div class="table-container" style="border-radius: 0 0 10px 10px; border-top: none;">
+                    <table id="playoffPlayersTable">
+                        <thead>
+                            <tr>
+                                <th>Player</th>
+                                <th>Team</th>
+                                <th>GP</th>
+                                <th>PPG</th>
+                                <th>RPG</th>
+                                <th>APG</th>
+                                <th>SPG</th>
+                                <th>BPG</th>
+                                <th>Total PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playoffPlayersTableBody"></tbody>
+                    </table>
+                </div>
+                <div id="emptyPlayoffPlayers" class="playoff-empty" style="display:none;">
+                    No playoff games recorded yet. Tag games as Quarterfinal / Semifinal / Final when saving.
+                </div>
+            </div>
         </div>
 
         <!-- League Leaders Tab -->
@@ -1895,6 +1952,45 @@
 
     <!-- Playoffs Tab -->
     <div id="playoffsTab" class="tab-content">
+        <!-- Admin: set bracket results manually -->
+        <div class="bracket-admin-panel">
+            <div class="ba-title">🛠️ Set Bracket Results</div>
+            <div class="ba-grid">
+                <div class="ba-row">
+                    <span class="ba-label">QF 1 Winner (#1 vs #8)</span>
+                    <select class="ba-select" id="baQf0"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">QF 2 Winner (#2 vs #7)</span>
+                    <select class="ba-select" id="baQf1"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">QF 3 Winner (#3 vs #6)</span>
+                    <select class="ba-select" id="baQf2"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">QF 4 Winner (#4 vs #5)</span>
+                    <select class="ba-select" id="baQf3"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">SF Game 1 Winner</span>
+                    <select class="ba-select" id="baSf0"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">SF Game 2 Winner</span>
+                    <select class="ba-select" id="baSf1"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">🏆 Champion</span>
+                    <select class="ba-select" id="baChampion"><option value="">— TBD —</option></select>
+                </div>
+                <div class="ba-row">
+                    <span class="ba-label">🥉 3rd Place</span>
+                    <select class="ba-select" id="baThird"><option value="">— TBD —</option></select>
+                </div>
+            </div>
+            <button class="ba-save-btn" onclick="applyBracketOverride()">💾 Save Bracket</button>
+        </div>
         <div id="playoffBracketContainer"></div>
     </div>
 
@@ -2369,11 +2465,13 @@
             } else if (currentTab === 'players') {
                 populateTeamFilter();
                 renderPlayerStats();
+                renderPlayoffPlayerStats();
             } else if (currentTab === 'leaders') {
                 renderLeagueLeaders();
             } else if (currentTab === 'schedule') {
                 renderScheduleTab();
             } else if (currentTab === 'playoffs') {
+                populateBracketOverrideDropdowns();
                 renderPlayoffBracket();
             } else if (currentTab === 'trash') {
                 renderTrashTab();
@@ -3996,6 +4094,7 @@
         function updateSeasonStandingsFromGame(gameRecord) {
             const team1Name = gameRecord.team1.name;
             const team2Name = gameRecord.team2.name;
+            const isPlayoff = ['Quarterfinal','Semifinal','Final'].includes(gameRecord.gameRound);
 
             // Initialize teams if needed
             if (!seasonStandings.teams[team1Name]) {
@@ -4008,22 +4107,22 @@
             if (!seasonStandings.teams[team1Name].h2h) seasonStandings.teams[team1Name].h2h = {};
             if (!seasonStandings.teams[team2Name].h2h) seasonStandings.teams[team2Name].h2h = {};
 
-            // Update win/loss and head-to-head
-            if (gameRecord.winner === team1Name) {
-                seasonStandings.teams[team1Name].wins++;
-                seasonStandings.teams[team2Name].losses++;
-                seasonStandings.teams[team1Name].h2h[team2Name] = (seasonStandings.teams[team1Name].h2h[team2Name] || 0) + 1;
-            } else if (gameRecord.winner === team2Name) {
-                seasonStandings.teams[team2Name].wins++;
-                seasonStandings.teams[team1Name].losses++;
-                seasonStandings.teams[team2Name].h2h[team1Name] = (seasonStandings.teams[team2Name].h2h[team1Name] || 0) + 1;
+            // Only count W/L and points toward standings for Regular Season games
+            if (!isPlayoff) {
+                if (gameRecord.winner === team1Name) {
+                    seasonStandings.teams[team1Name].wins++;
+                    seasonStandings.teams[team2Name].losses++;
+                    seasonStandings.teams[team1Name].h2h[team2Name] = (seasonStandings.teams[team1Name].h2h[team2Name] || 0) + 1;
+                } else if (gameRecord.winner === team2Name) {
+                    seasonStandings.teams[team2Name].wins++;
+                    seasonStandings.teams[team1Name].losses++;
+                    seasonStandings.teams[team2Name].h2h[team1Name] = (seasonStandings.teams[team2Name].h2h[team1Name] || 0) + 1;
+                }
+                seasonStandings.teams[team1Name].pointsFor += gameRecord.finalScore.team1;
+                seasonStandings.teams[team1Name].pointsAgainst += gameRecord.finalScore.team2;
+                seasonStandings.teams[team2Name].pointsFor += gameRecord.finalScore.team2;
+                seasonStandings.teams[team2Name].pointsAgainst += gameRecord.finalScore.team1;
             }
-
-            // Update points
-            seasonStandings.teams[team1Name].pointsFor += gameRecord.finalScore.team1;
-            seasonStandings.teams[team1Name].pointsAgainst += gameRecord.finalScore.team2;
-            seasonStandings.teams[team2Name].pointsFor += gameRecord.finalScore.team2;
-            seasonStandings.teams[team2Name].pointsAgainst += gameRecord.finalScore.team1;
 
             // Only update lastPlayed if this game is more recent
             const gameDate = new Date(gameRecord.gameDate);
@@ -4034,12 +4133,12 @@
                 seasonStandings.teams[team2Name].lastPlayed = gameRecord.gameDate;
             }
 
-            // Update player stats
-            updatePlayerStatsFromGame(gameRecord.team1, team1Name);
-            updatePlayerStatsFromGame(gameRecord.team2, team2Name);
+            // Update player stats (regular season or playoff)
+            updatePlayerStatsFromGame(gameRecord.team1, team1Name, isPlayoff);
+            updatePlayerStatsFromGame(gameRecord.team2, team2Name, isPlayoff);
         }
 
-        function updatePlayerStatsFromGame(teamData, teamName) {
+        function updatePlayerStatsFromGame(teamData, teamName, isPlayoff) {
             teamData.players.forEach(player => {
                 // Sanitize key for Firebase - replace invalid characters
                 const key = `${teamName}_${player.name}`.replace(/[.#$\/\[\]]/g, '-');
@@ -4066,25 +4165,46 @@
                         totalAssists: 0,
                         totalSteals: 0,
                         totalBlocks: 0,
-                        totalFouls: 0
+                        totalFouls: 0,
+                        playoffGamesPlayed: 0,
+                        playoffPoints: 0,
+                        playoffRebounds: 0,
+                        playoffAssists: 0,
+                        playoffSteals: 0,
+                        playoffBlocks: 0,
+                        playoffFouls: 0
                     };
                 }
-
+                // Ensure playoff fields exist on older records
                 const p = seasonStandings.players[key];
-                // Only count GP when the player actually has stats.
-                // Players on the predefined roster who didn't show up for a game
-                // are still stored in the game record with all-zero stats, and
-                // should not have their GP inflated.
+                if (p.playoffGamesPlayed === undefined) {
+                    p.playoffGamesPlayed = 0; p.playoffPoints = 0; p.playoffRebounds = 0;
+                    p.playoffAssists = 0; p.playoffSteals = 0; p.playoffBlocks = 0; p.playoffFouls = 0;
+                }
                 const hasStats = totalPoints > 0 || totalRebounds > 0 ||
                                  totalAssists > 0 || totalSteals > 0 || totalBlocks > 0;
-                if (hasStats) p.gamesPlayed++;
-                p.totalPoints    += totalPoints;
-                p.totalRebounds  += totalRebounds;
-                p.totalAssists   += totalAssists;
-                p.totalSteals    += totalSteals;
-                p.totalBlocks    += totalBlocks;
-                p.totalFouls     += totalFouls;
-                // Guard against division by zero — keeps averages at 0 for no-show players
+
+                if (isPlayoff) {
+                    // Track playoff stats separately — don't inflate regular season GP
+                    if (hasStats) p.playoffGamesPlayed++;
+                    p.playoffPoints   += totalPoints;
+                    p.playoffRebounds += totalRebounds;
+                    p.playoffAssists  += totalAssists;
+                    p.playoffSteals   += totalSteals;
+                    p.playoffBlocks   += totalBlocks;
+                    p.playoffFouls    += totalFouls;
+                } else {
+                    // Regular season
+                    // Only count GP when the player actually has stats.
+                    if (hasStats) p.gamesPlayed++;
+                    p.totalPoints    += totalPoints;
+                    p.totalRebounds  += totalRebounds;
+                    p.totalAssists   += totalAssists;
+                    p.totalSteals    += totalSteals;
+                    p.totalBlocks    += totalBlocks;
+                    p.totalFouls     += totalFouls;
+                }
+                // Recompute regular season averages
                 if (p.gamesPlayed > 0) {
                     p.avgPoints    = parseFloat((p.totalPoints    / p.gamesPlayed).toFixed(1));
                     p.avgRebounds  = parseFloat((p.totalRebounds  / p.gamesPlayed).toFixed(1));
@@ -4101,6 +4221,80 @@
 
         function sortPlayers(column) {
             // Sorting logic can be added here if needed
+        }
+
+        function renderPlayoffPlayerStats() {
+            const tbody = document.getElementById('playoffPlayersTableBody');
+            const empty = document.getElementById('emptyPlayoffPlayers');
+            if (!tbody) return;
+            const allPlayers = Object.values(seasonStandings.players).filter(p =>
+                (p.playoffPoints || 0) > 0 || (p.playoffRebounds || 0) > 0 ||
+                (p.playoffAssists || 0) > 0 || (p.playoffSteals || 0) > 0 || (p.playoffBlocks || 0) > 0
+            );
+            if (allPlayers.length === 0) {
+                tbody.innerHTML = '';
+                if (empty) empty.style.display = 'block';
+                return;
+            }
+            if (empty) empty.style.display = 'none';
+            allPlayers.sort((a, b) => (b.playoffPoints||0) - (a.playoffPoints||0));
+            tbody.innerHTML = '';
+            allPlayers.forEach(player => {
+                const gp = player.playoffGamesPlayed || 1;
+                const row = document.createElement('tr');
+                const logo = TEAM_LOGOS[player.teamName] || '';
+                const logoHTML = logo ? `<img src="${logo}" class="team-logo-table" alt="${player.teamName}">` : '';
+                row.innerHTML = `
+                    <td><div class="team-cell">${logoHTML}<span>${player.playerName}</span></div></td>
+                    <td>${player.teamName}</td>
+                    <td>${gp}</td>
+                    <td class="stat-highlight">${(player.playoffPoints / gp).toFixed(1)}</td>
+                    <td>${((player.playoffRebounds||0) / gp).toFixed(1)}</td>
+                    <td>${((player.playoffAssists||0) / gp).toFixed(1)}</td>
+                    <td>${((player.playoffSteals||0) / gp).toFixed(1)}</td>
+                    <td>${((player.playoffBlocks||0) / gp).toFixed(1)}</td>
+                    <td>${player.playoffPoints || 0}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // ── Admin Bracket Override ────────────────────────────────────────────
+        function populateBracketOverrideDropdowns() {
+            if (!isAdminMode) return;
+            const seeds = getPlayoffSeeds();
+            const teamNames = seeds.filter(Boolean).map(s => s.name);
+            const selIds = ['baQf0','baQf1','baQf2','baQf3','baSf0','baSf1','baChampion','baThird'];
+            const currentVals = [
+                playoffBracket.qf[0], playoffBracket.qf[1], playoffBracket.qf[2], playoffBracket.qf[3],
+                playoffBracket.sf[0], playoffBracket.sf[1],
+                playoffBracket.champion, playoffBracket.thirdPlace
+            ];
+            selIds.forEach((id, i) => {
+                const sel = document.getElementById(id);
+                if (!sel) return;
+                sel.innerHTML = '<option value="">— TBD —</option>';
+                teamNames.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name; opt.textContent = name;
+                    if (currentVals[i] === name) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+            });
+        }
+
+        function applyBracketOverride() {
+            if (!isAdminMode) return;
+            playoffBracket.qf[0] = document.getElementById('baQf0').value || null;
+            playoffBracket.qf[1] = document.getElementById('baQf1').value || null;
+            playoffBracket.qf[2] = document.getElementById('baQf2').value || null;
+            playoffBracket.qf[3] = document.getElementById('baQf3').value || null;
+            playoffBracket.sf[0] = document.getElementById('baSf0').value || null;
+            playoffBracket.sf[1] = document.getElementById('baSf1').value || null;
+            playoffBracket.champion  = document.getElementById('baChampion').value || null;
+            playoffBracket.thirdPlace = document.getElementById('baThird').value || null;
+            savePlayoffBracket();
+            renderPlayoffBracket();
         }
 
         // Player Game Log Functions
