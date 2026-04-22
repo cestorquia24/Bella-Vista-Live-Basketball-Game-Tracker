@@ -5074,6 +5074,14 @@
             const existingPlayers = document.getElementById(`team${teamNumber}PlayersInput`).value
                 .split('\n').map(s => s.trim()).filter(Boolean);
 
+            // Get players already claimed by the OTHER exhibition team — lock them out
+            const otherTeamNumber = teamNumber === 1 ? 2 : 1;
+            const otherTeamName = document.getElementById(`team${otherTeamNumber}Selector`).value;
+            const takenPlayers = EXHIBITION_TEAMS.includes(otherTeamName)
+                ? document.getElementById(`team${otherTeamNumber}PlayersInput`).value
+                    .split('\n').map(s => s.trim()).filter(Boolean)
+                : [];
+
             Object.entries(PREDEFINED_TEAMS).forEach(([team, players]) => {
                 const group = document.createElement('div');
                 group.style.cssText = 'border-bottom:1px solid #2d3748;';
@@ -5084,18 +5092,23 @@
                 group.appendChild(header);
 
                 players.forEach(playerName => {
+                    const isTaken = takenPlayers.includes(playerName);
+
                     const row = document.createElement('label');
                     row.className = 'picker-row';
-                    row.style.cssText = 'display:flex; align-items:center; gap:12px; padding:9px 14px; cursor:pointer; transition:background 0.15s;';
-                    row.onmouseenter = () => row.style.background = '#2d3748';
-                    row.onmouseleave = () => row.style.background = '';
+                    row.style.cssText = `display:flex; align-items:center; gap:12px; padding:9px 14px; transition:background 0.15s; ${isTaken ? 'opacity:0.35; cursor:not-allowed;' : 'cursor:pointer;'}`;
+                    if (!isTaken) {
+                        row.onmouseenter = () => row.style.background = '#2d3748';
+                        row.onmouseleave = () => row.style.background = '';
+                    }
 
                     const cb = document.createElement('input');
                     cb.type = 'checkbox';
                     cb.value = playerName;
                     cb.dataset.player = playerName;
-                    cb.style.cssText = 'width:16px; height:16px; accent-color:#48bb78; cursor:pointer; flex-shrink:0;';
+                    cb.style.cssText = `width:16px; height:16px; accent-color:#48bb78; flex-shrink:0; ${isTaken ? 'cursor:not-allowed;' : 'cursor:pointer;'}`;
                     cb.checked = existingPlayers.includes(playerName);
+                    cb.disabled = isTaken;
                     cb.addEventListener('change', updatePickerCount);
 
                     const label = document.createElement('span');
@@ -5103,8 +5116,8 @@
                     label.textContent = playerName;
 
                     const teamTag = document.createElement('span');
-                    teamTag.style.cssText = 'margin-left:auto; font-size:0.72rem; color:#4a5568; flex-shrink:0;';
-                    teamTag.textContent = team;
+                    teamTag.style.cssText = `margin-left:auto; font-size:0.72rem; flex-shrink:0; ${isTaken ? 'color:#e53e3e; font-weight:600;' : 'color:#4a5568;'}`;
+                    teamTag.textContent = isTaken ? 'Taken' : team;
 
                     row.appendChild(cb);
                     row.appendChild(label);
