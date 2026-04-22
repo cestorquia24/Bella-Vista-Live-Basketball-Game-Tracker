@@ -2219,6 +2219,14 @@
                             <img src="logos/Porpol Ravens.jpg?v=2" class="team-card-logo" alt="Porpol Ravens">
                             <div class="team-card-name">Porpol Ravens</div>
                         </div>
+                        <div class="team-card" data-team="TeamChow" onclick="selectTeam(1, 'TeamChow')">
+                            <img src="logos/TeamChow.png" class="team-card-logo" alt="TeamChow">
+                            <div class="team-card-name">TeamChow</div>
+                        </div>
+                        <div class="team-card" data-team="TeamCris" onclick="selectTeam(1, 'TeamCris')">
+                            <img src="logos/TeamCris.png" class="team-card-logo" alt="TeamCris">
+                            <div class="team-card-name">TeamCris</div>
+                        </div>
                     </div>
                 </div>
 
@@ -2256,6 +2264,14 @@
                         <div class="team-card" data-team="Porpol Ravens" onclick="selectTeam(2, 'Porpol Ravens')">
                             <img src="logos/Porpol Ravens.jpg?v=2" class="team-card-logo" alt="Porpol Ravens">
                             <div class="team-card-name">Porpol Ravens</div>
+                        </div>
+                        <div class="team-card" data-team="TeamChow" onclick="selectTeam(2, 'TeamChow')">
+                            <img src="logos/TeamChow.png" class="team-card-logo" alt="TeamChow">
+                            <div class="team-card-name">TeamChow</div>
+                        </div>
+                        <div class="team-card" data-team="TeamCris" onclick="selectTeam(2, 'TeamCris')">
+                            <img src="logos/TeamCris.png" class="team-card-logo" alt="TeamCris">
+                            <div class="team-card-name">TeamCris</div>
                         </div>
                     </div>
                 </div>
@@ -2688,6 +2704,9 @@
             ]
         };
 
+        // Exhibition teams — rosters are picked from the full league player pool
+        const EXHIBITION_TEAMS = ['TeamChow', 'TeamCris'];
+
         // Team Logos Mapping (v2 = cache-busting for updated logos)
         const TEAM_LOGOS = {
             'Orange Inferno': 'logos/Orange Inferno.jpg?v=2',
@@ -2697,7 +2716,9 @@
             'Black Hoopers': 'logos/Black Hoopers.jpg?v=2',
             'Yellow Slashers': 'logos/Yellow Slashers.jpg?v=2',
             'Red Blood Cells': 'logos/Red Blood Cells.jpg?v=2',
-            'Porpol Ravens': 'logos/Porpol Ravens.jpg?v=2'
+            'Porpol Ravens': 'logos/Porpol Ravens.jpg?v=2',
+            'TeamChow': 'logos/TeamChow.png',
+            'TeamCris': 'logos/TeamCris.png'
         };
 
         // Game data structure
@@ -5019,6 +5040,12 @@
             const teamName = document.getElementById(selectorId).value;
             const playersTextarea = document.getElementById(playersInputId);
 
+            // Exhibition teams: open player picker instead of auto-populating
+            if (teamName && EXHIBITION_TEAMS.includes(teamName)) {
+                openPlayerPicker(teamNumber);
+                return;
+            }
+
             if (teamName && PREDEFINED_TEAMS[teamName]) {
                 // Load players for selected team
                 playersTextarea.value = PREDEFINED_TEAMS[teamName].join('\n');
@@ -5030,9 +5057,115 @@
             updateGameName();
         }
 
+        // ── Player Picker (for exhibition teams) ───────────────────────────────
+        let _pickerTargetTeam = null;
+
+        function openPlayerPicker(teamNumber) {
+            _pickerTargetTeam = teamNumber;
+            const teamName = document.getElementById(`team${teamNumber}Selector`).value;
+            document.getElementById('pickerTeamLabel').textContent = teamName;
+            document.getElementById('pickerSearch').value = '';
+
+            // Build player list from all league teams
+            const list = document.getElementById('pickerPlayerList');
+            list.innerHTML = '';
+
+            // Get currently selected players for this team (to restore checkboxes on re-open)
+            const existingPlayers = document.getElementById(`team${teamNumber}PlayersInput`).value
+                .split('\n').map(s => s.trim()).filter(Boolean);
+
+            Object.entries(PREDEFINED_TEAMS).forEach(([team, players]) => {
+                const group = document.createElement('div');
+                group.style.cssText = 'border-bottom:1px solid #2d3748;';
+
+                const header = document.createElement('div');
+                header.style.cssText = 'padding:8px 14px 6px; font-size:0.75rem; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:0.1em; background:#171923; position:sticky; top:0;';
+                header.textContent = team;
+                group.appendChild(header);
+
+                players.forEach(playerName => {
+                    const row = document.createElement('label');
+                    row.className = 'picker-row';
+                    row.style.cssText = 'display:flex; align-items:center; gap:12px; padding:9px 14px; cursor:pointer; transition:background 0.15s;';
+                    row.onmouseenter = () => row.style.background = '#2d3748';
+                    row.onmouseleave = () => row.style.background = '';
+
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.value = playerName;
+                    cb.dataset.player = playerName;
+                    cb.style.cssText = 'width:16px; height:16px; accent-color:#48bb78; cursor:pointer; flex-shrink:0;';
+                    cb.checked = existingPlayers.includes(playerName);
+                    cb.addEventListener('change', updatePickerCount);
+
+                    const label = document.createElement('span');
+                    label.style.cssText = 'color:#e2e8f0; font-size:0.9rem;';
+                    label.textContent = playerName;
+
+                    const teamTag = document.createElement('span');
+                    teamTag.style.cssText = 'margin-left:auto; font-size:0.72rem; color:#4a5568; flex-shrink:0;';
+                    teamTag.textContent = team;
+
+                    row.appendChild(cb);
+                    row.appendChild(label);
+                    row.appendChild(teamTag);
+                    group.appendChild(row);
+                });
+
+                list.appendChild(group);
+            });
+
+            updatePickerCount();
+            const modal = document.getElementById('playerPickerModal');
+            modal.style.display = 'flex';
+        }
+
+        function closePlayerPicker() {
+            document.getElementById('playerPickerModal').style.display = 'none';
+        }
+
+        function filterPickerPlayers() {
+            const query = document.getElementById('pickerSearch').value.toLowerCase();
+            document.querySelectorAll('#pickerPlayerList .picker-row').forEach(row => {
+                const name = row.querySelector('input').value.toLowerCase();
+                row.style.display = name.includes(query) ? '' : 'none';
+            });
+            // Hide group headers that have no visible rows
+            document.querySelectorAll('#pickerPlayerList > div').forEach(group => {
+                const visibleRows = [...group.querySelectorAll('.picker-row')].filter(r => r.style.display !== 'none');
+                group.style.display = visibleRows.length === 0 ? 'none' : '';
+            });
+        }
+
+        function pickerSelectAll() {
+            document.querySelectorAll('#pickerPlayerList .picker-row').forEach(row => {
+                if (row.style.display !== 'none') row.querySelector('input').checked = true;
+            });
+            updatePickerCount();
+        }
+
+        function pickerClearAll() {
+            document.querySelectorAll('#pickerPlayerList input[type=checkbox]').forEach(cb => cb.checked = false);
+            updatePickerCount();
+        }
+
+        function updatePickerCount() {
+            const count = document.querySelectorAll('#pickerPlayerList input[type=checkbox]:checked').length;
+            document.getElementById('pickerCount').textContent = `${count} selected`;
+        }
+
+        function confirmPlayerPicker() {
+            const selected = [...document.querySelectorAll('#pickerPlayerList input[type=checkbox]:checked')]
+                .map(cb => cb.value);
+            if (selected.length === 0) {
+                alert('Please select at least one player.');
+                return;
+            }
+            document.getElementById(`team${_pickerTargetTeam}PlayersInput`).value = selected.join('\n');
+            closePlayerPicker();
+        }
+
         function updateGameName() {
-            const team1 = document.getElementById('team1Selector').value;
-            const team2 = document.getElementById('team2Selector').value;
             const gameNameInput = document.getElementById('gameNameInput');
 
             if (team1 && team2) {
@@ -5738,5 +5871,24 @@
                 .catch(err => console.warn('SW registration failed:', err));
         }
     </script>
+
+    <!-- Player Picker Modal (for exhibition teams) -->
+    <div id="playerPickerModal" style="display:none; position:fixed; z-index:5000; inset:0; background:rgba(0,0,0,0.88); align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;">
+        <div style="background:#1a202c; border-radius:14px; padding:24px; max-width:600px; width:100%; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid #2d3748;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="color:#f6e05e; font-size:1.15rem; margin:0;">🏀 Select Players — <span id="pickerTeamLabel" style="color:#fbd38d;"></span></h3>
+                <button onclick="closePlayerPicker()" style="background:none; border:none; color:#718096; font-size:1.6rem; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+            <input type="text" id="pickerSearch" placeholder="🔍 Search players…" oninput="filterPickerPlayers()"
+                style="width:100%; padding:10px 14px; background:#2d3748; border:1px solid #4a5568; border-radius:8px; color:#e2e8f0; margin-bottom:12px; font-size:0.9rem; box-sizing:border-box;">
+            <div style="display:flex; gap:8px; margin-bottom:14px; align-items:center;">
+                <button onclick="pickerSelectAll()" style="flex:1; padding:8px; background:#2d3748; border:1px solid #4a5568; border-radius:6px; color:#68d391; cursor:pointer; font-size:0.82rem; font-weight:600;">✓ Select All</button>
+                <button onclick="pickerClearAll()" style="flex:1; padding:8px; background:#2d3748; border:1px solid #4a5568; border-radius:6px; color:#fc8181; cursor:pointer; font-size:0.82rem; font-weight:600;">✕ Clear All</button>
+                <div id="pickerCount" style="flex:1; padding:8px; text-align:center; color:#a0aec0; font-size:0.82rem; border:1px solid #4a5568; border-radius:6px; background:#2d3748;">0 selected</div>
+            </div>
+            <div id="pickerPlayerList" style="max-height:360px; overflow-y:auto; margin-bottom:16px; border:1px solid #2d3748; border-radius:8px;"></div>
+            <button onclick="confirmPlayerPicker()" style="width:100%; padding:13px; background:#48bb78; border:none; border-radius:8px; color:#1a202c; font-weight:800; font-size:1rem; cursor:pointer; letter-spacing:0.03em;">✓ Confirm Selection</button>
+        </div>
+    </div>
 
 </body></html>
