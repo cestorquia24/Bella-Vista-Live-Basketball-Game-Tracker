@@ -2302,12 +2302,12 @@
                 <div class="form-row" style="display: none;">
                     <div class="form-group">
                         <label for="team1PlayersInput">Team 1 Players</label>
-                        <textarea id="team1PlayersInput" required></textarea>
+                        <textarea id="team1PlayersInput"></textarea>
                         <small>Auto-populated from team selection</small>
                     </div>
                     <div class="form-group">
                         <label for="team2PlayersInput">Team 2 Players</label>
-                        <textarea id="team2PlayersInput" required></textarea>
+                        <textarea id="team2PlayersInput"></textarea>
                         <small>Auto-populated from team selection</small>
                     </div>
                 </div>
@@ -5189,14 +5189,36 @@
         function startGameFromForm(event) {
             event.preventDefault();
 
+            const team1Name = document.getElementById('team1Selector').value;
+            const team2Name = document.getElementById('team2Selector').value;
+            const team1Players = document.getElementById('team1PlayersInput').value.trim();
+            const team2Players = document.getElementById('team2PlayersInput').value.trim();
+
+            if (!team1Name || !team2Name) {
+                alert('Please select both teams before starting.');
+                return false;
+            }
+
+            // Exhibition teams require players to be picked via the modal
+            if (EXHIBITION_TEAMS.includes(team1Name) && !team1Players) {
+                alert(`Please select players for ${team1Name} by clicking the team card again.`);
+                openPlayerPicker(1);
+                return false;
+            }
+            if (EXHIBITION_TEAMS.includes(team2Name) && !team2Players) {
+                alert(`Please select players for ${team2Name} by clicking the team card again.`);
+                openPlayerPicker(2);
+                return false;
+            }
+
             const formData = {
                 gameName: document.getElementById('gameNameInput').value,
                 gameDate: document.getElementById('gameDateInput').value,
                 gameRound: document.getElementById('gameRoundInput').value,
-                team1Name: document.getElementById('team1Selector').value,
-                team2Name: document.getElementById('team2Selector').value,
-                team1Players: document.getElementById('team1PlayersInput').value,
-                team2Players: document.getElementById('team2PlayersInput').value,
+                team1Name,
+                team2Name,
+                team1Players,
+                team2Players,
                 quarters: parseInt(document.getElementById('quartersInput').value),
                 minutesPerQuarter: parseInt(document.getElementById('minutesPerQuarterInput').value)
             };
@@ -5873,7 +5895,7 @@
     </script>
 
     <!-- Player Picker Modal (for exhibition teams) -->
-    <div id="playerPickerModal" style="display:none; position:fixed; z-index:5000; inset:0; background:rgba(0,0,0,0.88); align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;">
+    <div id="playerPickerModal" style="display:none; position:fixed; z-index:10001; inset:0; background:rgba(0,0,0,0.88); align-items:flex-start; justify-content:center; padding:20px; overflow-y:auto;">
         <div style="background:#1a202c; border-radius:14px; padding:24px; max-width:600px; width:100%; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,0.6); border:1px solid #2d3748;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <h3 style="color:#f6e05e; font-size:1.15rem; margin:0;">🏀 Select Players — <span id="pickerTeamLabel" style="color:#fbd38d;"></span></h3>
