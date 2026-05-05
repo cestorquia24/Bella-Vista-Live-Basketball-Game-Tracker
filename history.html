@@ -617,6 +617,7 @@
         .game-round-badge.qf  { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: #fbbf24; }
         .game-round-badge.sf  { background: rgba(239,68,68,0.15);  border-color: rgba(239,68,68,0.4);  color: #fc8181; }
         .game-round-badge.fin { background: rgba(246,224,94,0.15); border-color: rgba(246,224,94,0.4); color: #f6e05e; }
+        .game-round-badge.exh { background: rgba(160,174,192,0.15); border-color: rgba(160,174,192,0.4); color: #a0aec0; }
         .round-select-wrap { display: none; }
         body.admin-mode .round-select-wrap { display: inline-block; margin-left: 8px; }
         .round-select {
@@ -2607,7 +2608,7 @@
                     const card = document.createElement('div');
                     card.className = 'game-card';
                     const round = game.gameRound || 'Regular Season';
-                    const badgeCls = round === 'Quarterfinal' ? 'qf' : round === 'Semifinal' ? 'sf' : round === 'Final' ? 'fin' : '';
+                    const badgeCls = round === 'Quarterfinal' ? 'qf' : round === 'Semifinal' ? 'sf' : round === 'Final' ? 'fin' : round === 'Exhibition' ? 'exh' : '';
                     const roundLabel = round === 'Regular Season' ? 'Reg. Season' : round;
                     card.innerHTML = `
                         <div class="game-card-header">
@@ -2620,6 +2621,7 @@
                                         <option value="Quarterfinal"   ${round==='Quarterfinal'?'selected':''}>Quarterfinal</option>
                                         <option value="Semifinal"      ${round==='Semifinal'?'selected':''}>Semifinal</option>
                                         <option value="Final"          ${round==='Final'?'selected':''}>Final</option>
+                                        <option value="Exhibition"     ${round==='Exhibition'?'selected':''}>Exhibition</option>
                                     </select>
                                 </span>
                             </div>
@@ -4259,6 +4261,8 @@
         }
 
         function updateSeasonStandingsFromGame(gameRecord) {
+            if (gameRecord.gameRound === 'Exhibition') return;
+
             const team1Name = gameRecord.team1.name;
             const team2Name = gameRecord.team2.name;
             const isPlayoff = ['Quarterfinal','Semifinal','Final'].includes(gameRecord.gameRound);
