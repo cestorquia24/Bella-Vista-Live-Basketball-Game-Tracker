@@ -4267,7 +4267,7 @@
 
             const team1Name = gameRecord.team1.name;
             const team2Name = gameRecord.team2.name;
-            const isPlayoff = ['Quarterfinal','Semifinal','Battle for 3rd','Final'].includes(gameRecord.gameRound);
+            const isRegularSeason = gameRecord.gameRound === 'Regular Season';
 
             // Initialize teams if needed
             if (!seasonStandings.teams[team1Name]) {
@@ -4281,7 +4281,7 @@
             if (!seasonStandings.teams[team2Name].h2h) seasonStandings.teams[team2Name].h2h = {};
 
             // Only count W/L and points toward standings for Regular Season games
-            if (!isPlayoff) {
+            if (isRegularSeason) {
                 if (gameRecord.winner === team1Name) {
                     seasonStandings.teams[team1Name].wins++;
                     seasonStandings.teams[team2Name].losses++;
@@ -4307,8 +4307,8 @@
             }
 
             // Update player stats (regular season or playoff)
-            updatePlayerStatsFromGame(gameRecord.team1, team1Name, isPlayoff);
-            updatePlayerStatsFromGame(gameRecord.team2, team2Name, isPlayoff);
+            updatePlayerStatsFromGame(gameRecord.team1, team1Name, !isRegularSeason);
+            updatePlayerStatsFromGame(gameRecord.team2, team2Name, !isRegularSeason);
         }
 
         function updatePlayerStatsFromGame(teamData, teamName, isPlayoff) {
