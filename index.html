@@ -4469,6 +4469,7 @@
             // Update team records
             const team1Name = gameRecord.team1.name;
             const team2Name = gameRecord.team2.name;
+            const isPlayoff = ['Quarterfinal','Semifinal','Battle for 3rd','Final'].includes(gameRecord.gameRound);
 
             if (!standings.teams[team1Name]) {
                 standings.teams[team1Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 };
@@ -4477,21 +4478,24 @@
                 standings.teams[team2Name] = { wins: 0, losses: 0, pointsFor: 0, pointsAgainst: 0 };
             }
 
-            // Update win/loss
-            if (gameRecord.winner === team1Name) {
-                standings.teams[team1Name].wins++;
-                standings.teams[team2Name].losses++;
-            } else if (gameRecord.winner === team2Name) {
-                standings.teams[team2Name].wins++;
-                standings.teams[team1Name].losses++;
-            }
-            // If TIE, neither team gets a win or loss
+            if (!isPlayoff) {
+                // Update win/loss
+                if (gameRecord.winner === team1Name) {
+                    standings.teams[team1Name].wins++;
+                    standings.teams[team2Name].losses++;
+                } else if (gameRecord.winner === team2Name) {
+                    standings.teams[team2Name].wins++;
+                    standings.teams[team1Name].losses++;
+                }
+                // If TIE, neither team gets a win or loss
 
-            // Update points
-            standings.teams[team1Name].pointsFor += gameRecord.finalScore.team1;
-            standings.teams[team1Name].pointsAgainst += gameRecord.finalScore.team2;
-            standings.teams[team2Name].pointsFor += gameRecord.finalScore.team2;
-            standings.teams[team2Name].pointsAgainst += gameRecord.finalScore.team1;
+                // Update points
+                standings.teams[team1Name].pointsFor += gameRecord.finalScore.team1;
+                standings.teams[team1Name].pointsAgainst += gameRecord.finalScore.team2;
+                standings.teams[team2Name].pointsFor += gameRecord.finalScore.team2;
+                standings.teams[team2Name].pointsAgainst += gameRecord.finalScore.team1;
+            }
+
             standings.teams[team1Name].lastPlayed = gameRecord.gameDate;
             standings.teams[team2Name].lastPlayed = gameRecord.gameDate;
 
