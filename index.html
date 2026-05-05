@@ -4461,7 +4461,8 @@
         }
 
         function updateSeasonStandings(gameRecord) {
-            if (gameRecord.gameRound !== 'Regular Season') return;
+            const gameRound = gameRecord.gameRound || 'Regular Season';
+            if (gameRound !== 'Regular Season') return;
 
             let standings = JSON.parse(localStorage.getItem('basketballSeasonStandings') ||
                 '{"teams": {}, "players": {}}');

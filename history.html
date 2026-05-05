@@ -4264,11 +4264,12 @@
         }
 
         function updateSeasonStandingsFromGame(gameRecord) {
-            if (gameRecord.gameRound === 'Exhibition') return;
+            const gameRound = gameRecord.gameRound || 'Regular Season';
+            if (gameRound === 'Exhibition') return;
 
             const team1Name = gameRecord.team1.name;
             const team2Name = gameRecord.team2.name;
-            const isRegularSeason = gameRecord.gameRound === 'Regular Season';
+            const isRegularSeason = gameRound === 'Regular Season';
 
             // Initialize teams if needed
             if (!seasonStandings.teams[team1Name]) {
