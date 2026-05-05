@@ -4525,7 +4525,9 @@
                 }
 
                 const p = standings.players[sanitizedKey];
-                p.gamesPlayed++;
+                const hasStats = totalStats.points > 0 || totalStats.rebounds > 0 ||
+                                 totalStats.assists > 0 || totalStats.steals > 0 || totalStats.blocks > 0;
+                if (hasStats) p.gamesPlayed++;
                 p.totalPoints += totalStats.points;
                 p.totalRebounds += totalStats.rebounds;
                 p.totalAssists += totalStats.assists;

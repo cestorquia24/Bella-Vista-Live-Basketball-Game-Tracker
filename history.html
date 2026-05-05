@@ -2422,6 +2422,7 @@
                 console.error('Firebase load error:', error);
                 loadFromLocalStorage();
                 migrateHistoryLogos();
+                recalculateStandings();
                 renderCurrentTab();
             });
         }
@@ -2772,8 +2773,8 @@
             let players;
 
             if (teamFilter) {
-                // Specific team selected - show ALL players from that team (even with zero stats)
-                players = allPlayers.filter(player => player.teamName === teamFilter);
+                // Specific team selected - show players with regular season games played
+                players = allPlayers.filter(player => player.teamName === teamFilter && (player.gamesPlayed || 0) > 0);
             } else {
                 // "All Teams" selected - filter out players with no stats
                 players = allPlayers.filter(player =>
@@ -2814,8 +2815,8 @@
                     <td class="stat-highlight">${player.avgPoints}</td>
                     <td>${player.avgRebounds}</td>
                     <td>${player.avgAssists}</td>
-                    <td>${(player.totalSteals / player.gamesPlayed).toFixed(1)}</td>
-                    <td>${(player.totalBlocks / player.gamesPlayed).toFixed(1)}</td>
+                    <td>${(player.gamesPlayed > 0 ? player.totalSteals / player.gamesPlayed : 0).toFixed(1)}</td>
+                    <td>${(player.gamesPlayed > 0 ? player.totalBlocks / player.gamesPlayed : 0).toFixed(1)}</td>
                     <td>${player.totalPoints}</td>
                 `;
                 tbody.appendChild(row);
