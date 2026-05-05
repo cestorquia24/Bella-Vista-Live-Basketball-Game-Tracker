@@ -2296,6 +2296,7 @@
                         <option value="Quarterfinal">Quarterfinal</option>
                         <option value="Semifinal">Semifinal</option>
                         <option value="Final">Final</option>
+                        <option value="Exhibition">Exhibition</option>
                     </select>
                 </div>
 
@@ -4459,6 +4460,8 @@
         }
 
         function updateSeasonStandings(gameRecord) {
+            if (gameRecord.gameRound === 'Exhibition') return;
+
             let standings = JSON.parse(localStorage.getItem('basketballSeasonStandings') ||
                 '{"teams": {}, "players": {}}');
 
