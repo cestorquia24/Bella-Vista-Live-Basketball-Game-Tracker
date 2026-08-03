@@ -164,6 +164,63 @@
             transform: translateY(-2px);
         }
 
+        .season-selector-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .season-select {
+            background: #1a202c;
+            color: #e2e8f0;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.9em;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .archive-season-btn {
+            display: none;
+            background: #805ad5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85em;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        body.admin-mode .archive-season-btn {
+            display: inline-block;
+        }
+
+        .archive-season-btn:hover {
+            background: #6b46c1;
+        }
+
+        .archive-view-banner {
+            display: none;
+            text-align: center;
+            background: rgba(128,90,213,0.15);
+            border: 1px solid rgba(128,90,213,0.5);
+            color: #d6bcfa;
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin: 0 0 20px;
+            font-weight: 600;
+        }
+
+        body.viewing-archive .archive-view-banner {
+            display: block;
+        }
+
         /* Hide delete buttons by default, show only in admin mode */
         .delete-btn {
             display: none;
@@ -1772,6 +1829,13 @@
         <button class="backup-btn" onclick="downloadBackup()">⬇️ Backup</button>
         <button class="admin-toggle" id="adminToggle" onclick="toggleAdminMode()">🔓 Admin Mode</button>
 
+        <div class="season-selector-bar">
+            <label for="seasonSelector" style="color:#a0aec0; font-size:0.9em; font-weight:600;">Season:</label>
+            <select id="seasonSelector" class="season-select" onchange="switchSeasonView(this.value)"></select>
+            <button class="archive-season-btn" onclick="archiveCurrentSeason()">🗄️ Archive Season &amp; Start New</button>
+        </div>
+        <div class="archive-view-banner" id="archiveViewBanner"></div>
+
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('history')">🏀 Game History</button>
             <button class="tab-btn" onclick="switchTab('teams')">🏆 Team Standings</button>
@@ -1779,7 +1843,7 @@
             <button class="tab-btn" onclick="switchTab('leaders')">👑 League Leaders</button>
             <button class="tab-btn" onclick="switchTab('playoffleaders')">🏆 Playoff Leaders</button>
             <button class="tab-btn" onclick="switchTab('playoffs')">🥇 Playoffs</button>
-            <button class="tab-btn" onclick="switchTab('schedule')">📅 Schedule</button>
+            <button class="tab-btn" id="scheduleTabBtn" onclick="switchTab('schedule')">📅 Schedule</button>
             <button class="tab-btn trash-tab-btn" onclick="switchTab('trash')">🗑️ Trash</button>
         </div>
 
@@ -2063,28 +2127,24 @@
                 <label>Team 1</label>
                 <select id="scheduleTeam1">
                     <option value="">-- Select Team --</option>
-                    <option>Orange Inferno</option>
-                    <option>Gray Wolves</option>
-                    <option>Green Bulls</option>
-                    <option>Bella Vista Blue</option>
-                    <option>Black Hoopers</option>
-                    <option>Yellow Slashers</option>
-                    <option>Red Blood Cells</option>
-                    <option>Porpol Ravens</option>
+                    <option>Lumpiang Shanghai</option>
+                    <option>Relyenong Bangus</option>
+                    <option>Sisig</option>
+                    <option>Kare-kare</option>
+                    <option>Laing</option>
+                    <option>Lumpiang Sariwa Relyeno</option>
                 </select>
             </div>
             <div class="schedule-form-group">
                 <label>Team 2</label>
                 <select id="scheduleTeam2">
                     <option value="">-- Select Team --</option>
-                    <option>Orange Inferno</option>
-                    <option>Gray Wolves</option>
-                    <option>Green Bulls</option>
-                    <option>Bella Vista Blue</option>
-                    <option>Black Hoopers</option>
-                    <option>Yellow Slashers</option>
-                    <option>Red Blood Cells</option>
-                    <option>Porpol Ravens</option>
+                    <option>Lumpiang Shanghai</option>
+                    <option>Relyenong Bangus</option>
+                    <option>Sisig</option>
+                    <option>Kare-kare</option>
+                    <option>Laing</option>
+                    <option>Lumpiang Sariwa Relyeno</option>
                 </select>
             </div>
             <div class="schedule-form-group">
@@ -2122,7 +2182,13 @@
             'Red Blood Cells': 'logos/Red Blood Cells.jpg?v=2',
             'Porpol Ravens': 'logos/Porpol Ravens.jpg?v=2',
             'TeamChow': 'logos/TeamChow.png',
-            'TeamCris': 'logos/TeamCris.png'
+            'TeamCris': 'logos/TeamCris.png',
+            'Lumpiang Shanghai': 'logos/Lumpiang Shanghai.jpg',
+            'Relyenong Bangus': 'logos/Relyenong Bangus.jpg',
+            'Sisig': 'logos/Sisig.jpg',
+            'Kare-kare': 'logos/Kare-kare.jpg',
+            'Laing': 'logos/Laing.jpg',
+            'Lumpiang Sariwa Relyeno': 'logos/Lumpiang Sariwa Relyeno.jpg'
         };
 
         // Migrate old/wrong logo paths in stored game records
@@ -2175,6 +2241,10 @@
         let realtimeListenerSetup = false;
 
         let trashedHistory = [];
+        let seasonArchives = {};
+        let viewingArchiveId = null;
+        let liveDataBackup = null;
+        const CURRENT_SEASON_NAME = 'Kaldero Cup';
         // IDs permanently deleted (so stale Firebase/local data can't restore them)
         let permDeletedIds = new Set(JSON.parse(localStorage.getItem('permDeletedIds') || '[]'));
         // Migrate old deletedGameIds tombstone (from pre-trash system)
@@ -2189,7 +2259,8 @@
             const backup = {
                 exportDate: new Date().toISOString(),
                 gameHistory: gameHistory,
-                seasonStandings: seasonStandings
+                seasonStandings: seasonStandings,
+                seasonArchives: seasonArchives
             };
             const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -2201,12 +2272,17 @@
         }
 
         // Admin Mode Functions
+        function updateAdminModeVisuals() {
+            document.body.classList.toggle('admin-mode', isAdminMode && viewingArchiveId === null);
+            document.body.classList.toggle('viewing-archive', viewingArchiveId !== null);
+        }
+
         function toggleAdminMode() {
             if (isAdminMode) {
                 // Exit admin mode
                 isAdminMode = false;
                 sessionStorage.removeItem('adminMode');
-                document.body.classList.remove('admin-mode');
+                updateAdminModeVisuals();
                 document.getElementById('adminToggle').textContent = '🔓 Admin Mode';
                 document.getElementById('adminToggle').classList.remove('active');
             } else {
@@ -2248,7 +2324,7 @@
                 // Correct password - enable admin mode
                 isAdminMode = true;
                 sessionStorage.setItem('adminMode', 'true');
-                document.body.classList.add('admin-mode');
+                updateAdminModeVisuals();
                 document.getElementById('adminToggle').textContent = '🔒 Exit Admin';
                 document.getElementById('adminToggle').classList.add('active');
                 closePasswordModal();
@@ -2285,7 +2361,7 @@
             // Check if admin mode was previously enabled
             if (sessionStorage.getItem('adminMode') === 'true') {
                 isAdminMode = true;
-                document.body.classList.add('admin-mode');
+                updateAdminModeVisuals();
                 document.getElementById('adminToggle').textContent = '🔒 Exit Admin';
                 document.getElementById('adminToggle').classList.add('active');
             }
@@ -2334,6 +2410,7 @@
                 // Fallback to localStorage only
                 loadFromLocalStorage();
                 migrateHistoryLogos();
+                renderSeasonSelector();
                 renderCurrentTab();
             }
         }
@@ -2415,6 +2492,17 @@
                     }).catch(() => {});
                 }
 
+                // Load archived seasons (read-only history kept separate from live standings)
+                seasonArchives = JSON.parse(localStorage.getItem('basketballSeasonArchives') || '{}');
+                if (database) {
+                    database.ref('seasonArchives').once('value').then(snap => {
+                        if (snap.val()) seasonArchives = snap.val();
+                        localStorage.setItem('basketballSeasonArchives', JSON.stringify(seasonArchives));
+                        renderSeasonSelector();
+                    }).catch(() => {});
+                }
+                renderSeasonSelector();
+
                 setupRealtimeListeners();
                 renderCurrentTab();
 
@@ -2423,6 +2511,7 @@
                 loadFromLocalStorage();
                 migrateHistoryLogos();
                 recalculateStandings();
+                renderSeasonSelector();
                 renderCurrentTab();
             });
         }
@@ -2462,13 +2551,129 @@
                 seasonStandings = JSON.parse(localStorage.getItem('basketballSeasonStandings') ||
                     '{"teams": {}, "players": {}}');
                 scheduleData = JSON.parse(localStorage.getItem('basketballSchedule') || '[]');
+                seasonArchives = JSON.parse(localStorage.getItem('basketballSeasonArchives') || '{}');
             } catch (e) {
                 console.error('Error loading data:', e);
                 gameHistory = [];
                 trashedHistory = [];
                 seasonStandings = { teams: {}, players: {} };
                 scheduleData = [];
+                seasonArchives = {};
             }
+        }
+
+        // ── Season Archive (read-only view of past seasons) ────────────────────
+        function renderSeasonSelector() {
+            const sel = document.getElementById('seasonSelector');
+            if (!sel) return;
+            const archiveOptions = Object.entries(seasonArchives)
+                .sort((a, b) => (b[1].archivedAt || 0) - (a[1].archivedAt || 0))
+                .map(([id, archive]) => `<option value="${id}">📁 ${archive.name} (Archived)</option>`)
+                .join('');
+            sel.innerHTML = `<option value="live">🍲 ${CURRENT_SEASON_NAME} (Current)</option>${archiveOptions}`;
+            sel.value = viewingArchiveId || 'live';
+        }
+
+        function switchSeasonView(value) {
+            if (value === 'live') {
+                if (viewingArchiveId !== null && liveDataBackup) {
+                    gameHistory = liveDataBackup.gameHistory;
+                    seasonStandings = liveDataBackup.seasonStandings;
+                    playoffBracket = liveDataBackup.playoffBracket;
+                    scheduleData = liveDataBackup.scheduleData;
+                    trashedHistory = liveDataBackup.trashedHistory;
+                    liveDataBackup = null;
+                }
+                viewingArchiveId = null;
+            } else {
+                const archive = seasonArchives[value];
+                if (!archive) return;
+                if (viewingArchiveId === null) {
+                    liveDataBackup = { gameHistory, seasonStandings, playoffBracket, scheduleData, trashedHistory };
+                }
+                gameHistory = archive.gameHistory || [];
+                seasonStandings = archive.seasonStandings || { teams: {}, players: {} };
+                playoffBracket = archive.playoffBracket || { qf: [null,null,null,null], sf: [null,null], champion: null, thirdPlace: null };
+                scheduleData = archive.scheduleData || [];
+                trashedHistory = [];
+                normalizeBracket();
+                viewingArchiveId = value;
+            }
+
+            updateAdminModeVisuals();
+            renderSeasonSelector();
+
+            const banner = document.getElementById('archiveViewBanner');
+            const scheduleTabBtn = document.getElementById('scheduleTabBtn');
+            if (viewingArchiveId !== null) {
+                banner.textContent = `📁 Viewing archived season: "${seasonArchives[viewingArchiveId].name}" — read-only.`;
+                if (scheduleTabBtn) scheduleTabBtn.style.display = 'none';
+                if (currentTab === 'schedule' || currentTab === 'trash') {
+                    currentTab = 'history';
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    document.querySelector('.tab-btn[onclick*="history"]')?.classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+                    document.getElementById('historyTab')?.classList.add('active');
+                }
+            } else {
+                banner.textContent = '';
+                if (scheduleTabBtn) scheduleTabBtn.style.display = '';
+            }
+
+            renderCurrentTab();
+        }
+
+        function archiveCurrentSeason() {
+            if (!isAdminMode || viewingArchiveId !== null) return;
+            if (!gameHistory.length) {
+                alert('No games in the current season to archive.');
+                return;
+            }
+
+            const name = prompt('Name this archived season:', 'Bella Vista Hoopers Season 1');
+            if (!name) return;
+            if (!confirm(`Archive "${name}" with ${gameHistory.length} game(s) and start a fresh "${CURRENT_SEASON_NAME}" season?\n\nThis clears the current game history, standings, schedule, and playoff bracket — but the archive stays viewable anytime from the Season dropdown.`)) {
+                return;
+            }
+
+            const archiveId = 'season_' + Date.now();
+            seasonArchives[archiveId] = {
+                name,
+                archivedAt: Date.now(),
+                gameHistory,
+                seasonStandings,
+                playoffBracket,
+                scheduleData
+            };
+
+            gameHistory = [];
+            trashedHistory = [];
+            seasonStandings = { teams: {}, players: {} };
+            playoffBracket = { qf: [null,null,null,null], sf: [null,null], champion: null, thirdPlace: null };
+            scheduleData = [];
+            permDeletedIds = new Set();
+
+            localStorage.setItem('basketballSeasonArchives', JSON.stringify(seasonArchives));
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
+            localStorage.setItem('basketballSeasonStandings', JSON.stringify(seasonStandings));
+            localStorage.setItem('playoffBracket', JSON.stringify(playoffBracket));
+            localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+            localStorage.setItem('permDeletedIds', JSON.stringify([]));
+
+            if (database) {
+                database.ref('seasonArchives').set(seasonArchives);
+                database.ref('gameHistory').set(gameHistory);
+                database.ref('trashedGames').set(null);
+                database.ref('seasonStandings').set(seasonStandings);
+                database.ref('playoffBracket').set(playoffBracket);
+                database.ref('schedule').set(scheduleData);
+                database.ref('permDeletedIds').set(null);
+            }
+
+            renderSeasonSelector();
+            renderCurrentTab();
+            alert(`"${name}" archived! You're now starting fresh with ${CURRENT_SEASON_NAME}.`);
         }
 
         function switchTab(tab) {
@@ -3217,6 +3422,7 @@
         }
 
         function deleteGame(gameId) {
+            if (viewingArchiveId !== null) return;
             if (!confirm('Move this game to Trash? You can restore it later from the Trash tab in Admin Mode.')) return;
             const game = gameHistory.find(g => g.id === gameId);
             if (!game) return;
@@ -3282,6 +3488,7 @@
         }
 
         function restoreGame(gameId) {
+            if (viewingArchiveId !== null) return;
             if (!confirm('Restore this game to history? Season standings will be recalculated.')) return;
             const game = trashedHistory.find(g => g.id === gameId);
             if (!game) return;
@@ -3299,6 +3506,7 @@
         }
 
         function permanentlyDeleteGame(gameId) {
+            if (viewingArchiveId !== null) return;
             if (!confirm('Permanently delete this game? This CANNOT be undone.')) return;
             trashedHistory = trashedHistory.filter(g => g.id !== gameId);
             permDeletedIds.add(gameId);
@@ -3313,7 +3521,7 @@
 
         function moveGameUp(gameId) {
             // Check if admin mode is active
-            if (!isAdminMode) {
+            if (!isAdminMode || viewingArchiveId !== null) {
                 return; // Silently ignore if not in admin mode
             }
 
@@ -3342,7 +3550,7 @@
 
         function moveGameDown(gameId) {
             // Check if admin mode is active
-            if (!isAdminMode) {
+            if (!isAdminMode || viewingArchiveId !== null) {
                 return; // Silently ignore if not in admin mode
             }
 
@@ -3371,7 +3579,7 @@
 
         function editGameDate(gameId) {
             // Check if admin mode is active
-            if (!isAdminMode) {
+            if (!isAdminMode || viewingArchiveId !== null) {
                 return; // Silently ignore if not in admin mode
             }
 
@@ -3425,7 +3633,7 @@
         }
 
         function setGameRound(gameId, newRound) {
-            if (!isAdminMode) return;
+            if (!isAdminMode || viewingArchiveId !== null) return;
             const game = gameHistory.find(g => g.id === gameId);
             if (!game) return;
             game.gameRound = newRound;
@@ -3481,6 +3689,7 @@
         }
 
         function editGameMVP(gameId) {
+            if (viewingArchiveId !== null) return;
             // Find the game
             const game = gameHistory.find(g => g.id === gameId);
             if (!game) {
@@ -3640,6 +3849,7 @@
         }
 
         function saveAllTeamStats() {
+            if (viewingArchiveId !== null) return;
             const gameId  = parseInt(document.getElementById('editStatsGameId').value);
             const teamKey = document.getElementById('editStatsTeamKey').value;
 
@@ -3795,7 +4005,7 @@
         }
 
         function setPlayoffWinner(round, idx, teamName) {
-            if (!isAdminMode) return;
+            if (!isAdminMode || viewingArchiveId !== null) return;
             normalizeBracket();
             if (round === 'qf') {
                 playoffBracket.qf[idx] = teamName;
@@ -4208,6 +4418,7 @@
         }
 
         function saveScheduledGame() {
+            if (viewingArchiveId !== null) return;
             const gameName = document.getElementById('scheduleGameName').value.trim();
             const team1    = document.getElementById('scheduleTeam1').value;
             const team2    = document.getElementById('scheduleTeam2').value;
@@ -4239,6 +4450,7 @@
         }
 
         function deleteScheduledGame(id) {
+            if (viewingArchiveId !== null) return;
             if (!confirm('Delete this scheduled game?')) return;
             scheduleData = scheduleData.filter(g => g.id !== id);
             saveScheduleData();
@@ -4460,7 +4672,7 @@
         }
 
         function applyBracketOverride() {
-            if (!isAdminMode) return;
+            if (!isAdminMode || viewingArchiveId !== null) return;
             playoffBracket.qf[0] = document.getElementById('baQf0').value || null;
             playoffBracket.qf[1] = document.getElementById('baQf1').value || null;
             playoffBracket.qf[2] = document.getElementById('baQf2').value || null;
