@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bv-tracker-v67';
+const CACHE_NAME = 'bv-tracker-v68';
 
 // All local assets to pre-cache on install
 // Use relative paths so this works on any hosting path (e.g. GitHub Pages subfolders)
@@ -62,7 +62,8 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// ── Fetch: cache-first for local, network-only for external ──────────────────
+// ── Fetch: network-first for pages (always get the latest code when online),
+//    cache-first for images/logos (rarely change, fine to serve instantly) ──────
 self.addEventListener('fetch', event => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
@@ -72,6 +73,21 @@ self.addEventListener('fetch', event => {
   // Let Firebase, Google Fonts, imgly CDN, and other external requests
   // go straight to the network — they handle their own caching
   if (url.origin !== self.location.origin) return;
+
+  const isPage = event.request.mode === 'navigate' || event.request.destination === 'document';
+
+  if (isPage) {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then(cached => {
@@ -84,12 +100,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => {
-        // If both cache and network fail for an HTML page, return index as fallback
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-      });
+      }).catch(() => {});
     })
   );
 });
