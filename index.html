@@ -3122,13 +3122,7 @@
 
                     if (historyUpdated) {
                         localStorage.setItem('basketballGameHistory', JSON.stringify(history));
-                        console.log('✅ Game history logos migrated');
-
-                        // Also update Firebase history
-                        if (database) {
-                            database.ref('gameHistory').set(history);
-                            console.log('✅ Firebase history logos migrated');
-                        }
+                        console.log('✅ Game history logos migrated (local only — history.html owns syncing this to Firebase)');
                         migrationNeeded = true;
                     }
                 }
@@ -4344,15 +4338,6 @@
                 mvp: gameData.mvp
             };
 
-            // Save to history — replace existing record if re-saving, otherwise prepend
-            let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
-            const existingIdx = history.findIndex(g => g.id == gameId);
-            if (existingIdx !== -1) {
-                history[existingIdx] = gameRecord;
-            } else {
-                history.unshift(gameRecord);
-            }
-
             // Store the ID back so re-saves update in place
             gameData.savedGameId = gameId;
             saveGameData();
@@ -4360,14 +4345,20 @@
             // Update season standings
             updateSeasonStandings(gameRecord);
 
-            // Firebase first: save to cloud, then confirm to localStorage
-            pushHistoryToFirebase(history)
-                .then(() => {
+            // Merge against Firebase's CURRENT history, not this device's local cache —
+            // a device with an outdated local cache (e.g. hasn't synced since a season
+            // was archived/reset) must not be able to overwrite Firebase's real history
+            // with its own stale snapshot just because it's saving a new game.
+            mergeGameIntoHistory(gameRecord)
+                .then((history) => {
                     localStorage.setItem('basketballGameHistory', JSON.stringify(history));
                     alert('✅ Game saved successfully!\n📄 CSV file downloaded\n📊 History & standings updated\n\nGame data is still in the tracker. Use "Clear & Start New Game" when ready for a new game.');
                 })
                 .catch((err) => {
                     console.error('Firebase save failed, saving locally:', err);
+                    let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
+                    const existingIdx = history.findIndex(g => g.id == gameId);
+                    if (existingIdx !== -1) history[existingIdx] = gameRecord; else history.unshift(gameRecord);
                     localStorage.setItem('basketballGameHistory', JSON.stringify(history));
                     alert('✅ Game saved locally!\n📄 CSV file downloaded\n📊 History & standings updated\n⚠️ Cloud sync failed — history will sync automatically next time you open the app online.\n\nGame data is still in the tracker.');
                 });
@@ -5801,11 +5792,25 @@
         }
 
         // Push game history to Firebase for cross-device sync
-        function pushHistoryToFirebase(history) {
+        // Reads Firebase's CURRENT gameHistory, merges in the given game record
+        // (replacing by id if it already exists, otherwise prepending), and writes
+        // the result back. Never trusts this device's local cache as the base —
+        // that's what let stale devices resurrect archived/removed games by
+        // overwriting Firebase with an outdated snapshot whenever they saved.
+        function mergeGameIntoHistory(gameRecord) {
             if (!database) {
-                return Promise.resolve(); // Firebase not available; caller handles localStorage
+                let history = JSON.parse(localStorage.getItem('basketballGameHistory') || '[]');
+                const idx = history.findIndex(g => g.id == gameRecord.id);
+                if (idx !== -1) history[idx] = gameRecord; else history.unshift(gameRecord);
+                return Promise.resolve(history);
             }
-            return database.ref('gameHistory').set(history);
+            return database.ref('gameHistory').once('value').then(snap => {
+                let history = snap.val();
+                history = Array.isArray(history) ? history : [];
+                const idx = history.findIndex(g => g.id == gameRecord.id);
+                if (idx !== -1) history[idx] = gameRecord; else history.unshift(gameRecord);
+                return database.ref('gameHistory').set(history).then(() => history);
+            });
         }
 
         // Push season standings to Firebase for cross-device sync

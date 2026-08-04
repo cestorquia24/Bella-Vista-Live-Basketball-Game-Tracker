@@ -2736,6 +2736,15 @@
         // something already sitting in an archived season — i.e. duplicates that got
         // resurrected into Firebase by a device that hadn't caught up to a season
         // reset yet. Genuinely new current-season games (different IDs) are untouched.
+        // Marks that the current season's data just changed, so devices that already
+        // matched the last known epoch (but have their own outdated local cache) won't
+        // slip past the loadFromFirebase() staleness check and resurrect old data.
+        function bumpSeasonEpoch() {
+            const seasonEpoch = Date.now();
+            localStorage.setItem('basketballSeasonEpoch', String(seasonEpoch));
+            if (database) database.ref('seasonEpoch').set(seasonEpoch);
+        }
+
         function cleanupResurrectedData() {
             if (!isAdminMode || viewingArchiveId !== null) return;
 
@@ -2772,6 +2781,7 @@
                 database.ref('trashedGames').set(trashedHistory.length ? trashedHistory : null);
                 database.ref('schedule').set(scheduleData);
             }
+            bumpSeasonEpoch();
 
             renderCurrentTab();
             alert(`Removed ${dupGames.length} resurrected game(s) and ${dupSchedule.length} schedule entr${dupSchedule.length === 1 ? 'y' : 'ies'}.`);
@@ -2831,6 +2841,7 @@
                 database.ref('schedule').set(scheduleData);
                 database.ref('seasonArchives').set(seasonArchives);
             }
+            bumpSeasonEpoch();
 
             renderSeasonSelector();
             renderCurrentTab();
