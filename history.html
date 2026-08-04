@@ -2442,6 +2442,11 @@
                 // Fallback to localStorage only
                 loadFromLocalStorage();
                 migrateHistoryLogos();
+                // Recalculate rather than trust the cached snapshot — same reasoning as
+                // the Firebase path: a stale local basketballSeasonStandings cache can
+                // disagree with the actual game list (e.g. after games were archived out
+                // on other devices before this one ever synced).
+                recalculateStandings();
                 renderSeasonSelector();
                 renderCurrentTab();
             }
