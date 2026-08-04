@@ -205,6 +205,14 @@
             background: #6b46c1;
         }
 
+        .archive-season-btn.cleanup-btn {
+            background: #dd6b20;
+        }
+
+        .archive-season-btn.cleanup-btn:hover {
+            background: #c05621;
+        }
+
         .archive-view-banner {
             display: none;
             text-align: center;
@@ -1833,6 +1841,7 @@
             <label for="seasonSelector" style="color:#a0aec0; font-size:0.9em; font-weight:600;">Season:</label>
             <select id="seasonSelector" class="season-select" onchange="switchSeasonView(this.value)"></select>
             <button class="archive-season-btn" onclick="archiveCurrentSeason()">🗄️ Archive Season &amp; Start New</button>
+            <button class="archive-season-btn cleanup-btn" onclick="cleanupResurrectedData()">🧹 Clean Up Duplicates</button>
         </div>
         <div class="archive-view-banner" id="archiveViewBanner"></div>
 
@@ -2416,8 +2425,20 @@
         }
 
         function loadFromFirebase() {
-            // Step 0: Load permDeletedIds from Firebase first (shared across all devices)
-            database.ref('permDeletedIds').once('value').then((snap) => {
+            let fbSeasonEpoch = null;
+            let epochMatches = true;
+
+            // Step -1: Check if a season was archived/reset since this device last synced.
+            // If so, this device's local cache is stale and must NOT be resurrected into
+            // Firebase just because Firebase now looks "empty" — that emptiness is intentional.
+            database.ref('seasonEpoch').once('value').then((snap) => {
+                fbSeasonEpoch = snap.val();
+                const localEpoch = localStorage.getItem('basketballSeasonEpoch');
+                epochMatches = (fbSeasonEpoch == null) || (String(fbSeasonEpoch) === localEpoch);
+
+                // Step 0: Load permDeletedIds from Firebase first (shared across all devices)
+                return database.ref('permDeletedIds').once('value');
+            }).then((snap) => {
                 const fbPermIds = snap.val();
                 if (fbPermIds && Array.isArray(fbPermIds)) {
                     fbPermIds.forEach(id => permDeletedIds.add(id));
@@ -2436,7 +2457,7 @@
                     const fbIds = new Set(fbTrashed.map(g => g.id));
                     const localOnly = localTrashed.filter(g => !fbIds.has(g.id) && !permDeletedIds.has(g.id));
                     trashedHistory = [...fbTrashed.filter(g => !permDeletedIds.has(g.id)), ...localOnly];
-                } else if (localTrashed.length > 0) {
+                } else if (localTrashed.length > 0 && epochMatches) {
                     trashedHistory = localTrashed.filter(g => !permDeletedIds.has(g.id));
                     database.ref('trashedGames').set(trashedHistory);
                 }
@@ -2459,7 +2480,7 @@
                     if (localOnly.length > 0 || filteredFb.length < firebaseHistory.length) {
                         database.ref('gameHistory').set(gameHistory);
                     }
-                } else if (localHistory.length > 0) {
+                } else if (localHistory.length > 0 && epochMatches) {
                     gameHistory = localHistory.filter(g => !trashedIds.has(g.id) && !permDeletedIds.has(g.id));
                     database.ref('gameHistory').set(gameHistory);
                 }
@@ -2472,11 +2493,18 @@
                 const fbSchedule = snap.val();
                 if (fbSchedule) {
                     scheduleData = Object.values(fbSchedule);
-                } else {
+                } else if (epochMatches) {
                     scheduleData = JSON.parse(localStorage.getItem('basketballSchedule') || '[]');
                     if (scheduleData.length > 0) database.ref('schedule').set(scheduleData);
+                } else {
+                    scheduleData = [];
                 }
                 localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+
+                // This device has now caught up to the latest season reset, if any
+                if (fbSeasonEpoch != null) {
+                    localStorage.setItem('basketballSeasonEpoch', String(fbSeasonEpoch));
+                }
 
                 // Always recalculate standings from loaded history (ensures accuracy
                 // regardless of timing between gameHistory and seasonStandings writes)
@@ -2637,9 +2665,10 @@
             }
 
             const archiveId = 'season_' + Date.now();
+            const seasonEpoch = Date.now();
             seasonArchives[archiveId] = {
                 name,
-                archivedAt: Date.now(),
+                archivedAt: seasonEpoch,
                 gameHistory,
                 seasonStandings,
                 playoffBracket,
@@ -2660,6 +2689,9 @@
             localStorage.setItem('playoffBracket', JSON.stringify(playoffBracket));
             localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
             localStorage.setItem('permDeletedIds', JSON.stringify([]));
+            // Mark this device as caught up so it doesn't resurrect the just-archived
+            // data back into Firebase the next time it happens to load before other devices
+            localStorage.setItem('basketballSeasonEpoch', String(seasonEpoch));
 
             if (database) {
                 database.ref('seasonArchives').set(seasonArchives);
@@ -2669,11 +2701,57 @@
                 database.ref('playoffBracket').set(playoffBracket);
                 database.ref('schedule').set(scheduleData);
                 database.ref('permDeletedIds').set(null);
+                database.ref('seasonEpoch').set(seasonEpoch);
             }
 
             renderSeasonSelector();
             renderCurrentTab();
             alert(`"${name}" archived! You're now starting fresh with ${CURRENT_SEASON_NAME}.`);
+        }
+
+        // Removes games/schedule entries from the CURRENT season that exactly match
+        // something already sitting in an archived season — i.e. duplicates that got
+        // resurrected into Firebase by a device that hadn't caught up to a season
+        // reset yet. Genuinely new current-season games (different IDs) are untouched.
+        function cleanupResurrectedData() {
+            if (!isAdminMode || viewingArchiveId !== null) return;
+
+            const archivedGameIds = new Set();
+            const archivedScheduleIds = new Set();
+            Object.values(seasonArchives).forEach(archive => {
+                (archive.gameHistory || []).forEach(g => archivedGameIds.add(g.id));
+                (archive.scheduleData || []).forEach(s => archivedScheduleIds.add(s.id));
+            });
+
+            const dupGames = gameHistory.filter(g => archivedGameIds.has(g.id));
+            const dupSchedule = scheduleData.filter(s => archivedScheduleIds.has(s.id));
+
+            if (dupGames.length === 0 && dupSchedule.length === 0) {
+                alert('No resurrected duplicates found — current season data looks clean.');
+                return;
+            }
+
+            if (!confirm(`Found ${dupGames.length} game(s) and ${dupSchedule.length} schedule entr${dupSchedule.length === 1 ? 'y' : 'ies'} that match an already-archived season (likely resurrected by a device that hadn't synced yet). Remove them from "${CURRENT_SEASON_NAME}"? The archive itself is untouched, and your other current-season games are unaffected.`)) {
+                return;
+            }
+
+            gameHistory = gameHistory.filter(g => !archivedGameIds.has(g.id));
+            scheduleData = scheduleData.filter(s => !archivedScheduleIds.has(s.id));
+            trashedHistory = trashedHistory.filter(g => !archivedGameIds.has(g.id));
+            recalculateStandings();
+
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
+            localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                database.ref('trashedGames').set(trashedHistory.length ? trashedHistory : null);
+                database.ref('schedule').set(scheduleData);
+            }
+
+            renderCurrentTab();
+            alert(`Removed ${dupGames.length} resurrected game(s) and ${dupSchedule.length} schedule entr${dupSchedule.length === 1 ? 'y' : 'ies'}.`);
         }
 
         function switchTab(tab) {
