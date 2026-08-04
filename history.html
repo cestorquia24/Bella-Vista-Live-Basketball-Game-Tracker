@@ -2564,8 +2564,17 @@
                 seasonArchives = JSON.parse(localStorage.getItem('basketballSeasonArchives') || '{}');
                 if (database) {
                     database.ref('seasonArchives').once('value').then(snap => {
-                        if (snap.val()) seasonArchives = snap.val();
-                        localStorage.setItem('basketballSeasonArchives', JSON.stringify(seasonArchives));
+                        const fbArchives = snap.val();
+                        if (fbArchives) {
+                            seasonArchives = fbArchives;
+                            localStorage.setItem('basketballSeasonArchives', JSON.stringify(seasonArchives));
+                        } else if (Object.keys(seasonArchives).length > 0) {
+                            // Firebase has nothing yet — most likely this device archived a
+                            // season before this path was permitted in the DB rules, so the
+                            // write silently failed and only landed in local storage. Push
+                            // it up now that reads/writes are allowed.
+                            database.ref('seasonArchives').set(seasonArchives);
+                        }
                         renderSeasonSelector();
                     }).catch(() => {});
                 }
