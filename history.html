@@ -213,6 +213,14 @@
             background: #c05621;
         }
 
+        .archive-season-btn.recover-btn {
+            background: #2b6cb0;
+        }
+
+        .archive-season-btn.recover-btn:hover {
+            background: #2c5282;
+        }
+
         .archive-view-banner {
             display: none;
             text-align: center;
@@ -1842,6 +1850,7 @@
             <select id="seasonSelector" class="season-select" onchange="switchSeasonView(this.value)"></select>
             <button class="archive-season-btn" onclick="archiveCurrentSeason()">🗄️ Archive Season &amp; Start New</button>
             <button class="archive-season-btn cleanup-btn" onclick="cleanupResurrectedData()">🧹 Clean Up Duplicates</button>
+            <button class="archive-season-btn recover-btn" onclick="recoverCurrentSeasonFromArchives()">🔧 Recover Kaldero Cup from Archive</button>
         </div>
         <div class="archive-view-banner" id="archiveViewBanner"></div>
 
@@ -2254,6 +2263,19 @@
         let viewingArchiveId = null;
         let liveDataBackup = null;
         const CURRENT_SEASON_NAME = 'Kaldero Cup';
+        // These teams only exist in Kaldero Cup — any game/schedule entry naming one of
+        // them could not possibly belong to an older archived season, so this set is a
+        // reliable way to separate seasons that got merged together by mistake.
+        const CURRENT_SEASON_TEAMS = new Set([
+            'Lumpiang Shanghai', 'Relyenong Bangus', 'Sisig',
+            'Kare-kare', 'Laing', 'Lumpiang Sariwa Relyeno'
+        ]);
+        function isCurrentSeasonGame(g) {
+            return CURRENT_SEASON_TEAMS.has(g.team1?.name) || CURRENT_SEASON_TEAMS.has(g.team2?.name);
+        }
+        function isCurrentSeasonSchedule(s) {
+            return CURRENT_SEASON_TEAMS.has(s.team1) || CURRENT_SEASON_TEAMS.has(s.team2);
+        }
         // IDs permanently deleted (so stale Firebase/local data can't restore them)
         let permDeletedIds = new Set(JSON.parse(localStorage.getItem('permDeletedIds') || '[]'));
         // Migrate old deletedGameIds tombstone (from pre-trash system)
@@ -2752,6 +2774,66 @@
 
             renderCurrentTab();
             alert(`Removed ${dupGames.length} resurrected game(s) and ${dupSchedule.length} schedule entr${dupSchedule.length === 1 ? 'y' : 'ies'}.`);
+        }
+
+        // Recovers Kaldero Cup games/schedule entries that got swept into an archive
+        // (e.g. archived a second time while old and new data were mixed together).
+        // Splits every archive by team name — Kaldero Cup teams never existed before
+        // this season, so this is an unambiguous way to tell them apart from Season 1.
+        function recoverCurrentSeasonFromArchives() {
+            if (!isAdminMode || viewingArchiveId !== null) return;
+
+            let recoveredGames = [];
+            let recoveredSchedule = [];
+            const summaries = [];
+
+            Object.values(seasonArchives).forEach(archive => {
+                const newGames = (archive.gameHistory || []).filter(isCurrentSeasonGame);
+                const newSchedule = (archive.scheduleData || []).filter(isCurrentSeasonSchedule);
+
+                if (newGames.length > 0 || newSchedule.length > 0) {
+                    summaries.push(`"${archive.name}": ${newGames.length} game(s), ${newSchedule.length} schedule entr${newSchedule.length === 1 ? 'y' : 'ies'}`);
+                    archive.gameHistory = (archive.gameHistory || []).filter(g => !isCurrentSeasonGame(g));
+                    archive.scheduleData = (archive.scheduleData || []).filter(s => !isCurrentSeasonSchedule(s));
+                    recoveredGames.push(...newGames);
+                    recoveredSchedule.push(...newSchedule);
+                }
+            });
+
+            if (recoveredGames.length === 0 && recoveredSchedule.length === 0) {
+                alert(`No ${CURRENT_SEASON_NAME} games found sitting inside any archive.`);
+                return;
+            }
+
+            if (!confirm(`Found ${CURRENT_SEASON_NAME} data mixed into archives:\n${summaries.join('\n')}\n\nMove ${recoveredGames.length} game(s) and ${recoveredSchedule.length} schedule entr${recoveredSchedule.length === 1 ? 'y' : 'ies'} back into the current "${CURRENT_SEASON_NAME}" season? Each archive keeps only its own original teams' data.`)) {
+                return;
+            }
+
+            const existingIds = new Set(gameHistory.map(g => g.id));
+            recoveredGames.forEach(g => {
+                if (!existingIds.has(g.id)) { gameHistory.push(g); existingIds.add(g.id); }
+            });
+
+            const existingScheduleIds = new Set(scheduleData.map(s => s.id));
+            recoveredSchedule.forEach(s => {
+                if (!existingScheduleIds.has(s.id)) { scheduleData.push(s); existingScheduleIds.add(s.id); }
+            });
+
+            recalculateStandings();
+
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+            localStorage.setItem('basketballSeasonArchives', JSON.stringify(seasonArchives));
+
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                database.ref('schedule').set(scheduleData);
+                database.ref('seasonArchives').set(seasonArchives);
+            }
+
+            renderSeasonSelector();
+            renderCurrentTab();
+            alert(`Recovered ${recoveredGames.length} game(s) and ${recoveredSchedule.length} schedule entr${recoveredSchedule.length === 1 ? 'y' : 'ies'} back into ${CURRENT_SEASON_NAME}.`);
         }
 
         function switchTab(tab) {
