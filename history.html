@@ -2709,7 +2709,12 @@
                     liveDataBackup = { gameHistory, seasonStandings, playoffBracket, scheduleData, trashedHistory };
                 }
                 gameHistory = archive.gameHistory || [];
-                seasonStandings = archive.seasonStandings || { teams: {}, players: {} };
+                // Recompute standings fresh from this archive's own game list instead of
+                // trusting its stored snapshot — that snapshot was captured whenever the
+                // archive was created/edited and can drift out of sync (e.g. after games
+                // get pulled back out of the archive by the recovery/cleanup tools).
+                seasonStandings = { teams: {}, players: {} };
+                gameHistory.forEach(game => updateSeasonStandingsFromGame(game));
                 playoffBracket = archive.playoffBracket || { qf: [null,null,null,null], sf: [null,null], champion: null, thirdPlace: null };
                 scheduleData = archive.scheduleData || [];
                 trashedHistory = [];
