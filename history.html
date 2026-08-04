@@ -2150,7 +2150,7 @@
                     <option>Sisig</option>
                     <option>Kare-kare</option>
                     <option>Laing</option>
-                    <option>Lumpiang Sariwa Relyeno</option>
+                    <option>Lumpiang Sariwa</option>
                 </select>
             </div>
             <div class="schedule-form-group">
@@ -2162,7 +2162,7 @@
                     <option>Sisig</option>
                     <option>Kare-kare</option>
                     <option>Laing</option>
-                    <option>Lumpiang Sariwa Relyeno</option>
+                    <option>Lumpiang Sariwa</option>
                 </select>
             </div>
             <div class="schedule-form-group">
@@ -2206,6 +2206,7 @@
             'Sisig': 'logos/Sisig.jpg',
             'Kare-kare': 'logos/Kare-kare.jpg',
             'Laing': 'logos/Laing.jpg',
+            'Lumpiang Sariwa': 'logos/Lumpiang Sariwa Relyeno.jpg',
             'Lumpiang Sariwa Relyeno': 'logos/Lumpiang Sariwa Relyeno.jpg'
         };
 
@@ -2268,7 +2269,7 @@
         // reliable way to separate seasons that got merged together by mistake.
         const CURRENT_SEASON_TEAMS = new Set([
             'Lumpiang Shanghai', 'Relyenong Bangus', 'Sisig',
-            'Kare-kare', 'Laing', 'Lumpiang Sariwa Relyeno'
+            'Kare-kare', 'Laing', 'Lumpiang Sariwa', 'Lumpiang Sariwa Relyeno'
         ]);
         function isCurrentSeasonGame(g) {
             return CURRENT_SEASON_TEAMS.has(g.team1?.name) || CURRENT_SEASON_TEAMS.has(g.team2?.name);
