@@ -184,22 +184,6 @@
             cursor: pointer;
         }
 
-        .debug-info-btn {
-            background: #2d3748;
-            color: #a0aec0;
-            border: 1px solid #4a5568;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .debug-info-btn:hover {
-            background: #4a5568;
-            color: white;
-        }
-
         .archive-season-btn {
             display: none;
             background: #805ad5;
@@ -1864,7 +1848,6 @@
         <div class="season-selector-bar">
             <label for="seasonSelector" style="color:#a0aec0; font-size:0.9em; font-weight:600;">Season:</label>
             <select id="seasonSelector" class="season-select" onchange="switchSeasonView(this.value)"></select>
-            <button class="debug-info-btn" onclick="showDebugInfo()">🔍 Debug Info</button>
             <button class="archive-season-btn" onclick="archiveCurrentSeason()">🗄️ Archive Season &amp; Start New</button>
             <button class="archive-season-btn cleanup-btn" onclick="cleanupResurrectedData()">🧹 Clean Up Duplicates</button>
             <button class="archive-season-btn recover-btn" onclick="recoverCurrentSeasonFromArchives()">🔧 Recover Kaldero Cup from Archive</button>
@@ -2649,46 +2632,6 @@
                 .join('');
             sel.innerHTML = `<option value="live">🍲 ${CURRENT_SEASON_NAME} (Current)</option>${archiveOptions}`;
             sel.value = viewingArchiveId || 'live';
-        }
-
-        // Reads Firebase directly (bypassing whatever this device currently has in
-        // memory/cache) so you can compare "what Firebase actually has" against "what
-        // this device is showing" — settles caching-vs-real-data-problem questions
-        // without needing screenshots from every device.
-        function showDebugInfo() {
-            const localInfo = [
-                `In-memory gameHistory count: ${gameHistory.length}`,
-                `In-memory seasonArchives entries: ${Object.keys(seasonArchives).length}`,
-                `In-memory seasonArchives: ${Object.values(seasonArchives).map(a => `"${a.name}" (${(a.gameHistory || []).length} games)`).join(', ') || '(none)'}`,
-                `localStorage seasonEpoch: ${localStorage.getItem('basketballSeasonEpoch') || '(not set)'}`,
-                `Firebase connected: ${database ? 'yes' : 'no'}`
-            ].join('\n');
-
-            if (!database) {
-                alert(`📱 THIS DEVICE (no Firebase connection — local only):\n${localInfo}`);
-                return;
-            }
-
-            Promise.all([
-                database.ref('gameHistory').once('value'),
-                database.ref('seasonArchives').once('value'),
-                database.ref('seasonEpoch').once('value')
-            ]).then(([gh, sa, se]) => {
-                const fbGameHistory = gh.val();
-                const fbSeasonArchives = sa.val();
-                const fbSeasonEpoch = se.val();
-
-                const fbInfo = [
-                    `Firebase gameHistory count: ${Array.isArray(fbGameHistory) ? fbGameHistory.length : 0}`,
-                    `Firebase seasonArchives entries: ${fbSeasonArchives ? Object.keys(fbSeasonArchives).length : 0}`,
-                    `Firebase seasonArchives: ${fbSeasonArchives ? Object.values(fbSeasonArchives).map(a => `"${a.name}" (${(a.gameHistory || []).length} games)`).join(', ') : '(none)'}`,
-                    `Firebase seasonEpoch: ${fbSeasonEpoch != null ? fbSeasonEpoch : '(not set)'}`
-                ].join('\n');
-
-                alert(`🔥 FIREBASE (live, true state):\n${fbInfo}\n\n📱 THIS DEVICE (currently showing):\n${localInfo}`);
-            }).catch(err => {
-                alert(`Failed to read Firebase directly: ${err.message}\n\n📱 THIS DEVICE (local only):\n${localInfo}`);
-            });
         }
 
         function switchSeasonView(value) {
