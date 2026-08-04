@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bv-tracker-v66';
+const CACHE_NAME = 'bv-tracker-v67';
 
 // All local assets to pre-cache on install
 // Use relative paths so this works on any hosting path (e.g. GitHub Pages subfolders)
@@ -14,6 +14,8 @@ const PRECACHE_ASSETS = [
   './icon-512.png',
   './bellaLogo.jpg',
   './belaLogo1.jpg',
+  './kalderoCupLogo.jpg',
+  './historyBackgroundKalderoCup.jpg',
   './logos/Orange Inferno.jpg',
   './logos/Gray Wolves.jpg',
   './logos/Green Bulls.jpg',
@@ -22,6 +24,12 @@ const PRECACHE_ASSETS = [
   './logos/Yellow Slashers.jpg',
   './logos/Red Blood Cells.jpg',
   './logos/Porpol Ravens.jpg',
+  './logos/Lumpiang Shanghai.jpg',
+  './logos/Relyenong Bangus.jpg',
+  './logos/Sisig.jpg',
+  './logos/Kare-kare.jpg',
+  './logos/Laing.jpg',
+  './logos/Lumpiang Sariwa Relyeno.jpg',
   './court-display.html',
   './logos/Bella Vista League Logo.jpeg',
   './logos/Cafe Bara.jpeg',
