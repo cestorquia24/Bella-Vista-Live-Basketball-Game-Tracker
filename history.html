@@ -237,6 +237,13 @@
             display: block;
         }
 
+        .conn-status {
+            text-align: center;
+            font-size: 0.75em;
+            color: #718096;
+            margin: -8px 0 16px;
+        }
+
         /* Hide delete buttons by default, show only in admin mode */
         .delete-btn {
             display: none;
@@ -1853,6 +1860,7 @@
             <button class="archive-season-btn recover-btn" onclick="recoverCurrentSeasonFromArchives()">🔧 Recover Kaldero Cup from Archive</button>
         </div>
         <div class="archive-view-banner" id="archiveViewBanner"></div>
+        <div class="conn-status" id="connStatus">checking connection…</div>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('history')">🏀 Game History</button>
@@ -2434,6 +2442,16 @@
             }
         }
 
+        // Small always-visible status line — a reload-resistant discrepancy between
+        // devices usually means one of them never actually connected to Firebase and
+        // is quietly running on stale local-only data instead.
+        function renderConnStatus() {
+            const el = document.getElementById('connStatus');
+            if (!el) return;
+            const swActive = ('serviceWorker' in navigator) && !!navigator.serviceWorker.controller;
+            el.textContent = `🔌 Firebase: ${database ? 'connected' : 'OFFLINE (local only)'} · SW: ${swActive ? 'active' : 'none'} · Games loaded: ${gameHistory.length} · Archives: ${Object.keys(seasonArchives).length}`;
+        }
+
         function loadData() {
             if (database) {
                 // Load from Firebase (synced across all devices)
@@ -2899,6 +2917,7 @@
         }
 
         function renderCurrentTab() {
+            renderConnStatus();
             if (currentTab === 'history') {
                 renderGameHistory();
             } else if (currentTab === 'teams') {
