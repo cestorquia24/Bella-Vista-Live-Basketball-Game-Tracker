@@ -221,6 +221,14 @@
             background: #2c5282;
         }
 
+        .archive-season-btn.moveold-btn {
+            background: #b83280;
+        }
+
+        .archive-season-btn.moveold-btn:hover {
+            background: #97266d;
+        }
+
         .archive-view-banner {
             display: none;
             text-align: center;
@@ -1858,6 +1866,7 @@
             <button class="archive-season-btn" onclick="archiveCurrentSeason()">🗄️ Archive Season &amp; Start New</button>
             <button class="archive-season-btn cleanup-btn" onclick="cleanupResurrectedData()">🧹 Clean Up Duplicates</button>
             <button class="archive-season-btn recover-btn" onclick="recoverCurrentSeasonFromArchives()">🔧 Recover Kaldero Cup from Archive</button>
+            <button class="archive-season-btn moveold-btn" onclick="moveOldGamesToArchive()">📤 Move Old Teams to Archive</button>
         </div>
         <div class="archive-view-banner" id="archiveViewBanner"></div>
         <div class="conn-status" id="connStatus">checking connection…</div>
@@ -2284,6 +2293,20 @@
         }
         function isCurrentSeasonSchedule(s) {
             return CURRENT_SEASON_TEAMS.has(s.team1) || CURRENT_SEASON_TEAMS.has(s.team2);
+        }
+        // The inverse: teams that only ever existed in Season 1. Games/schedule entries
+        // naming one of these could not possibly be a real Kaldero Cup matchup, so this
+        // catches contamination that ID-based duplicate matching can miss (e.g. a device
+        // re-saved an old game under a new id, or old data arrived some other way).
+        const OLD_SEASON_TEAMS = new Set([
+            'Orange Inferno', 'Gray Wolves', 'Green Bulls', 'Bella Vista Blue',
+            'Black Hoopers', 'Yellow Slashers', 'Red Blood Cells', 'Porpol Ravens'
+        ]);
+        function isOldSeasonGame(g) {
+            return OLD_SEASON_TEAMS.has(g.team1?.name) || OLD_SEASON_TEAMS.has(g.team2?.name);
+        }
+        function isOldSeasonSchedule(s) {
+            return OLD_SEASON_TEAMS.has(s.team1) || OLD_SEASON_TEAMS.has(s.team2);
         }
         // IDs permanently deleted (so stale Firebase/local data can't restore them)
         let permDeletedIds = new Set(JSON.parse(localStorage.getItem('permDeletedIds') || '[]'));
@@ -2892,6 +2915,75 @@
             renderSeasonSelector();
             renderCurrentTab();
             alert(`Recovered ${recoveredGames.length} game(s) and ${recoveredSchedule.length} schedule entr${recoveredSchedule.length === 1 ? 'y' : 'ies'} back into ${CURRENT_SEASON_NAME}.`);
+        }
+
+        // The reverse of recoverCurrentSeasonFromArchives(): moves any game/schedule
+        // entry naming an old Season 1-only team OUT of the live current season and
+        // into an archive, by team name rather than id — catches contamination that
+        // cleanupResurrectedData()'s exact-id matching can miss (e.g. an old game that
+        // got re-saved under a new id somewhere along the way).
+        function moveOldGamesToArchive() {
+            if (!isAdminMode || viewingArchiveId !== null) return;
+
+            const oldGames = gameHistory.filter(isOldSeasonGame);
+            const oldSchedule = scheduleData.filter(isOldSeasonSchedule);
+
+            if (oldGames.length === 0 && oldSchedule.length === 0) {
+                alert('No old-season team games found in the current season.');
+                return;
+            }
+
+            const archiveEntries = Object.entries(seasonArchives);
+            let targetArchiveId;
+            if (archiveEntries.length === 0) {
+                const name = prompt('No archive exists yet. Name a new archive for these old-season games:', 'Bella Vista Hoopers Season 1');
+                if (!name) return;
+                targetArchiveId = 'season_' + Date.now();
+                seasonArchives[targetArchiveId] = {
+                    name, archivedAt: Date.now(), gameHistory: [],
+                    seasonStandings: { teams: {}, players: {} },
+                    playoffBracket: { qf: [null,null,null,null], sf: [null,null], champion: null, thirdPlace: null },
+                    scheduleData: []
+                };
+            } else if (archiveEntries.length === 1) {
+                targetArchiveId = archiveEntries[0][0];
+            } else {
+                const names = archiveEntries.map(([, a], i) => `${i + 1}. ${a.name}`).join('\n');
+                const choice = prompt(`Multiple archives exist. Move these games into which one?\n${names}\n\nEnter the number:`);
+                const idx = parseInt(choice) - 1;
+                if (isNaN(idx) || !archiveEntries[idx]) return;
+                targetArchiveId = archiveEntries[idx][0];
+            }
+
+            const archive = seasonArchives[targetArchiveId];
+            if (!confirm(`Move ${oldGames.length} game(s) and ${oldSchedule.length} schedule entr${oldSchedule.length === 1 ? 'y' : 'ies'} naming old-season teams out of "${CURRENT_SEASON_NAME}" and into "${archive.name}"?`)) {
+                return;
+            }
+
+            archive.gameHistory = [...(archive.gameHistory || []), ...oldGames];
+            archive.scheduleData = [...(archive.scheduleData || []), ...oldSchedule];
+
+            gameHistory = gameHistory.filter(g => !isOldSeasonGame(g));
+            scheduleData = scheduleData.filter(s => !isOldSeasonSchedule(s));
+            trashedHistory = trashedHistory.filter(g => !isOldSeasonGame(g));
+            recalculateStandings();
+
+            localStorage.setItem('basketballGameHistory', JSON.stringify(gameHistory));
+            localStorage.setItem('basketballSchedule', JSON.stringify(scheduleData));
+            localStorage.setItem('basketballTrashedGames', JSON.stringify(trashedHistory));
+            localStorage.setItem('basketballSeasonArchives', JSON.stringify(seasonArchives));
+
+            if (database) {
+                database.ref('gameHistory').set(gameHistory);
+                database.ref('schedule').set(scheduleData);
+                database.ref('trashedGames').set(trashedHistory.length ? trashedHistory : null);
+                database.ref('seasonArchives').set(seasonArchives);
+            }
+            bumpSeasonEpoch();
+
+            renderSeasonSelector();
+            renderCurrentTab();
+            alert(`Moved ${oldGames.length} game(s) and ${oldSchedule.length} schedule entr${oldSchedule.length === 1 ? 'y' : 'ies'} into "${archive.name}".`);
         }
 
         function switchTab(tab) {
