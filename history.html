@@ -2298,17 +2298,15 @@
         // naming one of these could not possibly be a real Kaldero Cup matchup, so this
         // catches contamination that ID-based duplicate matching can miss (e.g. a device
         // re-saved an old game under a new id, or old data arrived some other way).
+        // TeamChow/TeamCris are deliberately excluded — they're shared exhibition teams
+        // kept available for both seasons, and exhibition games already don't count
+        // toward Team Standings/Player Stats regardless of which era they're from.
         const OLD_SEASON_TEAMS = new Set([
             'Orange Inferno', 'Gray Wolves', 'Green Bulls', 'Bella Vista Blue',
             'Black Hoopers', 'Yellow Slashers', 'Red Blood Cells', 'Porpol Ravens'
         ]);
-        const EXHIBITION_TEAM_NAMES = new Set(['TeamChow', 'TeamCris']);
-        // TeamChow/TeamCris are shared across both seasons (they draft players from
-        // whichever league is active), so team name alone can't tell an old exhibition
-        // game from a new one. Season 1 rosters were entered as "Name #Number" —
-        // Kaldero Cup rosters have no jersey numbers — so use that as the tell instead.
-        function hasNumberedPlayerNames(teamData) {
-            return (teamData?.players || []).some(p => /#\d/.test(p.name || ''));
+        function isOldSeasonGame(g) {
+            return OLD_SEASON_TEAMS.has(g.team1?.name) || OLD_SEASON_TEAMS.has(g.team2?.name);
         }
         function isOldSeasonGame(g) {
             if (OLD_SEASON_TEAMS.has(g.team1?.name) || OLD_SEASON_TEAMS.has(g.team2?.name)) return true;
