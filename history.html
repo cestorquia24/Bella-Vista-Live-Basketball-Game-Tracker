@@ -2501,7 +2501,9 @@
 
                 if (fbTrashed && Array.isArray(fbTrashed) && fbTrashed.length > 0) {
                     const fbIds = new Set(fbTrashed.map(g => g.id));
-                    const localOnly = localTrashed.filter(g => !fbIds.has(g.id) && !permDeletedIds.has(g.id));
+                    const localOnly = epochMatches
+                        ? localTrashed.filter(g => !fbIds.has(g.id) && !permDeletedIds.has(g.id))
+                        : [];
                     trashedHistory = [...fbTrashed.filter(g => !permDeletedIds.has(g.id)), ...localOnly];
                 } else if (localTrashed.length > 0 && epochMatches) {
                     trashedHistory = localTrashed.filter(g => !permDeletedIds.has(g.id));
@@ -2521,7 +2523,14 @@
                 if (firebaseHistory && Array.isArray(firebaseHistory) && firebaseHistory.length > 0) {
                     const filteredFb = firebaseHistory.filter(g => !trashedIds.has(g.id) && !permDeletedIds.has(g.id));
                     const fbIds = new Set(filteredFb.map(g => g.id));
-                    const localOnly = localHistory.filter(g => !fbIds.has(g.id) && !trashedIds.has(g.id) && !permDeletedIds.has(g.id));
+                    // Only fold in this device's local-only games when it's caught up to
+                    // the latest season reset — otherwise those "extras" are usually old
+                    // games that were intentionally archived/cleaned up elsewhere, not
+                    // legitimate offline saves, and merging them back in just re-corrupts
+                    // Firebase every time this device loads.
+                    const localOnly = epochMatches
+                        ? localHistory.filter(g => !fbIds.has(g.id) && !trashedIds.has(g.id) && !permDeletedIds.has(g.id))
+                        : [];
                     gameHistory = [...filteredFb, ...localOnly];
                     if (localOnly.length > 0 || filteredFb.length < firebaseHistory.length) {
                         database.ref('gameHistory').set(gameHistory);
